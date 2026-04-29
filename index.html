@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pl">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interaktywna Instrukcja Prasy Mimośrodowej</title>
+    <!-- Google Fonts for modern technical look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/style.css">
+  </head>
+  <body>
+    <!-- Kontener na scenę Three.js -->
+    <div id="three-canvas"></div>
+
+    <!-- Interfejs Użytkownika -->
+    <div id="ui-layer">
+      <header class="header">
+        <h1>Prasa Mimośrodowa PM-300</h1>
+        <p class="subtitle">Wizualizacja kinematyki układu korbowego</p>
+      </header>
+
+      <div class="control-panel glass-panel">
+        <h2>Panel Sterowania</h2>
+        
+        <div class="control-group">
+          <label>Status Maszyny</label>
+          <div class="status-indicator">
+            <span id="status-dot" class="dot stopped"></span>
+            <span id="status-text">Zatrzymana</span>
+          </div>
+        </div>
+
+        <div class="control-group">
+          <label for="speed-slider">Prędkość obrotowa (RPM)</label>
+          <div class="slider-wrapper">
+            <input type="range" id="speed-slider" min="10" max="120" value="30" step="1">
+            <span id="speed-value" class="mono">30</span>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button id="btn-toggle" class="btn primary">Start / Stop</button>
+          <button id="btn-buzzer" class="btn secondary">Test Sygnału (D8)</button>
+        </div>
+      </div>
+
+      <div class="info-panel glass-panel">
+        <h2>Parametry Układu</h2>
+        <ul class="params-list">
+          <li><span>Skok suwaka (2r):</span> <span class="mono">1.6 m</span></li>
+          <li><span>Długość korbowodu (l):</span> <span class="mono">4.0 m</span></li>
+          <li><span>Aktualny kąt wału:</span> <span id="val-angle" class="mono">0.0°</span></li>
+          <li><span>Wychylenie suwaka (y):</span> <span id="val-displacement" class="mono">0.00 m</span></li>
+        </ul>
+        <div class="equation-box">
+          <code>y = r·cos(α) + √(l² - (r·sin(α))²)</code>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
