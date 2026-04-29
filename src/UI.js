@@ -6,7 +6,6 @@ export class UI {
       speedSlider: document.getElementById('speed-slider'),
       speedValue: document.getElementById('speed-value'),
       btnToggle: document.getElementById('btn-toggle'),
-      btnBuzzer: document.getElementById('btn-buzzer'),
       valAngle: document.getElementById('val-angle'),
       valDisplacement: document.getElementById('val-displacement')
     };
@@ -27,10 +26,6 @@ export class UI {
     this.elements.speedSlider.addEventListener('input', (e) => {
       this.speed = parseInt(e.target.value, 10);
       this.elements.speedValue.innerText = this.speed;
-    });
-
-    this.elements.btnBuzzer.addEventListener('click', () => {
-      this.triggerBuzzer();
     });
   }
 
@@ -69,33 +64,5 @@ export class UI {
     this.elements.valDisplacement.innerText = `${displacement.toFixed(3)} m`;
   }
 
-  /**
-   * Placeholder dla komunikacji WebSerial wysyłającej sygnał do pinu D8
-   */
-  async triggerBuzzer() {
-    console.log("[WebSerial] Próba wysłania sygnału do buzera (Pin D8)...");
-    
-    // Animacja przycisku jako feedback
-    const originalText = this.elements.btnBuzzer.innerText;
-    this.elements.btnBuzzer.innerText = "Wysyłanie...";
-    this.elements.btnBuzzer.disabled = true;
-
-    try {
-      // W przyszłości tutaj znajdzie się kod WebSerial, np:
-      // const port = await navigator.serial.requestPort();
-      // await port.open({ baudRate: 9600 });
-      // const writer = port.writable.getWriter();
-      // await writer.write(new TextEncoder().encode("BUZZER_ON\n"));
-      // writer.releaseLock();
-      
-      // Symulacja opóźnienia
-      await new Promise(resolve => setTimeout(resolve, 500));
-      console.log("[WebSerial] Sygnał wysłany pomyślnie.");
-    } catch (err) {
-      console.error("[WebSerial] Błąd:", err);
-    } finally {
-      this.elements.btnBuzzer.innerText = originalText;
-      this.elements.btnBuzzer.disabled = false;
-    }
   }
 }
