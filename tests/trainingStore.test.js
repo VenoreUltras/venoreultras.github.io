@@ -142,6 +142,66 @@ describe('TrainingStore — spinUpTimer pod fake timers (D-07/D-08)', () => {
   });
 });
 
+describe('TrainingStore — applyEffects branch coverage', () => {
+  it('playAudio effect jest no-op w Phase 1 (Phase 5 implementuje)', () => {
+    const tinyScenario = {
+      id: 'audio-test',
+      titlePL: 'A', descriptionPL: 'A',
+      initialMachineState: 'oczekiwanie-na-inspekcje',
+      steps: [{
+        id: 'X', kind: 'manipulation', targetMeshId: 'm',
+        labelPL: '', descriptionPL: '', rationalePL: '',
+        effectsOnSuccess: [{ type: 'playAudio', clipId: 'beep' }],
+        effectsOnError: [],
+      }],
+    };
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(tinyScenario);
+    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'm' }, tinyScenario)).not.toThrow();
+    // step.done event obecny (advance), playAudio nic nie robi
+    expect(store.getState().events.some(e => e.type === 'step.done')).toBe(true);
+  });
+
+  it('unknown effect type silently skipped (default case)', () => {
+    const tinyScenario = {
+      id: 'unknown-test',
+      titlePL: 'U', descriptionPL: 'U',
+      initialMachineState: 'oczekiwanie-na-inspekcje',
+      steps: [{
+        id: 'X', kind: 'manipulation', targetMeshId: 'm',
+        labelPL: '', descriptionPL: '', rationalePL: '',
+        effectsOnSuccess: [{ type: 'unknownEffectFromFutureSchema', payload: 42 }],
+        effectsOnError: [],
+      }],
+    };
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(tinyScenario);
+    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'm' }, tinyScenario)).not.toThrow();
+  });
+
+  it('scoring minor severity obniża score o 2 (applyScoringEvent minor branch)', () => {
+    // effectsOnSuccess zawiera appendEvent z severity:minor — to wykonuje applyScoringEvent gałąź minor.
+    const tinyScenario = {
+      id: 'minor-test',
+      titlePL: 'M', descriptionPL: 'M',
+      initialMachineState: 'x',
+      steps: [{
+        id: 'X', kind: 'manipulation', targetMeshId: 'm',
+        labelPL: '', descriptionPL: '', rationalePL: '',
+        effectsOnSuccess: [
+          { type: 'appendEvent', event: { type: 'step.note', severity: 'minor' } },
+        ],
+        effectsOnError: [],
+      }],
+    };
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(tinyScenario);
+    store.getState().attemptStep({ kind: 'click', meshId: 'm' }, tinyScenario);
+    expect(store.getState().scoring.minorCount).toBe(1);
+    expect(store.getState().scoring.score).toBe(98);
+  });
+});
+
 describe('TrainingStore — STATE-03 dispose pattern signals', () => {
   it('subscribe handle zwalnia listener po unsub', () => {
     const store = createTrainingStore();

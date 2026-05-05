@@ -4,21 +4,32 @@ import { SceneSetup } from './SceneSetup';
 import { PressModel } from './PressModel';
 import { UI } from './UI';
 import { PhysicsEngine } from './PhysicsEngine';
+import { createTrainingStore } from './state/trainingStore.js';
 
 class Application {
   constructor() {
     this.sceneSetup = new SceneSetup('three-canvas');
     this.pressModel = new PressModel(this.sceneSetup.scene);
     this.ui = new UI();
-
+    this.disclaimerBanner = null;  // Plan 05 wpina (DisclaimerBanner)
+    this.store = createTrainingStore();
     this.currentAngle = 0; // Kąt w radianach
 
-    // Zamiast requestAnimationFrame używamy GSAP ticker do zapewnienia
-    // bardzo płynnej i spójnej pętli animacji niezależnie od odświeżania ekranu.
-    gsap.ticker.add((time, deltaTime, frame) => this.tick(deltaTime));
+    // Tickable list (RESEARCH §"Pattern 3" — Phase 3 dorzuca raycastHover bez merge-conflict).
+    this.tickables = [(dt) => this.simulationTick(dt)];
+    this._tickerCallback = (time, dt) => {
+      for (const fn of this.tickables) fn(dt);
+      this.sceneSetup.render();
+    };
+
+    // Zamiast requestAnimationFrame używamy GSAP ticker (single source of timing).
+    gsap.ticker.add(this._tickerCallback);
+
+    // STATE-03 (T-04-01): capture każde unsubscribe handle, zwalniane w dispose().
+    this._unsubscribers = [];
   }
 
-  tick(deltaTime) {
+  simulationTick(deltaTime) {
     // GSAP 3.x ticker: deltaTime w milisekundach (kontrakt zablokowany ~3.15.0 pin w package.json — INFRA-03).
     const dtSeconds = deltaTime / 1000;
     const angularVelocity = this.ui.getAngularVelocity();
@@ -31,17 +42,37 @@ class Application {
     this.pressModel.update(this.currentAngle);
 
     // Wyliczamy przesunięcie do wyświetlenia w UI
-    const displacement = PhysicsEngine.calculateSliderPosition(this.currentAngle, this.pressModel.r, this.pressModel.l);
-    
+    const displacement = PhysicsEngine.calculateSliderPosition(
+      this.currentAngle, this.pressModel.r, this.pressModel.l,
+    );
+
     // Aktualizujemy dane w UI
     this.ui.updateTelemetry(this.currentAngle, displacement);
+  }
 
-    // Renderujemy klatkę
-    this.sceneSetup.render();
+  /**
+   * Zwalnia wszystkie subskrypcje + GSAP ticker callback + komponenty (STATE-03).
+   * Wywoływane przez Vite HMR `import.meta.hot.dispose()` aby uniknąć leaków
+   * subscriberów (T-04-01) i resize listenerów (T-04-02) między hot reloadami.
+   */
+  dispose() {
+    gsap.ticker.remove(this._tickerCallback);
+    for (const unsub of this._unsubscribers) unsub();
+    this._unsubscribers = [];
+    if (this.disclaimerBanner) this.disclaimerBanner.dispose();
+    this.sceneSetup.dispose();
   }
 }
 
-// Inicjalizacja aplikacji po załadowaniu DOM (choć moduł ładuje się defer)
+// Bootstrap
+let app;
 document.addEventListener('DOMContentLoaded', () => {
-  new Application();
+  app = new Application();
 });
+
+// Vite HMR — STATE-03: na hot reload zwalniamy stary Application zanim Vite załaduje nowy.
+if (import.meta.hot) {
+  import.meta.hot.dispose(() => {
+    if (app) app.dispose();
+  });
+}

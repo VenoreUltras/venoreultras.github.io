@@ -38,8 +38,10 @@ export class SceneSetup {
     const gridHelper = new THREE.GridHelper(20, 20, 0x444444, 0x222222);
     this.scene.add(gridHelper);
 
-    // Resize handler
-    window.addEventListener('resize', this.onWindowResize.bind(this));
+    // Bound reference dla późniejszego dispose() (STATE-03 / T-04-02).
+    // Anonymous bind utraciłby reference i removeEventListener byłby no-op.
+    this._onWindowResizeBound = this.onWindowResize.bind(this);
+    window.addEventListener('resize', this._onWindowResizeBound);
   }
 
   onWindowResize() {
@@ -51,5 +53,14 @@ export class SceneSetup {
 
   render() {
     this.renderer.render(this.scene, this.camera);
+  }
+
+  /**
+   * Zwalnia zasoby SceneSetup (STATE-03). Plan 05 rozszerzy o WebGL
+   * context-loss listenery (webglcontextlost / webglcontextrestored).
+   */
+  dispose() {
+    window.removeEventListener('resize', this._onWindowResizeBound);
+    this.renderer.dispose();
   }
 }
