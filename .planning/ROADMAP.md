@@ -168,7 +168,7 @@ These are not requirements per se — they are the policies that prevent the cri
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 1/5 | In progress | - |
+| 1. Foundation | 2/5 | In progress | - |
 | 2. Digital Twin Geometry | 0/? | Not started | - |
 | 3. Click-to-State Pipeline | 0/? | Not started | - |
 | 4. Visual Feedback Layer | 0/? | Not started | - |

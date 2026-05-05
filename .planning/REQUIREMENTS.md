@@ -24,12 +24,12 @@ Wymagania dla pierwszego wydania. Każde mapowane na fazę roadmapy.
 ### SOP Procedure Engine (SOP)
 
 - [ ] **SOP-01**: `ProcedureEngine` to czysta funkcja — `validateStep(intent, state, scenario)` zwraca `{ok, reason, effects[]}` bez efektów ubocznych, bez importów THREE/DOM/store
-- [ ] **SOP-02**: Scenariusze są deklaratywnymi modułami JSON ze stabilnymi stringowymi `id` (zakaz numerycznych indeksów kroków w logice walidacji)
+- [x] **SOP-02**: Scenariusze są deklaratywnymi modułami JSON ze stabilnymi stringowymi `id` (zakaz numerycznych indeksów kroków w logice walidacji)
 - [ ] **SOP-03**: Scenariusz **uruchomienie** zaimplementowany — minimum 6 kroków obejmujących inspekcję wzrokową, sprawdzenie smarowania, zamknięcie osłon, odblokowanie E-stop, włączenie zasilania, sprzęgnięcie po nabraniu obrotów koła zamachowego
 - [ ] **SOP-04**: Scenariusz **cykl pracy** zaimplementowany — wymaga aktywnego oburęcznego sterowania, materiał poza strefą tłocznika, gating przy otwartej osłonie
 - [ ] **SOP-05**: Scenariusz **zatrzymanie** zaimplementowany — kolejność: rozsprzęgnięcie, hamulec, wyłącznik główny, blokada
 - [ ] **SOP-06**: Scenariusz **awaria** zaimplementowany — przynajmniej 3 zdarzenia awaryjne (np. otwarcie osłony w cyklu, brak ciśnienia oleju, awaryjne zatrzymanie) z poprawną reakcją
-- [ ] **SOP-07**: `evaluateFaultRules` weryfikuje invarianty cross-cutting na każdej zmianie stanu (np. "osłona otwarta podczas cyklu = NATYCHMIASTOWE zatrzymanie i błąd procedury")
+- [x] **SOP-07**: `evaluateFaultRules` weryfikuje invarianty cross-cutting na każdej zmianie stanu (np. "osłona otwarta podczas cyklu = NATYCHMIASTOWE zatrzymanie i błąd procedury")
 - [ ] **SOP-08**: Twardy gating — błędna akcja wyzwala WIDOCZNĄ porażkę (czerwony pulse, polski komunikat błędu, kara w scoringu), nigdy cichy skip
 - [ ] **SOP-09**: Wyczerpujące testy jednostkowe Vitest pokrywają wszystkie 4 scenariusze, wszystkie ścieżki sukces/porażka, edge case'y kolejności
 
@@ -74,7 +74,7 @@ Wymagania dla pierwszego wydania. Każde mapowane na fazę roadmapy.
 - [ ] **UI-03**: TooltipManager używa `@floating-ui/dom` z 600ms hover delay, pozycjonowanie auto-update przy ruchu
 - [ ] **UI-04**: Każdy aktywny krok wyświetla pole `rationale` po polsku ("po co ten krok") — pod krokiem lub za przyciskiem `?`
 - [ ] **UI-05**: Banner disclaimera widoczny stale — informuje że symulator NIE zastępuje rzeczywistego szkolenia BHP (CRIT-1)
-- [ ] **UI-06**: Wszystkie nowe stringi UI są po polsku; `src/i18n/pl.js` jako tabela tłumaczeń (nawet jeśli mono-lingual)
+- [x] **UI-06**: Wszystkie nowe stringi UI są po polsku; `src/i18n/pl.js` jako tabela tłumaczeń (nawet jeśli mono-lingual)
 
 ### Educational Layer (EDU)
 
@@ -162,12 +162,12 @@ Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera 2026-05-05.
 | STATE-02 | Phase 1 | Pending |
 | STATE-03 | Phase 1 | Pending |
 | SOP-01 | Phase 1 | Pending |
-| SOP-02 | Phase 1 | Pending |
+| SOP-02 | Phase 1 | Complete |
 | SOP-03 | Phase 1 | Pending |
 | SOP-04 | Phase 6 | Pending |
 | SOP-05 | Phase 6 | Pending |
 | SOP-06 | Phase 6 | Pending |
-| SOP-07 | Phase 1 | Pending |
+| SOP-07 | Phase 1 | Complete |
 | SOP-08 | Phase 1 | Pending |
 | SOP-09 | Phase 1 | Pending |
 | TWIN-01 | Phase 2 | Pending |
@@ -200,7 +200,7 @@ Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera 2026-05-05.
 | UI-03 | Phase 5 | Pending |
 | UI-04 | Phase 5 | Pending |
 | UI-05 | Phase 1 | Pending |
-| UI-06 | Phase 1 | Pending |
+| UI-06 | Phase 1 | Complete |
 | EDU-01 | Phase 5 | Pending |
 | EDU-02 | Phase 5 | Pending |
 | EDU-03 | Phase 5 | Pending |

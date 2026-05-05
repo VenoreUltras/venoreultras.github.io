@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-05T12:30:00.000Z"
+last_updated: "2026-05-05T12:35:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 5
-  completed_plans: 1
-  percent: 20
+  completed_plans: 2
+  percent: 40
 ---
 
 # Project State: PM-300 Trener
@@ -33,20 +33,20 @@ progress:
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 2 of 5 (Wave 1 — Plan 02 + Plan 03 mogą iść równolegle)
+Plan: 3 of 5 (Wave 1 Plan 02 done; Plan 03 może iść; Wave 2 czeka)
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
 | Phase | 1 — Foundation |
-| Plan | 01-01 complete; 01-02..05 pending |
-| Status | Wave 0 done — npm test green (11/11), GSAP pinned, hygiene paid, PhysicsEngine validated |
+| Plan | 01-01, 01-02 complete; 01-03..05 pending |
+| Status | Wave 1 part 1 done — i18n + scenarios + faultRules + scoringWeights data layer; npm test green (30/30) |
 | Mode | YOLO with parallel execution |
 | Granularity | Standard |
 
 **Progress:**
 
 ```
-Phase 1: Foundation                          [██        ] 20%  in progress (1/5 plans)
+Phase 1: Foundation                          [████      ] 40%  in progress (2/5 plans)
 Phase 2: Digital Twin Geometry               [          ] 0%   not started
 Phase 3: Click-to-State Pipeline             [          ] 0%   not started
 Phase 4: Visual Feedback Layer               [          ] 0%   not started
@@ -104,7 +104,8 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 ### Todos / Next Actions
 
 - [x] Plan 01-01 (Wave 0) executed — test infra + Phase Z hygiene + INFRA-04
-- [ ] Wave 1 — Plan 01-02 + Plan 01-03 (równolegle)
+- [x] Plan 01-02 (Wave 1 part 1) executed — i18n table + scenarios + faultRules + scoringWeights + shape test
+- [ ] Plan 01-03 (Wave 1 part 2) — pure ProcedureEngine + ScoringService + unit tests
 - [ ] Wave 2+ zgodnie z `01-PATTERNS.md` dependency graph
 - [ ] (W trakcie Phase 1) edytować `REQUIREMENTS.md` UI-02 i `ROADMAP.md` Phase 4 SC3 — dodać 7. stan maszyny `Rozpędzanie...` (decyzja D-09 z 01-CONTEXT.md)
 
@@ -113,6 +114,9 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - GSAP pin via tilde `~3.15.0` blokuje minor bumpy zmieniające deltaTime contract (Plan 01-01)
 - vitest.config.js coverage thresholds dormant aż src/training/** + src/state/** powstaną w Wave 1+2 (Plan 01-01)
 - PhysicsEngine input validation runs every tick; cost negligible (Plan 01-01)
+- `evaluateFaultRulesData` żyje w `src/training/faultRules.js` jako pure top-level — Plan 03 ProcedureEngine re-eksportuje pod nazwą `evaluateFaultRules` (Plan 01-02)
+- `validateBefore` jako inline arrow function w pliku scenariusza (Open Question #2 v1 resolution; eskalacja do declarative spec gdy ≥3 scenariuszy) (Plan 01-02)
+- `Object.freeze` lock na DEFAULT_WEIGHTS, REGISTRY, faultRules — defaults niemutowalne przez ScoringService/store (Plan 01-02)
 
 ### Blockers
 
@@ -120,7 +124,14 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 01-01 execution complete (Wave 0). Files written this session:
+**Last session ended after:** Plan 01-02 execution complete (Wave 1 part 1). Files written this session:
+
+- `.planning/phases/01-foundation/01-02-SUMMARY.md`
+- `src/i18n/pl.js`, `src/training/scoringWeights.js`, `src/training/faultRules.js` (created)
+- `src/training/scenarios/uruchomienie.js`, `src/training/scenarios/index.js`, `src/training/scenarios/validateScenario.js` (created)
+- `tests/scenarioShape.test.js`, `tests/fixtures/scenario.fixture.js` (created)
+
+**Earlier:** Plan 01-01 execution complete (Wave 0). Files written:
 
 - `.planning/phases/01-foundation/01-01-SUMMARY.md`
 - `vitest.config.js`, `tests/physicsEngine.test.js` (created)
@@ -133,7 +144,7 @@ None.
 - `.planning/phases/01-foundation/01-DISCUSSION-LOG.md` (audit trail)
 - `.planning/STATE.md` (this file)
 
-**Next session should:** Run `/gsd-plan-phase 1` to decompose Phase 1 (Foundation) into concrete plans on top of the locked context, then execute under YOLO + parallel mode.
+**Next session should:** Execute Plan 01-03 (Wave 1 part 2 — pure ProcedureEngine + ScoringService + ich unit testy). Plan 03 musi re-eksportować `evaluateFaultRulesData` z `faultRules.js` pod nazwą `evaluateFaultRules` (Plan 02 decyzja).
 
 ---
 
