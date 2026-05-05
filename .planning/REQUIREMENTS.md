@@ -154,10 +154,10 @@ Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera 2026-05-05.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | INFRA-01 | Phase 1 | Complete (Plan 01-01) |
-| INFRA-02 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Complete (Plan 01-05) |
 | INFRA-03 | Phase 1 | Complete (Plan 01-01) |
 | INFRA-04 | Phase 1 | Complete (Plan 01-01) |
-| INFRA-05 | Phase 1 | Pending |
+| INFRA-05 | Phase 1 | Complete (Plan 01-05) |
 | STATE-01 | Phase 1 | Pending |
 | STATE-02 | Phase 1 | Pending |
 | STATE-03 | Phase 1 | Pending |
@@ -199,7 +199,7 @@ Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera 2026-05-05.
 | UI-02 | Phase 4 | Pending |
 | UI-03 | Phase 5 | Pending |
 | UI-04 | Phase 5 | Pending |
-| UI-05 | Phase 1 | Pending |
+| UI-05 | Phase 1 | Complete (Plan 01-05) |
 | UI-06 | Phase 1 | Complete |
 | EDU-01 | Phase 5 | Pending |
 | EDU-02 | Phase 5 | Pending |
@@ -214,7 +214,7 @@ Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera 2026-05-05.
 | SCORE-06 | Phase 6 | Pending |
 | TEST-01 | Phase 1 | Pending |
 | TEST-02 | Phase 1 | Pending |
-| TEST-03 | Phase 1 | Pending |
+| TEST-03 | Phase 1 | Complete (Plan 01-05) |
 | TEST-04 | Phase 1 | Pending |
 | TEST-05 | Phase 6 | Pending |
 

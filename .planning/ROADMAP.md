@@ -23,7 +23,7 @@ Brownfield extension layered over existing PM-300 simulator (Three.js r0.184 + G
 
 ## Phases
 
-- [ ] **Phase 1: Foundation** — Test infra + pure SOP engine + store skeleton + disclaimer/redundant-encoding policy + Phase Z hygiene
+- [x] **Phase 1: Foundation** — Test infra + pure SOP engine + store skeleton + disclaimer/redundant-encoding policy + Phase Z hygiene (5/5 plans complete; 21/21 requirements; 133 tests; coverage 98.05/93.42/96/100)
 - [ ] **Phase 2: Digital Twin Geometry** — All SOP-relevant components exist as named, tagged, individually-materialed meshes
 - [ ] **Phase 3: Click-to-State Pipeline** — RaycastController wires 3D clicks to validated store transitions
 - [ ] **Phase 4: Visual Feedback Layer** — HighlightManager + DOM panels project store state with redundant (color + icon + text) encoding
@@ -49,7 +49,7 @@ Brownfield extension layered over existing PM-300 simulator (Three.js r0.184 + G
   3. The disclaimer banner ("Symulator nie zastępuje szkolenia BHP…") renders on the page on first load and persists across all sessions; `src/i18n/pl.js` is the single Polish-string source for all new UI strings.
   4. Phase Z hygiene is paid: `src/style.css` and `src/counter.js` deleted, stray `}` in `src/UI.js` fixed, `currentAngle` modulo 2π, GSAP pinned `~3.15.0`, `PhysicsEngine` throws on `r >= l` or non-positive inputs, WebGL context-loss listeners pause the ticker with a Polish overlay and auto-resume on restore.
   5. Zustand vanilla `TrainingStore` is the only mutable shared state; every subscriber returns an unsubscribe handle and `Application.dispose()` (wired via Vite HMR `import.meta.hot?.dispose`) frees them all on hot reload without leaks.
-**Plans**: TBD
+**Plans**: 5/5 complete (01-01 Phase Z hygiene + test infra; 01-02 i18n + scenarios + faultRules; 01-03 ProcedureEngine + ScoringService; 01-04 TrainingStore + Application.dispose + uruchomienie integration; 01-05 DisclaimerBanner + WebGL context-loss + boundaries.test.js)
 
 ### Phase 2: Digital Twin Geometry
 **Goal:** Every SOP-relevant component of the PM-300 exists as an individually-materialed, tagged, clickable mesh, registered for downstream layers to consume.

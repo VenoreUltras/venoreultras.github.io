@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-05T12:50:00.000Z"
+last_updated: "2026-05-05T13:00:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 5
-  completed_plans: 4
-  percent: 80
+  completed_plans: 5
+  percent: 100
 ---
 
 # Project State: PM-300 Trener
@@ -28,25 +28,25 @@ progress:
 - `.planning/research/SUMMARY.md` — synthesis of stack/features/architecture/pitfalls research
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 01 — foundation
+**Current focus:** Phase 02 — digital twin geometry (next phase)
 
 ## Current Position
 
-Phase: 01 (foundation) — EXECUTING
-Plan: 4 of 5 (Wave 2 Plan 04 done; Plan 05 pending — DisclaimerBanner + WebGL context-loss + boundaries.test)
+Phase: 01 (foundation) — COMPLETE
+Plan: 5 of 5 (all plans done)
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
-| Phase | 1 — Foundation |
-| Plan | 01-01..01-04 complete; 01-05 pending |
-| Status | Wave 2 part 1 done — TrainingStore (zustand vanilla) + Application.dispose + HMR + uruchomienie integration; npm test green (105/105); coverage 98/93/96/100 |
+| Phase | 1 — Foundation (COMPLETE) |
+| Plan | 01-01..01-05 complete |
+| Status | Phase 1 done — DisclaimerBanner + WebGL context-loss + boundaries.test.js; npm test green (133/133); coverage 98.05/93.42/96/100; 21/21 wymagań Phase 1 spełnione |
 | Mode | YOLO with parallel execution |
 | Granularity | Standard |
 
 **Progress:**
 
 ```
-Phase 1: Foundation                          [████████  ] 80%  in progress (4/5 plans)
+Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
 Phase 2: Digital Twin Geometry               [          ] 0%   not started
 Phase 3: Click-to-State Pipeline             [          ] 0%   not started
 Phase 4: Visual Feedback Layer               [          ] 0%   not started
@@ -107,8 +107,8 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [x] Plan 01-02 (Wave 1 part 1) executed — i18n table + scenarios + faultRules + scoringWeights + shape test
 - [x] Plan 01-03 (Wave 1 part 2) executed — pure ProcedureEngine + ScoringService + unit tests
 - [x] Plan 01-04 (Wave 2 part 1) executed — TrainingStore + Application.dispose + HMR + uruchomienie integration
-- [ ] Plan 01-05 (Wave 2 part 2) — DisclaimerBanner + WebGL context-loss listeners + boundaries.test.js
-- [ ] (W trakcie Phase 1) edytować `REQUIREMENTS.md` UI-02 i `ROADMAP.md` Phase 4 SC3 — dodać 7. stan maszyny `Rozpędzanie...` (decyzja D-09 z 01-CONTEXT.md)
+- [x] Plan 01-05 (Wave 3) executed — DisclaimerBanner (UI-05) + WebGL context-loss (INFRA-05) + boundaries.test.js (INFRA-02 + UI-06 + TEST-03) + brownfield UI-06 migration
+- [ ] (Před Phase 2) edytować `REQUIREMENTS.md` UI-02 i `ROADMAP.md` Phase 4 SC3 — dodać 7. stan maszyny `Rozpędzanie...` (decyzja D-09 z 01-CONTEXT.md)
 
 ### Decisions
 
@@ -121,6 +121,9 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - D-08 RESOLVED: timer rozpędu odpalany jest store-side przez injectable `scheduleTimer` (default `setTimeout`); ProcedureEngine emituje deklaratywny effect `{type:'startSpinUpTimer', ms}` (Plan 01-04)
 - Plan 04 NIE dodaje `pressModel.dispose()` stub (Open Question #4 — Phase 2 to wprowadza wraz z cloned-materials registry) (Plan 01-04)
 - Forbidden-state branch ProcedureEngine spreaduje `effectsOnError` po syntezowanym violation event → 2 step.violation events w teście integracyjnym (criticalCount=2, score=50). Plan-defined behavior z D-02. (Plan 01-04)
+- D-13 interpretacja kod-fence'owana w `src/DisclaimerBanner.js` JSDoc + test który czyta src i waliduje obecność D-13/widoczny stale/dismiss tokenów (Plan 01-05)
+- WebGL context-loss listener: `event.preventDefault()` w PIERWSZEJ linii (Pitfall 7 / CRIT-5 prevention); `gsap.ticker.sleep()`/`.wake()` pauzują cały tick loop (Plan 01-05)
+- Pre-existing brownfield Polish literals z `src/UI.js` ('Praca ciągła', 'Zatrzymana') i `src/PhysicsEngine.js` (4 error messages) zmigrowane do `pl.ui` i `pl.physics`. PhysicsEngine importuje `./i18n/pl.js` — pure data module bez side-effectów, nie narusza boundary (Plan 01-05)
 
 ### Blockers
 
@@ -128,7 +131,14 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 01-04 execution complete (Wave 2 part 1). Files written this session:
+**Last session ended after:** Plan 01-05 execution complete (Wave 3 — Phase 1 finalization). Files written this session:
+
+- `.planning/phases/01-foundation/01-05-SUMMARY.md`
+- `src/DisclaimerBanner.js` (created — UI-05 sticky banner z D-13 code-fence)
+- `tests/disclaimerBanner.test.js`, `tests/boundaries.test.js` (created)
+- `src/SceneSetup.js`, `src/main.js`, `src/UI.js`, `src/PhysicsEngine.js`, `src/i18n/pl.js`, `style.css`, `tests/application.test.js` (modified)
+
+**Earlier:** Plan 01-04 execution complete (Wave 2 part 1). Files written this session:
 
 - `.planning/phases/01-foundation/01-04-SUMMARY.md`
 - `.planning/phases/01-foundation/STATE-02-CHECKLIST.md` (code-review checklist for mesh.userData identity-only invariant)
@@ -156,7 +166,7 @@ None.
 - `.planning/phases/01-foundation/01-DISCUSSION-LOG.md` (audit trail)
 - `.planning/STATE.md` (this file)
 
-**Next session should:** Execute Plan 01-05 (Wave 2 part 2 — DisclaimerBanner DOM component + WebGL context-loss listeners w SceneSetup.dispose + tests/boundaries.test.js + tests/disclaimerBanner.test.js). Plan 05 dziedziczy `disclaimerBanner = null` placeholder w `src/main.js` i `dispose()` shell w `src/SceneSetup.js` z Plan 04.
+**Next session should:** Run `/gsd-verify-work` for Phase 1 gate, then begin Phase 2 (digital twin geometry — meshes, RaycastController, cloned-materials registry, PressModel.dispose stub). Phase 1 finalized: 21/21 wymagań spełnione, 133 tests green, coverage 98.05/93.42/96/100, boundaries.test.js + Polish-literal scanner aktywne.
 
 ---
 
