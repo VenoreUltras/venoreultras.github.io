@@ -62,14 +62,7 @@ Brownfield extension layered over existing PM-300 simulator (Three.js r0.184 + G
   3. Every interactable mesh has its own cloned `MeshStandardMaterial` instance — `pressModel.shaft.material !== pressModel.eccentric.material` (and analogously for new parts) is asserted in a Vitest smoke test, eliminating CRIT-6 before any highlight code lands.
   4. Each interactable has `userData = { id, kind, restPosition, labelPL, descriptionPL }` and **no live status** (no `state`, no `isOpen`); CRIT-7 invariant is the documented rule and the code-review checklist enforces it.
   5. The cloned-material registry has a `dispose()` path that releases all GPU buffers on Vite HMR; `renderer.info.memory` material count does not grow across hot reloads.
-**Plans:** 6 plans
-Plans:
-- [ ] 02-01-PLAN.md - MaterialRegistry + pl.parts + interactable scaffolding (TWIN-11/12/13 base, D-Phase2-07/08)
-- [ ] 02-02-PLAN.md - Static meshes: flywheel + brake + oil sight + rear guard + light curtain (TWIN-01/03/04/06)
-- [ ] 02-03-PLAN.md - Nameplate with CanvasTexture (TWIN-10)
-- [ ] 02-04-PLAN.md - Safety panel cluster + E-stop (TWIN-07/08)
-- [ ] 02-05-PLAN.md - Pivot-group movables: front guard + main switch + clutch lever (TWIN-02/05/09)
-- [ ] 02-06-PLAN.md - Smoke tests + dispose wire + boundaries (TWIN-11/12/13 enforcement)
+
 **UI hint**: yes
 
 ### Phase 3: Click-to-State Pipeline
@@ -83,7 +76,7 @@ Plans:
   3. The first end-to-end happy path (Phase 1's `uruchomienie` scenario) is now fully playable in the browser: hover lights the target, click advances the step, scoring updates, status badge updates.
   4. A 100-click stress test on the E-stop mesh (Vitest with mocked raycaster outputs) records exactly one step completion — synchronous validator + `isAnimating` lock prevents double-counting (CRIT-8).
   5. Hover over a tagged mesh produces a visible hint highlight (lighter emissive, no GSAP pulse yet) within one tick; hovering off clears it within one tick. Adjacent-mesh flicker is bounded by hysteresis (≥2 consecutive hits or 50ms dwell).
-**Plans**: TBD
+
 **UI hint**: yes
 
 ### Phase 4: Visual Feedback Layer
@@ -98,7 +91,7 @@ Plans:
   3. The status badge (`StatusPanel`) displays one of six Polish states ("Oczekiwanie na inspekcję" / "Gotowa do pracy" / "W cyklu" / "Zatrzymana" / "Awaria — błąd procedury" / "Tryb wolny") plus a current score readout, all driven from store selectors.
   4. Every status change presents **color + icon + text** simultaneously (Wong palette #D55E00 for error / #009E73 for success). Toggling the high-contrast outline mode swaps emissive for an outline-shader presentation that still distinguishes error/success without color reliance.
   5. The full Phase 3 happy path now produces visible green/red feedback; viewed through a deuteranopia simulator the error/success distinction remains unambiguous (manual QA pass).
-**Plans**: TBD
+
 **UI hint**: yes
 
 ### Phase 5: Educational Layer
@@ -115,7 +108,7 @@ Plans:
   3. Free-roam mode (toggle from main menu / `T` key) lets the trainee click any component without SOP validation; difficulty toggle switches between Nauka (hints, highlights, rationale visible) and Egzamin (no hints, no retry from store, final score only). The store flag is the single source of truth for both modes.
   4. WebAudio cues fire on the right events: alarm (~600 Hz, 2× burst) on critical errors, gentle confirm (~880 Hz, 200ms) on correct steps, low-frequency hum on flywheel rotation proportional to RPM. The `M` key globally mutes all audio and persists the preference.
   5. Keyboard shortcuts work and are documented in a `H`-toggleable help overlay: `R` reset, `T` free-roam, `1-4` scenario select, `Space` start/pauza, `Esc` E-stop, `H` help, `L` labels, `M` mute.
-**Plans**: TBD
+
 **UI hint**: yes
 
 ### Phase 6: Scenarios + Replay + Retry + Export
@@ -132,7 +125,7 @@ Plans:
   3. Session metrics (errors, completion time, missed-step list, sequence-violation pairs, retry count) are computed by `ScoringService` from the event log and persisted to `localStorage` under the versioned key `pm300:session:v1`; corrupt or stale entries are gracefully migrated or replaced without crashing the app.
   4. JSON export produces a complete event-log dump; PDF export uses `jsPDF` (code-split via dynamic `import('jspdf')`) with an embedded Roboto/Noto Sans TTF that renders the Polish pangram "Zażółć gęślą jaźń" correctly. The PDF is titled "Raport sesji szkoleniowej", carries the disclaimer in its footer, and contains zero certificate-styled elements (no seal, no signature line).
   5. All counts in UI and PDF use `Intl.PluralRules('pl-PL')` — "1 błąd" / "2 błędy" / "5 błędów" all render correctly. Vitest integration tests cover all four scenarios with happy path + ≥2 failure paths each (TEST-05).
-**Plans**: TBD
+
 **UI hint**: yes
 
 ### Phase 7 (v2 frontier): Differentiators
