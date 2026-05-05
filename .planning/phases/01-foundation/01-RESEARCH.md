@@ -1449,27 +1449,27 @@ describe('ProcedureEngine.validateStep', () => {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Czy Phase 1 ma już wpinać DisclaimerBanner w `pl.js` przez subskrypcję storu, czy banner jest 100% standalone?**
    - What we know: UI-SPEC.md §Integration Notes #3 mówi „instantiated in Application constructor"; CONTEXT D-12 mówi tylko o localStorage persistence (nie store).
    - What's unclear: czy lokalizacja pełnego tekstu disclaimera (`pl.disclaimer.full`) ma być reaktywna na zmianę locale (przyszłość v2 EN/DE)?
-   - Recommendation: W Phase 1 banner czyta `pl.disclaimer.full` STATYCZNIE z importu — żadnej subskrypcji store'a. v2 EN/DE doda i18n provider który refresh'nie banner manualnie. Najprostszy MVP, zero overengineering.
+   - **RESOLVED:** W Phase 1 banner czyta `pl.disclaimer.full` STATYCZNIE z importu — żadnej subskrypcji store'a. v2 EN/DE doda i18n provider który refresh'nie banner manualnie. Najprostszy MVP, zero overengineering.
 
 2. **Czy `validateBefore` field na step ma być inline JS function czy deklaratywny spec?**
    - What we know: D-03 mówi że fault rules `when` to JS (nie łamie deklaratywności bo to inny plik). D-02 mówi że effects są deklaratywnymi typowanymi akcjami.
    - What's unclear: `validateBefore` to nie ten sam mechanizm co fault rules (per-step, nie globalne) — jak rozumieć purity?
-   - Recommendation: Inline JS function w pliku scenariusza dla v1 (~5 funkcji w 4 scenariuszach łącznie); eskalacja do declarative spec gdy 3+ scenariuszy będzie wymagało nieoczywistych guards. Plannerowi do explicit decision.
+   - **RESOLVED:** Inline JS function w pliku scenariusza dla v1 (~5 funkcji w 4 scenariuszach łącznie); eskalacja do declarative spec gdy 3+ scenariuszy będzie wymagało nieoczywistych guards. Plan 02 implementuje inline arrow functions per ten resolution.
 
 3. **Czy Phase 1 dorzuca już `tests/disclaimerBanner.test.js` (jsdom env)?**
    - What we know: REQUIREMENTS UI-05 jest w Phase 1; testy DOM komponentów to Phase 4 generalnie.
    - What's unclear: skoro DisclaimerBanner ląduje w Phase 1, czy go testujemy czy zostawiamy manual QA do Phase 4?
-   - Recommendation: Tak, testujemy w Phase 1 — happy path (mount expands by default) + collapsed-from-localStorage + aria-expanded toggle. ~30 LOC, jeden plik. Inwestujemy aby boundaries / disclaimer-permanent invariant nie wyciekła w Phase 4.
+   - **RESOLVED:** Tak, testujemy w Phase 1 — happy path (mount expands by default) + collapsed-from-localStorage + aria-expanded toggle. Plan 05 Task 1 tworzy `tests/disclaimerBanner.test.js` z ≥14 testami (jsdom env via `vitest.config.js` `environmentMatchGlobs`).
 
 4. **Czy `Application.dispose()` musi też dispose'ować `pressModel`?**
    - What we know: STATE-03 mówi „Application.dispose() frees subscribers"; PressModel obecnie nie subscribe'uje store w Phase 1 (Phase 2 może).
    - What's unclear: PressModel ma cloned materials — Phase 2 doda registry — czy Phase 1 już szykuje `pressModel.dispose()` jako no-op stub?
-   - Recommendation: Tak, Phase 1 dodaje `PressModel.dispose()` jako no-op (na razie tylko `console.log` w dev), żeby Phase 2 nie zmieniała publicznego API. Symetrycznie `SceneSetup.dispose()` (zwalnia listener resize + WebGL listeners — to akurat IS w Phase 1 INFRA-05).
+   - **RESOLVED (planner override):** PressModel.dispose() NIE dodawany w Phase 1 — Phase 2 wprowadza meshy/cloned materials i tam ląduje dispose wraz z registry. Plan 04 SceneSetup.dispose() pokrywa Three.js side (resize + WebGL listeners + renderer.dispose); PressModel pozostaje bez dispose do Phase 2. Plan 04 Task 3 explicit: `Application.dispose()` NIE woła `pressModel.dispose()`. Override względem RESEARCH recommendation podyktowany YAGNI — no-op stub byłby dead code aż do Phase 2.
 
 ---
 
