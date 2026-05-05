@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import { gsap } from 'gsap';
+import { pl } from './i18n/pl.js';
 
 export class SceneSetup {
   constructor(containerId) {
@@ -24,6 +26,22 @@ export class SceneSetup {
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.shadowMap.enabled = true;
     this.container.appendChild(this.renderer.domElement);
+
+    // INFRA-05: WebGL context-loss handling.
+    // KRYTYCZNE: event.preventDefault() w pierwszej linii listener'a — bez tego
+    // browser może odmówic restore (Pitfall 7 / CRIT-5).
+    this._overlayEl = this._createWebglOverlay();
+    this._onContextLost = (event) => {
+      event.preventDefault();
+      gsap.ticker.sleep();
+      this._showOverlay();
+    };
+    this._onContextRestored = () => {
+      gsap.ticker.wake();
+      this._hideOverlay();
+    };
+    this.renderer.domElement.addEventListener('webglcontextlost', this._onContextLost, false);
+    this.renderer.domElement.addEventListener('webglcontextrestored', this._onContextRestored, false);
 
     // Światła
     const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
@@ -55,12 +73,41 @@ export class SceneSetup {
     this.renderer.render(this.scene, this.camera);
   }
 
+  /** Tworzy overlay element WebGL context-loss (hidden by default). */
+  _createWebglOverlay() {
+    let el = document.getElementById('webgl-overlay');
+    if (!el) {
+      el = document.createElement('div');
+      el.id = 'webgl-overlay';
+      el.className = 'webgl-overlay webgl-overlay--hidden';
+      el.setAttribute('role', 'alert');
+      el.textContent = pl.webgl.contextLost;
+      document.body.appendChild(el);
+    }
+    return el;
+  }
+
+  _showOverlay() {
+    if (this._overlayEl) this._overlayEl.classList.remove('webgl-overlay--hidden');
+  }
+
+  _hideOverlay() {
+    if (this._overlayEl) this._overlayEl.classList.add('webgl-overlay--hidden');
+  }
+
   /**
-   * Zwalnia zasoby SceneSetup (STATE-03). Plan 05 rozszerzy o WebGL
-   * context-loss listenery (webglcontextlost / webglcontextrestored).
+   * Zwalnia zasoby SceneSetup (STATE-03). Plan 05 rozszerzony o WebGL
+   * context-loss listenery (webglcontextlost / webglcontextrestored)
+   * + usunięcie overlay z DOM.
    */
   dispose() {
     window.removeEventListener('resize', this._onWindowResizeBound);
+    // INFRA-05 cleanup
+    this.renderer.domElement.removeEventListener('webglcontextlost', this._onContextLost);
+    this.renderer.domElement.removeEventListener('webglcontextrestored', this._onContextRestored);
+    if (this._overlayEl && this._overlayEl.parentNode) {
+      this._overlayEl.parentNode.removeChild(this._overlayEl);
+    }
     this.renderer.dispose();
   }
 }

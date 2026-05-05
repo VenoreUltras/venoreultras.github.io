@@ -53,10 +53,12 @@ describe('Application.dispose() (STATE-03 smoke)', () => {
     expect(src).toMatch(/_unsubscribers/);
   });
 
-  it('src/main.js instantiuje TrainingStore + ma placeholder DisclaimerBanner', () => {
+  it('src/main.js instantiuje TrainingStore + DisclaimerBanner (Plan 05 wired)', () => {
     const src = readFileSync('src/main.js', 'utf-8');
     expect(src).toMatch(/createTrainingStore/);
-    expect(src).toMatch(/disclaimerBanner\s*=\s*null/);
+    // Plan 05 zamienil placeholder `disclaimerBanner = null` na konkretny `new DisclaimerBanner()`.
+    expect(src).toMatch(/this\.disclaimerBanner\s*=\s*new DisclaimerBanner\(/);
+    expect(src).not.toMatch(/this\.disclaimerBanner\s*=\s*null/);
   });
 
   it('src/SceneSetup.js eksponuje dispose() i bound resize handler', () => {

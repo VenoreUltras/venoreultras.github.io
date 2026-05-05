@@ -5,13 +5,14 @@ import { PressModel } from './PressModel';
 import { UI } from './UI';
 import { PhysicsEngine } from './PhysicsEngine';
 import { createTrainingStore } from './state/trainingStore.js';
+import { DisclaimerBanner } from './DisclaimerBanner';
 
 class Application {
   constructor() {
     this.sceneSetup = new SceneSetup('three-canvas');
     this.pressModel = new PressModel(this.sceneSetup.scene);
     this.ui = new UI();
-    this.disclaimerBanner = null;  // Plan 05 wpina (DisclaimerBanner)
+    this.disclaimerBanner = new DisclaimerBanner();  // UI-05 (Plan 05)
     this.store = createTrainingStore();
     this.currentAngle = 0; // Kąt w radianach
 
