@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-last_updated: "2026-05-05T12:35:00.000Z"
+last_updated: "2026-05-05T12:50:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 5
-  completed_plans: 2
-  percent: 40
+  completed_plans: 4
+  percent: 80
 ---
 
 # Project State: PM-300 Trener
@@ -33,20 +33,20 @@ progress:
 ## Current Position
 
 Phase: 01 (foundation) — EXECUTING
-Plan: 3 of 5 (Wave 1 Plan 02 done; Plan 03 może iść; Wave 2 czeka)
+Plan: 4 of 5 (Wave 2 Plan 04 done; Plan 05 pending — DisclaimerBanner + WebGL context-loss + boundaries.test)
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
 | Phase | 1 — Foundation |
-| Plan | 01-01, 01-02 complete; 01-03..05 pending |
-| Status | Wave 1 part 1 done — i18n + scenarios + faultRules + scoringWeights data layer; npm test green (30/30) |
+| Plan | 01-01..01-04 complete; 01-05 pending |
+| Status | Wave 2 part 1 done — TrainingStore (zustand vanilla) + Application.dispose + HMR + uruchomienie integration; npm test green (105/105); coverage 98/93/96/100 |
 | Mode | YOLO with parallel execution |
 | Granularity | Standard |
 
 **Progress:**
 
 ```
-Phase 1: Foundation                          [████      ] 40%  in progress (2/5 plans)
+Phase 1: Foundation                          [████████  ] 80%  in progress (4/5 plans)
 Phase 2: Digital Twin Geometry               [          ] 0%   not started
 Phase 3: Click-to-State Pipeline             [          ] 0%   not started
 Phase 4: Visual Feedback Layer               [          ] 0%   not started
@@ -105,8 +105,9 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 
 - [x] Plan 01-01 (Wave 0) executed — test infra + Phase Z hygiene + INFRA-04
 - [x] Plan 01-02 (Wave 1 part 1) executed — i18n table + scenarios + faultRules + scoringWeights + shape test
-- [ ] Plan 01-03 (Wave 1 part 2) — pure ProcedureEngine + ScoringService + unit tests
-- [ ] Wave 2+ zgodnie z `01-PATTERNS.md` dependency graph
+- [x] Plan 01-03 (Wave 1 part 2) executed — pure ProcedureEngine + ScoringService + unit tests
+- [x] Plan 01-04 (Wave 2 part 1) executed — TrainingStore + Application.dispose + HMR + uruchomienie integration
+- [ ] Plan 01-05 (Wave 2 part 2) — DisclaimerBanner + WebGL context-loss listeners + boundaries.test.js
 - [ ] (W trakcie Phase 1) edytować `REQUIREMENTS.md` UI-02 i `ROADMAP.md` Phase 4 SC3 — dodać 7. stan maszyny `Rozpędzanie...` (decyzja D-09 z 01-CONTEXT.md)
 
 ### Decisions
@@ -117,6 +118,9 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - `evaluateFaultRulesData` żyje w `src/training/faultRules.js` jako pure top-level — Plan 03 ProcedureEngine re-eksportuje pod nazwą `evaluateFaultRules` (Plan 01-02)
 - `validateBefore` jako inline arrow function w pliku scenariusza (Open Question #2 v1 resolution; eskalacja do declarative spec gdy ≥3 scenariuszy) (Plan 01-02)
 - `Object.freeze` lock na DEFAULT_WEIGHTS, REGISTRY, faultRules — defaults niemutowalne przez ScoringService/store (Plan 01-02)
+- D-08 RESOLVED: timer rozpędu odpalany jest store-side przez injectable `scheduleTimer` (default `setTimeout`); ProcedureEngine emituje deklaratywny effect `{type:'startSpinUpTimer', ms}` (Plan 01-04)
+- Plan 04 NIE dodaje `pressModel.dispose()` stub (Open Question #4 — Phase 2 to wprowadza wraz z cloned-materials registry) (Plan 01-04)
+- Forbidden-state branch ProcedureEngine spreaduje `effectsOnError` po syntezowanym violation event → 2 step.violation events w teście integracyjnym (criticalCount=2, score=50). Plan-defined behavior z D-02. (Plan 01-04)
 
 ### Blockers
 
@@ -124,7 +128,15 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 01-02 execution complete (Wave 1 part 1). Files written this session:
+**Last session ended after:** Plan 01-04 execution complete (Wave 2 part 1). Files written this session:
+
+- `.planning/phases/01-foundation/01-04-SUMMARY.md`
+- `.planning/phases/01-foundation/STATE-02-CHECKLIST.md` (code-review checklist for mesh.userData identity-only invariant)
+- `src/state/trainingStore.js` (created — zustand vanilla store, jedyny mutowalny shared state)
+- `tests/trainingStore.test.js`, `tests/uruchomienie.integration.test.js`, `tests/application.test.js` (created)
+- `src/main.js`, `src/SceneSetup.js` (modified — Application.dispose + HMR + tickables + bound resize handler)
+
+**Earlier:** Plan 01-02 execution complete (Wave 1 part 1). Files written:
 
 - `.planning/phases/01-foundation/01-02-SUMMARY.md`
 - `src/i18n/pl.js`, `src/training/scoringWeights.js`, `src/training/faultRules.js` (created)
@@ -144,7 +156,7 @@ None.
 - `.planning/phases/01-foundation/01-DISCUSSION-LOG.md` (audit trail)
 - `.planning/STATE.md` (this file)
 
-**Next session should:** Execute Plan 01-03 (Wave 1 part 2 — pure ProcedureEngine + ScoringService + ich unit testy). Plan 03 musi re-eksportować `evaluateFaultRulesData` z `faultRules.js` pod nazwą `evaluateFaultRules` (Plan 02 decyzja).
+**Next session should:** Execute Plan 01-05 (Wave 2 part 2 — DisclaimerBanner DOM component + WebGL context-loss listeners w SceneSetup.dispose + tests/boundaries.test.js + tests/disclaimerBanner.test.js). Plan 05 dziedziczy `disclaimerBanner = null` placeholder w `src/main.js` i `dispose()` shell w `src/SceneSetup.js` z Plan 04.
 
 ---
 
