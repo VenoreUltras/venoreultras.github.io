@@ -9,10 +9,10 @@ Wymagania dla pierwszego wydania. Każde mapowane na fazę roadmapy.
 
 ### Infrastructure (INFRA)
 
-- [ ] **INFRA-01**: Vitest 4 + jsdom 29 są skonfigurowane; `npm test` uruchamia testy jednostkowe
+- [x] **INFRA-01**: Vitest 4 + jsdom 29 są skonfigurowane; `npm test` uruchamia testy jednostkowe
 - [ ] **INFRA-02**: `tests/boundaries.test.js` statycznie wymusza granice importów (PressModel/Physics/Scene bez DOM, ProcedureEngine bez THREE/store/gsap, UI bez THREE)
-- [ ] **INFRA-03**: Phase Z hygiene wykonana — usunięty `src/style.css`, usunięty `src/counter.js`, naprawiony osierocony nawias w `src/UI.js:67`, `currentAngle` ograniczony przez modulo 2π, GSAP zpinowany na `~3.15.0`
-- [ ] **INFRA-04**: Walidacja wejść `PhysicsEngine` — rzuca przy `r >= l` lub niedodatnich wartościach
+- [x] **INFRA-03**: Phase Z hygiene wykonana — usunięty `src/style.css`, usunięty `src/counter.js`, naprawiony osierocony nawias w `src/UI.js:67`, `currentAngle` ograniczony przez modulo 2π, GSAP zpinowany na `~3.15.0`
+- [x] **INFRA-04**: Walidacja wejść `PhysicsEngine` — rzuca przy `r >= l` lub niedodatnich wartościach
 - [ ] **INFRA-05**: Obsługa utraty kontekstu WebGL — pauza tickera GSAP na `webglcontextlost`, polski komunikat overlay, auto-restore na `webglcontextrestored`
 
 ### State Management (STATE)
@@ -153,10 +153,10 @@ Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera 2026-05-05.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | Phase 1 | Pending |
+| INFRA-01 | Phase 1 | Complete (Plan 01-01) |
 | INFRA-02 | Phase 1 | Pending |
-| INFRA-03 | Phase 1 | Pending |
-| INFRA-04 | Phase 1 | Pending |
+| INFRA-03 | Phase 1 | Complete (Plan 01-01) |
+| INFRA-04 | Phase 1 | Complete (Plan 01-01) |
 | INFRA-05 | Phase 1 | Pending |
 | STATE-01 | Phase 1 | Pending |
 | STATE-02 | Phase 1 | Pending |

@@ -1,3 +1,17 @@
+---
+gsd_state_version: 1.0
+milestone: v1.0
+milestone_name: milestone
+status: executing
+last_updated: "2026-05-05T12:30:00.000Z"
+progress:
+  total_phases: 6
+  completed_phases: 0
+  total_plans: 5
+  completed_plans: 1
+  percent: 20
+---
+
 # Project State: PM-300 Trener
 
 **Last updated:** 2026-05-05 after Phase 1 context gathering
@@ -7,29 +21,32 @@
 **Core Value:** Uczeń, który ukończy sesję szkoleniową w symulatorze, wie w jakiej kolejności i dlaczego wykonuje się każdy krok procedury obsługi prasy mimośrodowej — i nie uruchomi maszyny pomijając krytyczny krok bezpieczeństwa.
 
 **Project documents:**
+
 - `.planning/PROJECT.md` — vision, constraints, key decisions
 - `.planning/REQUIREMENTS.md` — 64 v1 requirements with phase traceability
 - `.planning/ROADMAP.md` — 6 v1 phases + Phase 7 v2 frontier
 - `.planning/research/SUMMARY.md` — synthesis of stack/features/architecture/pitfalls research
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 1 — Foundation. Context gathered (`.planning/phases/01-foundation/01-CONTEXT.md`); ready for `/gsd-plan-phase 1`.
+**Current focus:** Phase 01 — foundation
 
 ## Current Position
 
+Phase: 01 (foundation) — EXECUTING
+Plan: 2 of 5 (Wave 1 — Plan 02 + Plan 03 mogą iść równolegle)
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
 | Phase | 1 — Foundation |
-| Plan | (not yet planned — run `/gsd-plan-phase 1`) |
-| Status | Phase 1 context gathered (16 decisions across 4 gray areas); awaiting plan decomposition |
+| Plan | 01-01 complete; 01-02..05 pending |
+| Status | Wave 0 done — npm test green (11/11), GSAP pinned, hygiene paid, PhysicsEngine validated |
 | Mode | YOLO with parallel execution |
 | Granularity | Standard |
 
 **Progress:**
 
 ```
-Phase 1: Foundation                          [          ] 0%   not started
+Phase 1: Foundation                          [██        ] 20%  in progress (1/5 plans)
 Phase 2: Digital Twin Geometry               [          ] 0%   not started
 Phase 3: Click-to-State Pipeline             [          ] 0%   not started
 Phase 4: Visual Feedback Layer               [          ] 0%   not started
@@ -86,9 +103,16 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 
 ### Todos / Next Actions
 
-- [ ] Run `/gsd-plan-phase 1` to decompose Phase 1 into plans
-- [ ] Begin Phase 1 implementation when plan is approved
+- [x] Plan 01-01 (Wave 0) executed — test infra + Phase Z hygiene + INFRA-04
+- [ ] Wave 1 — Plan 01-02 + Plan 01-03 (równolegle)
+- [ ] Wave 2+ zgodnie z `01-PATTERNS.md` dependency graph
 - [ ] (W trakcie Phase 1) edytować `REQUIREMENTS.md` UI-02 i `ROADMAP.md` Phase 4 SC3 — dodać 7. stan maszyny `Rozpędzanie...` (decyzja D-09 z 01-CONTEXT.md)
+
+### Decisions
+
+- GSAP pin via tilde `~3.15.0` blokuje minor bumpy zmieniające deltaTime contract (Plan 01-01)
+- vitest.config.js coverage thresholds dormant aż src/training/** + src/state/** powstaną w Wave 1+2 (Plan 01-01)
+- PhysicsEngine input validation runs every tick; cost negligible (Plan 01-01)
 
 ### Blockers
 
@@ -96,7 +120,15 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Phase 1 context gathering (`/gsd-discuss-phase 1`). Files written:
+**Last session ended after:** Plan 01-01 execution complete (Wave 0). Files written this session:
+
+- `.planning/phases/01-foundation/01-01-SUMMARY.md`
+- `vitest.config.js`, `tests/physicsEngine.test.js` (created)
+- `package.json`, `package-lock.json`, `src/main.js`, `src/UI.js`, `src/PhysicsEngine.js` (modified)
+- `src/style.css`, `src/counter.js` (deleted)
+
+**Earlier:** Phase 1 context gathering (`/gsd-discuss-phase 1`). Files written:
+
 - `.planning/phases/01-foundation/01-CONTEXT.md` (16 decisions: schemat scenariusza JSON, lista 8 kroków `uruchomienie`, disclaimer banner, formuła scoringu)
 - `.planning/phases/01-foundation/01-DISCUSSION-LOG.md` (audit trail)
 - `.planning/STATE.md` (this file)
