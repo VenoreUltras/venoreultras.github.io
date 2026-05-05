@@ -64,9 +64,11 @@ Phase 1 UI surface is limited to the disclaimer banner. Inherits the existing ty
 | Body | 14px | 400 (regular) | 1.5 | Disclaimer text in expanded state |
 | Label | 12px | 600 (semibold) | 1.2 | Not used in Phase 1 |
 | Heading | 18px (1.1rem at 16px base) | 600 (semibold) | 1.2 | Not used in Phase 1 |
-| Display | 40px (2.5rem at 16px base) | 700 (bold) | 1.1 | Not used in Phase 1 (existing `.header h1`) |
+| Display | 40px (2.5rem at 16px base) | inherited from pre-existing UI.js, not declared by Phase 1 | 1.1 | Not used in Phase 1 (existing `.header h1`) |
 
-**Disclaimer text specifically:** 13px, weight 400, line-height 1.4. Kept smaller than body to avoid competing with the 3D scene title, but large enough to read at arms length (training context).
+**Phase 1 type system declares exactly 4 sizes (12, 14, 18, 40px) and 2 weights (400 regular, 600 semibold).** The Display role's weight (700 bold) is pre-existing and not part of Phase 1's type contract — it is inherited unchanged from the existing `.header h1` styling.
+
+Disclaimer text uses the standard 14px body size. The banner is visually differentiated by the amber background, `!` icon, and sticky position — no smaller font size is needed.
 
 Font stack: `'Inter', sans-serif` — already loaded; no new font requests.
 
