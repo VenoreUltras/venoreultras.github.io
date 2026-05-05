@@ -1,6 +1,6 @@
 # Project State: PM-300 Trener
 
-**Last updated:** 2026-05-05 after roadmap creation
+**Last updated:** 2026-05-05 after Phase 1 context gathering
 
 ## Project Reference
 
@@ -13,7 +13,7 @@
 - `.planning/research/SUMMARY.md` — synthesis of stack/features/architecture/pitfalls research
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 1 — Foundation (test infra + pure SOP engine + store skeleton + disclaimer/redundant-encoding policy + Phase Z hygiene). Not yet started.
+**Current focus:** Phase 1 — Foundation. Context gathered (`.planning/phases/01-foundation/01-CONTEXT.md`); ready for `/gsd-plan-phase 1`.
 
 ## Current Position
 
@@ -22,7 +22,7 @@
 | Milestone | v1 — SOP Training Layer |
 | Phase | 1 — Foundation |
 | Plan | (not yet planned — run `/gsd-plan-phase 1`) |
-| Status | Roadmap approved; awaiting Phase 1 plan decomposition |
+| Status | Phase 1 context gathered (16 decisions across 4 gray areas); awaiting plan decomposition |
 | Mode | YOLO with parallel execution |
 | Granularity | Standard |
 
@@ -88,6 +88,7 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 
 - [ ] Run `/gsd-plan-phase 1` to decompose Phase 1 into plans
 - [ ] Begin Phase 1 implementation when plan is approved
+- [ ] (W trakcie Phase 1) edytować `REQUIREMENTS.md` UI-02 i `ROADMAP.md` Phase 4 SC3 — dodać 7. stan maszyny `Rozpędzanie...` (decyzja D-09 z 01-CONTEXT.md)
 
 ### Blockers
 
@@ -95,12 +96,12 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Roadmap creation. Files written:
-- `.planning/ROADMAP.md` (6 v1 phases + Phase 7 v2 frontier; all 64 requirements mapped)
+**Last session ended after:** Phase 1 context gathering (`/gsd-discuss-phase 1`). Files written:
+- `.planning/phases/01-foundation/01-CONTEXT.md` (16 decisions: schemat scenariusza JSON, lista 8 kroków `uruchomienie`, disclaimer banner, formuła scoringu)
+- `.planning/phases/01-foundation/01-DISCUSSION-LOG.md` (audit trail)
 - `.planning/STATE.md` (this file)
-- `.planning/REQUIREMENTS.md` Traceability table updated
 
-**Next session should:** Run `/gsd-plan-phase 1` to decompose Phase 1 (Foundation) into concrete plans, then execute under YOLO + parallel mode.
+**Next session should:** Run `/gsd-plan-phase 1` to decompose Phase 1 (Foundation) into concrete plans on top of the locked context, then execute under YOLO + parallel mode.
 
 ---
 
