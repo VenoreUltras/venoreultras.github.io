@@ -191,6 +191,75 @@ describe('ProcedureEngine helpers', () => {
   });
 });
 
+describe('ProcedureEngine.validateStep — edge cases / branch coverage', () => {
+  it('używa Date.now() gdy state._now jest niezdefiniowane', () => {
+    const state = {
+      currentStepId: 'step-A',
+      steps: { 'step-A': { status: 'active' } },
+      machineState: 'oczekiwanie-na-inspekcje',
+      meshStates: {},
+      events: [],
+      // _now intentionally omitted
+    };
+    const r = validateStep({ kind: 'click', meshId: 'mesh-X' }, state, inlineScenario);
+    expect(r.ok).toBe(true);
+    const done = r.effects.find(e => e.event?.type === 'step.done');
+    expect(typeof done.event.timestamp).toBe('number');
+  });
+
+  it('forbidden-state używa fallback errorCode/severity gdy effectsOnError pusty', () => {
+    const scenarioBareGuard = {
+      ...inlineScenario,
+      steps: [
+        {
+          id: 'step-G',
+          kind: 'manipulation',
+          targetMeshId: 'mesh-Q',
+          validateBefore: () => false,
+          labelPL: 'G', descriptionPL: 'G', rationalePL: 'G',
+          effectsOnSuccess: [],
+          effectsOnError: [],
+        },
+      ],
+    };
+    const state = {
+      currentStepId: 'step-G',
+      steps: { 'step-G': { status: 'active' } },
+      machineState: 'idle', meshStates: {}, events: [], _now: () => 0,
+    };
+    const r = validateStep({ kind: 'click', meshId: 'mesh-Q' }, state, scenarioBareGuard);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toBe('forbidden-state');
+    const v = r.effects.find(e => e.event?.type === 'step.violation');
+    expect(v.event.errorCode).toBe('E-NIEZNANY');
+    expect(v.event.severity).toBe('critical');
+  });
+
+  it('success branch działa gdy effectsOnSuccess jest niezdefiniowane', () => {
+    const minimalScenario = {
+      steps: [{ id: 's', kind: 'visual-attest', labelPL: 's', descriptionPL: 's', rationalePL: 's' }],
+    };
+    const state = {
+      currentStepId: 's',
+      steps: { s: { status: 'active' } },
+      machineState: 'x', meshStates: {}, events: [], _now: () => 0,
+    };
+    const r = validateStep({ kind: 'check', stepId: 's' }, state, minimalScenario);
+    expect(r.ok).toBe(true);
+    expect(r.effects.some(e => e.type === 'advanceStep')).toBe(true);
+  });
+
+  it('nextStep zwraca null gdy currentStepId nie istnieje w scenariuszu (idx === -1)', () => {
+    const state = makeState('nonexistent-step');
+    expect(nextStep(state, inlineScenario)).toBeNull();
+  });
+
+  it('isScenarioComplete działa gdy state.steps jest niezdefiniowane', () => {
+    const state = { currentStepId: null, machineState: 'x', meshStates: {}, events: [] };
+    expect(isScenarioComplete(state, inlineScenario)).toBe(false);
+  });
+});
+
 describe('ProcedureEngine.evaluateFaultRules — re-export from faultRules.js', () => {
   it('jest funkcją (re-eksportowaną z faultRules.js)', () => {
     expect(typeof evaluateFaultRules).toBe('function');

@@ -27,7 +27,7 @@ export function calculate(events, opts = {}) {
     if (!VALID_SEVERITIES.has(ev.severity)) continue;
     if (ev.severity === 'critical') criticalCount += 1;
     else if (ev.severity === 'medium') mediumCount += 1;
-    else if (ev.severity === 'minor') minorCount += 1;
+    else minorCount += 1; // VALID_SEVERITIES gwarantuje że to 'minor'
   }
 
   const raw = SCORE_BASELINE
