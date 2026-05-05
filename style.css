@@ -256,3 +256,109 @@ input[type=range]::-webkit-slider-thumb:hover {
   .glass-panel { width: 100%; margin-top: 1rem; }
   .info-panel { position: relative; top: auto; right: auto; }
 }
+
+/* ──────────────────────────────────────────────────────────
+   DisclaimerBanner (UI-05) — Phase 1
+   Wong amber #E69F00 (Wong palette CRIT-4 prevention)
+   ────────────────────────────────────────────────────────── */
+.disclaimer-banner {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background-color: rgba(230, 159, 0, 0.15);
+  border-bottom: 1px solid rgba(230, 159, 0, 0.4);
+  font-family: var(--font-sans);
+  color: var(--text-main);
+  pointer-events: auto;
+}
+
+.disclaimer-banner__bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 8px 16px;
+  min-height: 44px;
+}
+
+.disclaimer-banner__toggle {
+  /* WCAG 2.5.5 hard floor — 44x44 touch target */
+  min-width: 44px;
+  min-height: 44px;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: transparent;
+  border: 1px solid rgba(230, 159, 0, 0.6);
+  border-radius: 4px;
+  color: #E69F00;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.disclaimer-banner__toggle:hover,
+.disclaimer-banner__toggle:focus-visible {
+  background: rgba(230, 159, 0, 0.1);
+  outline: 2px solid #E69F00;
+  outline-offset: 2px;
+}
+
+.disclaimer-banner__icon {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.disclaimer-banner__chevron {
+  transition: transform 150ms ease;
+}
+
+.disclaimer-banner__content {
+  flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Collapsed state — bar 8px, tylko ikona widoczna (D-13 "widoczny stale") */
+.disclaimer-banner--collapsed .disclaimer-banner__bar {
+  padding: 0 16px;
+  min-height: 8px;
+}
+
+.disclaimer-banner--collapsed .disclaimer-banner__content {
+  display: none;
+}
+
+.disclaimer-banner--collapsed .disclaimer-banner__chevron {
+  transform: rotate(180deg);
+}
+
+.disclaimer-banner--collapsed {
+  border-left: 3px solid #E69F00;
+  background-color: rgba(230, 159, 0, 0.6);
+}
+
+/* ──────────────────────────────────────────────────────────
+   WebGL context-loss overlay (INFRA-05) — Phase 1
+   ────────────────────────────────────────────────────────── */
+.webgl-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 15, 25, 0.92);
+  color: var(--text-main);
+  font-family: var(--font-sans);
+  font-size: 18px;
+  text-align: center;
+  padding: 24px;
+}
+
+.webgl-overlay--hidden {
+  display: none;
+}
