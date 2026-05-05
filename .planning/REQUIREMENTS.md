@@ -149,80 +149,88 @@ Odłożone do przyszłego wydania.
 
 ## Traceability
 
-Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera.
+Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera 2026-05-05.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| INFRA-01 | TBD | Pending |
-| INFRA-02 | TBD | Pending |
-| INFRA-03 | TBD | Pending |
-| INFRA-04 | TBD | Pending |
-| INFRA-05 | TBD | Pending |
-| STATE-01 | TBD | Pending |
-| STATE-02 | TBD | Pending |
-| STATE-03 | TBD | Pending |
-| SOP-01 | TBD | Pending |
-| SOP-02 | TBD | Pending |
-| SOP-03 | TBD | Pending |
-| SOP-04 | TBD | Pending |
-| SOP-05 | TBD | Pending |
-| SOP-06 | TBD | Pending |
-| SOP-07 | TBD | Pending |
-| SOP-08 | TBD | Pending |
-| SOP-09 | TBD | Pending |
-| TWIN-01 | TBD | Pending |
-| TWIN-02 | TBD | Pending |
-| TWIN-03 | TBD | Pending |
-| TWIN-04 | TBD | Pending |
-| TWIN-05 | TBD | Pending |
-| TWIN-06 | TBD | Pending |
-| TWIN-07 | TBD | Pending |
-| TWIN-08 | TBD | Pending |
-| TWIN-09 | TBD | Pending |
-| TWIN-10 | TBD | Pending |
-| TWIN-11 | TBD | Pending |
-| TWIN-12 | TBD | Pending |
-| TWIN-13 | TBD | Pending |
-| INTERACT-01 | TBD | Pending |
-| INTERACT-02 | TBD | Pending |
-| INTERACT-03 | TBD | Pending |
-| INTERACT-04 | TBD | Pending |
-| INTERACT-05 | TBD | Pending |
-| INTERACT-06 | TBD | Pending |
-| FEEDBACK-01 | TBD | Pending |
-| FEEDBACK-02 | TBD | Pending |
-| FEEDBACK-03 | TBD | Pending |
-| FEEDBACK-04 | TBD | Pending |
-| FEEDBACK-05 | TBD | Pending |
-| FEEDBACK-06 | TBD | Pending |
-| UI-01 | TBD | Pending |
-| UI-02 | TBD | Pending |
-| UI-03 | TBD | Pending |
-| UI-04 | TBD | Pending |
-| UI-05 | TBD | Pending |
-| UI-06 | TBD | Pending |
-| EDU-01 | TBD | Pending |
-| EDU-02 | TBD | Pending |
-| EDU-03 | TBD | Pending |
-| EDU-04 | TBD | Pending |
-| EDU-05 | TBD | Pending |
-| SCORE-01 | TBD | Pending |
-| SCORE-02 | TBD | Pending |
-| SCORE-03 | TBD | Pending |
-| SCORE-04 | TBD | Pending |
-| SCORE-05 | TBD | Pending |
-| SCORE-06 | TBD | Pending |
-| TEST-01 | TBD | Pending |
-| TEST-02 | TBD | Pending |
-| TEST-03 | TBD | Pending |
-| TEST-04 | TBD | Pending |
-| TEST-05 | TBD | Pending |
+| INFRA-01 | Phase 1 | Pending |
+| INFRA-02 | Phase 1 | Pending |
+| INFRA-03 | Phase 1 | Pending |
+| INFRA-04 | Phase 1 | Pending |
+| INFRA-05 | Phase 1 | Pending |
+| STATE-01 | Phase 1 | Pending |
+| STATE-02 | Phase 1 | Pending |
+| STATE-03 | Phase 1 | Pending |
+| SOP-01 | Phase 1 | Pending |
+| SOP-02 | Phase 1 | Pending |
+| SOP-03 | Phase 1 | Pending |
+| SOP-04 | Phase 6 | Pending |
+| SOP-05 | Phase 6 | Pending |
+| SOP-06 | Phase 6 | Pending |
+| SOP-07 | Phase 1 | Pending |
+| SOP-08 | Phase 1 | Pending |
+| SOP-09 | Phase 1 | Pending |
+| TWIN-01 | Phase 2 | Pending |
+| TWIN-02 | Phase 2 | Pending |
+| TWIN-03 | Phase 2 | Pending |
+| TWIN-04 | Phase 2 | Pending |
+| TWIN-05 | Phase 2 | Pending |
+| TWIN-06 | Phase 2 | Pending |
+| TWIN-07 | Phase 2 | Pending |
+| TWIN-08 | Phase 2 | Pending |
+| TWIN-09 | Phase 2 | Pending |
+| TWIN-10 | Phase 2 | Pending |
+| TWIN-11 | Phase 2 | Pending |
+| TWIN-12 | Phase 2 | Pending |
+| TWIN-13 | Phase 2 | Pending |
+| INTERACT-01 | Phase 3 | Pending |
+| INTERACT-02 | Phase 3 | Pending |
+| INTERACT-03 | Phase 3 | Pending |
+| INTERACT-04 | Phase 3 | Pending |
+| INTERACT-05 | Phase 3 | Pending |
+| INTERACT-06 | Phase 5 | Pending |
+| FEEDBACK-01 | Phase 4 | Pending |
+| FEEDBACK-02 | Phase 4 | Pending |
+| FEEDBACK-03 | Phase 4 | Pending |
+| FEEDBACK-04 | Phase 4 | Pending |
+| FEEDBACK-05 | Phase 4 | Pending |
+| FEEDBACK-06 | Phase 5 | Pending |
+| UI-01 | Phase 4 | Pending |
+| UI-02 | Phase 4 | Pending |
+| UI-03 | Phase 5 | Pending |
+| UI-04 | Phase 5 | Pending |
+| UI-05 | Phase 1 | Pending |
+| UI-06 | Phase 1 | Pending |
+| EDU-01 | Phase 5 | Pending |
+| EDU-02 | Phase 5 | Pending |
+| EDU-03 | Phase 5 | Pending |
+| EDU-04 | Phase 6 | Pending |
+| EDU-05 | Phase 6 | Pending |
+| SCORE-01 | Phase 1 | Pending |
+| SCORE-02 | Phase 6 | Pending |
+| SCORE-03 | Phase 6 | Pending |
+| SCORE-04 | Phase 6 | Pending |
+| SCORE-05 | Phase 6 | Pending |
+| SCORE-06 | Phase 6 | Pending |
+| TEST-01 | Phase 1 | Pending |
+| TEST-02 | Phase 1 | Pending |
+| TEST-03 | Phase 1 | Pending |
+| TEST-04 | Phase 1 | Pending |
+| TEST-05 | Phase 6 | Pending |
 
 **Coverage:**
-- v1 requirements: 63 total
-- Mapped to phases: 0 (do uzupełnienia przez roadmappera)
-- Unmapped: 63 ⚠️
+- v1 requirements (Traceability table): 64 total *(REQUIREMENTS.md previously read "63" — off-by-one in original document)*
+- Mapped to phases: 64 ✓
+- Unmapped: 0 ✓
+
+**Per-phase counts:**
+- Phase 1 (Foundation): 21 requirements
+- Phase 2 (Digital Twin Geometry): 13 requirements
+- Phase 3 (Click-to-State Pipeline): 5 requirements
+- Phase 4 (Visual Feedback Layer): 7 requirements
+- Phase 5 (Educational Layer): 7 requirements
+- Phase 6 (Scenarios + Replay + Retry + Export): 11 requirements
 
 ---
 *Requirements defined: 2026-05-05*
-*Last updated: 2026-05-05 after initial definition*
+*Last updated: 2026-05-05 after roadmap creation (traceability filled)*
