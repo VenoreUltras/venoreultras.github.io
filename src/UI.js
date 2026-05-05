@@ -63,6 +63,4 @@ export class UI {
     this.elements.valAngle.innerText = `${deg.toFixed(1)}°`;
     this.elements.valDisplacement.innerText = `${displacement.toFixed(3)} m`;
   }
-
-  }
 }

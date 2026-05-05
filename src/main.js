@@ -1,4 +1,4 @@
-import './style.css'; // Vite załaduje ten plik
+// Style ładowane przez index.html (link rel=stylesheet href="/style.css") — root style.css jest jedynym source of truth (Phase Z hygiene).
 import { gsap } from 'gsap';
 import { SceneSetup } from './SceneSetup';
 import { PressModel } from './PressModel';
@@ -19,16 +19,12 @@ class Application {
   }
 
   tick(deltaTime) {
-    // deltaTime to czas między klatkami w milisekundach (dla GSAP ticker)
-    // Czasem GSAP podaje to w sekundach, ale standardowo jest to czas ticku (zależny od wersji, zwykle w ms).
-    // GSAP 3.x domyślnie deltaTime to ms, ale by być bezpiecznym, możemy wziąć ui.getAngularVelocity() * (deltaTime / 1000)
-    
-    // Obliczamy przyrost kąta
+    // GSAP 3.x ticker: deltaTime w milisekundach (kontrakt zablokowany ~3.15.0 pin w package.json — INFRA-03).
     const dtSeconds = deltaTime / 1000;
     const angularVelocity = this.ui.getAngularVelocity();
-    
+
     if (angularVelocity > 0) {
-      this.currentAngle += angularVelocity * dtSeconds;
+      this.currentAngle = (this.currentAngle + angularVelocity * dtSeconds) % (Math.PI * 2);
     }
 
     // Aktualizujemy pozycję elementów modelu prasy
