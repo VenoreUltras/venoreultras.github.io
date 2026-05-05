@@ -18,6 +18,20 @@ export const pl = {
     contextLost: 'Utracono kontekst grafiki. Próba odzyskania...',
   },
 
+  // UI labels uzywane przez src/UI.js (Phase Z hygiene — UI-06 enforcement Plan 05)
+  ui: {
+    statusRunning: 'Praca ciągła',
+    statusStopped: 'Zatrzymana',
+  },
+
+  // Komunikaty bledow PhysicsEngine (UI-06 enforcement — wczesniej inline w throw)
+  physics: {
+    paramsNotFinite: 'PhysicsEngine: parametry muszą być skończonymi liczbami',
+    rNotPositive: 'PhysicsEngine: r musi być dodatnie',
+    lNotPositive: 'PhysicsEngine: l musi być dodatnie',
+    rNotLessThanL: 'PhysicsEngine: r musi być mniejsze niż l (geometria zwyrodniała)',
+  },
+
   // D-09 etykiety stanów maszyny (Phase 1 LOCK; Phase 4 wykorzysta w StatusPanel)
   machineState: {
     'oczekiwanie-na-inspekcje': 'Oczekiwanie na inspekcję',

@@ -1,3 +1,5 @@
+import { pl } from './i18n/pl.js';
+
 export class UI {
   constructor() {
     this.elements = {
@@ -33,11 +35,11 @@ export class UI {
     if (this.isRunning) {
       this.elements.statusDot.classList.remove('stopped');
       this.elements.statusDot.classList.add('running');
-      this.elements.statusText.innerText = 'Praca ciągła';
+      this.elements.statusText.innerText = pl.ui.statusRunning;
     } else {
       this.elements.statusDot.classList.remove('running');
       this.elements.statusDot.classList.add('stopped');
-      this.elements.statusText.innerText = 'Zatrzymana';
+      this.elements.statusText.innerText = pl.ui.statusStopped;
     }
   }
 

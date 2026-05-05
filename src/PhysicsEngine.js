@@ -1,3 +1,5 @@
+import { pl } from './i18n/pl.js';
+
 export class PhysicsEngine {
   /**
    * Oblicza pozycję suwaka na osi Y w mechanizmie korbowo-wodzikowym.
@@ -13,16 +15,16 @@ export class PhysicsEngine {
     // INFRA-04: walidacja wejść. Walidacja przy każdym wywołaniu — koszt znikomy
     // (3 porównania), pewność że tick loop nie przemyca NaN-ów.
     if (!Number.isFinite(r) || !Number.isFinite(l) || !Number.isFinite(angle)) {
-      throw new Error(`PhysicsEngine: parametry muszą być skończonymi liczbami (angle=${angle}, r=${r}, l=${l})`);
+      throw new Error(`${pl.physics.paramsNotFinite} (angle=${angle}, r=${r}, l=${l})`);
     }
     if (r <= 0) {
-      throw new Error(`PhysicsEngine: r musi być dodatnie (otrzymano r=${r})`);
+      throw new Error(`${pl.physics.rNotPositive} (otrzymano r=${r})`);
     }
     if (l <= 0) {
-      throw new Error(`PhysicsEngine: l musi być dodatnie (otrzymano l=${l})`);
+      throw new Error(`${pl.physics.lNotPositive} (otrzymano l=${l})`);
     }
     if (r >= l) {
-      throw new Error(`PhysicsEngine: r musi być mniejsze niż l (otrzymano r=${r}, l=${l}; geometria zwyrodniała)`);
+      throw new Error(`${pl.physics.rNotLessThanL} (otrzymano r=${r}, l=${l})`);
     }
     const term1 = r * Math.cos(angle);
     const term2 = Math.sqrt(l * l - (r * Math.sin(angle)) ** 2);
