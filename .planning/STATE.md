@@ -33,7 +33,7 @@ progress:
 ## Current Position
 
 Phase: 02 (digital-twin-geometry) — EXECUTING
-Plan: 2 of 6
+Plan: 3 of 6
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
@@ -47,7 +47,7 @@ Plan: 2 of 6
 
 ```
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
-Phase 2: Digital Twin Geometry               [█         ] 17%  1/6 plans complete
+Phase 2: Digital Twin Geometry               [██        ] 33%  2/6 plans complete
 Phase 3: Click-to-State Pipeline             [          ] 0%   not started
 Phase 4: Visual Feedback Layer               [          ] 0%   not started
 Phase 5: Educational Layer                   [          ] 0%   not started
@@ -109,10 +109,14 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [x] Plan 01-04 (Wave 2 part 1) executed — TrainingStore + Application.dispose + HMR + uruchomienie integration
 - [x] Plan 01-05 (Wave 3) executed — DisclaimerBanner (UI-05) + WebGL context-loss (INFRA-05) + boundaries.test.js (INFRA-02 + UI-06 + TEST-03) + brownfield UI-06 migration
 - [x] Plan 02-01 (Wave 1) executed — MaterialRegistry + pl.parts + PressModel scaffolding; 136 tests green
+- [x] Plan 02-02 (Wave 2) executed — 6 interactable meshes: kolo-zamachowe + hamulec + wziernik-smarowania + oslona-tylna + kurtyna-lewa + kurtyna-prawa; getInteractables().size=6; 136 tests green
 - [ ] (Před Phase 2) edytować `REQUIREMENTS.md` UI-02 i `ROADMAP.md` Phase 4 SC3 — dodać 7. stan maszyny `Rozpędzanie...` (decyzja D-09 z 01-CONTEXT.md)
 
 ### Decisions
 
+- HIGH-2 (D-Phase2-04 ZACHOWANE): klocek hamulca po PRAWEJ stronie walu x=2.9 w [2.0, 3.0]; kolo zamachowe po LEWEJ x=-2.5 (Plan 02-02)
+- MEDIUM-3 (Claude's Discretion): tarcza hamulcowa visual-only na prawej stronie walu (x=1.7) jako dziecko shaftAxis — rotuje z walem, sluzy jako wizualny target dla klocka hamulca (Plan 02-02)
+- Klocek hamulca kind='manipulation' bez poses — Phase 4 przesunie go o ~0.1 jednostki na podstawie meshStates['hamulec'] (Plan 02-02)
 - MaterialRegistry jako osobna klasa (nie inline w PressModel) — testowalność i separacja odpowiedzialności (Plan 02-01, D-Phase2-07)
 - baseMaterial===null path w _registerInteractable dla CanvasTexture — tabliczka-znamionowa zachowuje własny MeshBasicMaterial (Plan 02-01, MEDIUM-5)
 - pivotTarget enum z walidacją throw w _registerInteractable — fail-fast zamiast silent bug w Phase 3 (Plan 02-01, HIGH-1)
@@ -135,13 +139,10 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 02-01 execution complete (Wave 1 — MaterialRegistry + pl.parts + PressModel scaffolding). Files written this session:
+**Last session ended after:** Plan 02-02 execution complete (Wave 2 — 6 static meshes: flywheel + brake + oil sight + rear guard + light curtain). Files written this session:
 
-- `.planning/phases/02-digital-twin-geometry/02-01-SUMMARY.md`
-- `src/MaterialRegistry.js` (created — CRIT-6 cloned material registry)
-- `tests/MaterialRegistry.smoke.test.js` (created — 3 smoke tests)
-- `src/i18n/pl.js` (modified — dodana sekcja pl.parts 15 wpisów)
-- `src/PressModel.js` (modified — registry + _interactables + _meshDictionary + _registerInteractable + 12 new materials)
+- `.planning/phases/02-digital-twin-geometry/02-02-SUMMARY.md`
+- `src/PressModel.js` (modified — _buildFlywheel + _buildBrake + _buildOilSightGlass + _buildRearGuard + _buildLightCurtain; 6 interactables registered)
 
 **Earlier:** Plan 01-05 execution complete (Wave 3 — Phase 1 finalization). Files written this session:
 
