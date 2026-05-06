@@ -61,6 +61,7 @@ class Application {
     for (const unsub of this._unsubscribers) unsub();
     this._unsubscribers = [];
     if (this.disclaimerBanner) this.disclaimerBanner.dispose();
+    this.pressModel.disposeMaterials();  // TWIN-11 SC5 — release GPU buffers (materials + textures) na HMR
     this.sceneSetup.dispose();
   }
 }
