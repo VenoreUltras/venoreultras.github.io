@@ -52,7 +52,10 @@ export class PressModel {
     // 10% Accent — color-coded safety-critical surfaces (paleta Wong)
     this.matEStopRed = new THREE.MeshStandardMaterial({ color: 0xD55E00, metalness: 0.1, roughness: 0.55 });
     this.matSafetyButtonGreen = new THREE.MeshStandardMaterial({ color: 0x009E73, metalness: 0.1, roughness: 0.55 });
-    this.matReadyLamp = new THREE.MeshStandardMaterial({ color: 0x009E73, metalness: 0.0, roughness: 0.3 });
+    // emissiveIntensity=0 explicit (T-02-11 / UI-SPEC negative criteria): lampka nie świeci w Phase 2.
+    // Three.js MeshStandardMaterial defaults emissiveIntensity=1 — bez explicit 0 smoke test failuje.
+    // Phase 4 ustawi emissive=0x009E73 + emissiveIntensity=1 przez store-driven update.
+    this.matReadyLamp = new THREE.MeshStandardMaterial({ color: 0x009E73, metalness: 0.0, roughness: 0.3, emissive: 0x000000, emissiveIntensity: 0 });
     this.matGuardOrange = new THREE.MeshStandardMaterial({ color: 0xE07A1F, metalness: 0.05, roughness: 0.7 });
     this.matGuardRearBlack = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.0, roughness: 0.8 });
     this.matOilSightYellow = new THREE.MeshStandardMaterial({ color: 0xd4a017, metalness: 0.1, roughness: 0.4 });
@@ -395,6 +398,11 @@ export class PressModel {
 
     // 6. Track texture w registry — disposeAll() Wave 5 ja domknie (T-02-06 mitigation)
     this.materialRegistry.trackTexture('tabliczka-znamionowa', texture);
+
+    // 6b. Track MeshBasicMaterial w registry (Rule 2: TWIN-11 SC5 completeness — size()=15, dispose=15).
+    //     baseMaterial=null path pomija getCloned(), ale material musi trafić do registry żeby
+    //     disposeAll() objął go razem z 14 klonowanymi MeshStandardMaterial.
+    this.materialRegistry.trackMaterial('tabliczka-znamionowa', material);
 
     // 7. Register interactable — UWAGA: baseMaterial = null bo mesh JUZ ma swoje material
     //    (MeshBasicMaterial z CanvasTexture, nie ze sklonowanego MeshStandardMaterial).

@@ -33,6 +33,20 @@ export class MaterialRegistry {
   }
 
   /**
+   * Rejestruje materiał który nie pochodzi z klonowania (np. MeshBasicMaterial tabliczki
+   * znamionowej) — tak by disposeAll() go objął i size() liczyło go jako interactable.
+   * [Rule 2 - Missing] Tabliczka-znamionowa MeshBasicMaterial musi być dispose'owany razem
+   * z pozostałymi 14 klonowanymi materiałami (TWIN-11 SC5 completeness).
+   * @param {string} meshId - Identyfikator mesha
+   * @param {THREE.Material} material - Materiał do śledzenia
+   */
+  trackMaterial(meshId, material) {
+    if (!this._materials.has(meshId)) {
+      this._materials.set(meshId, material);
+    }
+  }
+
+  /**
    * Rejestruje texturę pod danym meshId do późniejszego dispose.
    * Używane przez CanvasTexture tabliczki znamionowej (Wave 3).
    * @param {string} meshId - Identyfikator mesha
