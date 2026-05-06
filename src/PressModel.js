@@ -148,6 +148,9 @@ export class PressModel {
     this._buildRearGuard();
     this._buildLightCurtain();
 
+    // Wave 3: tabliczka znamionowa (TWIN-10)
+    this._buildNameplate();
+
     // Inicjalizacja położenia
     this.update(0);
   }
@@ -306,6 +309,91 @@ export class PressModel {
       id: 'kurtyna-prawa',
       kind: 'visual-target',
       baseMaterial: this.matLightCurtainBlack,
+    });
+  }
+
+  /**
+   * TWIN-10: Tabliczka znamionowa z CanvasTexture renderowaną raz w buildzie.
+   * MeshBasicMaterial (nie Standard) — tekst nie powinien być oświetlony scenicznie.
+   * Texture trackowana osobno w registry dla dispose path (TWIN-11 SC5).
+   *
+   * Treść tabliczki (ASCII-clean — bez polskich diakrytyk zeby boundary scanner (UI-06)
+   * nie failowal na literalach Polish poza i18n/scenarios. CONTEXT deferred ideas: jesli
+   * BHP review wymaga producenta z diatykami, migracja do pl.parts['tabliczka-znamionowa'].canvasContent
+   * (osobny commit, deferred Phase 2)):
+   *   Linia 1: PM-300        (96px, weight 700)
+   *   Linia 2: Nr ser. 2025/0042   (56px, weight 600)
+   *   Linia 3: Producent: Demo Sp. z o.o.  (44px, weight 500)
+   */
+  _buildNameplate() {
+    // 1. Canvas + 2D context — render once at build time
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 320;
+    const ctx = canvas.getContext('2d');
+
+    // Background — matt silver per UI-SPEC §Typography
+    ctx.fillStyle = '#c8c8c8';
+    ctx.fillRect(0, 0, 512, 320);
+
+    // Border — engraved bezel
+    ctx.strokeStyle = '#3a3a3a';
+    ctx.lineWidth = 4;
+    ctx.strokeRect(2, 2, 508, 316);
+
+    // Text rendering — system-ui font fallback chain (UI-SPEC §Typography)
+    ctx.fillStyle = '#1a1a1a';
+    ctx.textBaseline = 'alphabetic';
+    ctx.imageSmoothingEnabled = true;
+
+    // Line 1 — model
+    ctx.font = 'bold 96px system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText('PM-300', 32, 130);
+
+    // Line 2 — serial
+    ctx.font = '600 56px system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText('Nr ser. 2025/0042', 32, 200);
+
+    // Line 3 — producer (ASCII-clean — boundary scanner UI-06 OK)
+    ctx.font = '500 44px system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+    ctx.fillText('Producent: Demo Sp. z o.o.', 32, 260);
+
+    // 2. Texture — Three.js r0.184 explicit colorSpace dla SRGB-aware rendering
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    // Anizotropia: renderer NIE jest dostepny w PressModel ctor — accepting default 1.
+    // RESEARCH otwarte pytanie #1: rekomendacja (b) {maxAnisotropy} — ZACHOWANE NA PHASE 5/QA
+    // ze wzgledu na drobny visual-only wplyw; smoke test nie zalezy od tego.
+
+    // 3. Material + Mesh — MeshBasicMaterial (NIE Standard — tekst nie ma byc oswietlony)
+    const material = new THREE.MeshBasicMaterial({ map: texture });
+
+    // 4. Geometry per UI-SPEC §Color tabela (0.4 × 0.25 × 0.02)
+    const plateGeo = new THREE.BoxGeometry(0.4, 0.25, 0.02);
+    const plate = new THREE.Mesh(plateGeo, material);
+
+    // 5. Pozycja per CONTEXT D-Phase2-04 + RESEARCH §"Layout collision risk":
+    //    Lewy bok korpusu (x=-3) koliduje z lewa ramka (x=-3..-1, y=0..10). Mitigation: przesuniecie Z
+    //    na +0.05 zeby tabliczka wystawala przed front ramki (jak realne maszyny).
+    plate.position.set(-3.05, 5.5, 0.05);
+    // Obrot: tabliczka czytelna z przodu maszyny — lekkie skierowanie do kamery (rotacja Y)
+    plate.rotation.y = Math.PI * 0.05; // ~9 stopni w prawo, czytelnosc dla kursanta z pozycji frontalnej
+    plate.castShadow = false; // plaska powierzchnia, cienie niepotrzebne
+    this.group.add(plate);
+
+    // 6. Track texture w registry — disposeAll() Wave 5 ja domknie (T-02-06 mitigation)
+    this.materialRegistry.trackTexture('tabliczka-znamionowa', texture);
+
+    // 7. Register interactable — UWAGA: baseMaterial = null bo mesh JUZ ma swoje material
+    //    (MeshBasicMaterial z CanvasTexture, nie ze sklonowanego MeshStandardMaterial).
+    //    _registerInteractable z guard'em na null pominie wywolanie getCloned (plan 02-01 Task 3.4).
+    this._registerInteractable({
+      mesh: plate,
+      id: 'tabliczka-znamionowa',
+      kind: 'visual-target',
+      baseMaterial: null, // CanvasTexture path — material juz ustawiony explicit
     });
   }
 
