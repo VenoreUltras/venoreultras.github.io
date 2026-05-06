@@ -58,7 +58,7 @@ describe('TrainingStore — startScenario / attemptStep (minimalScenario)', () =
   it('attemptStep happy advansuje step i dodaje step.done event', () => {
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(minimalScenario);
-    store.getState().attemptStep({ kind: 'click', meshId: 'mesh-A' }, minimalScenario);
+    store.getState().attemptStep({ kind: 'click', meshId: 'mesh-A' });
     const s = store.getState();
     expect(s.currentStepId).toBe('step-visual-attest');
     expect(s.steps['step-visual-target'].status).toBe('done');
@@ -68,7 +68,7 @@ describe('TrainingStore — startScenario / attemptStep (minimalScenario)', () =
   it('attemptStep wrong-target NIE advansuje + dodaje step.violation + obniża score', () => {
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(minimalScenario);
-    store.getState().attemptStep({ kind: 'click', meshId: 'wrong-mesh' }, minimalScenario);
+    store.getState().attemptStep({ kind: 'click', meshId: 'wrong-mesh' });
     const s = store.getState();
     expect(s.currentStepId).toBe('step-visual-target'); // no advance
     expect(s.events.some(e => e.type === 'step.violation' && e.severity === 'medium')).toBe(true);
@@ -79,7 +79,7 @@ describe('TrainingStore — startScenario / attemptStep (minimalScenario)', () =
   it('attemptStep ignoruje gdy currentStepId === null (graceful)', () => {
     const store = createTrainingStore({ now: () => 1000 });
     // bez startScenario — currentStepId === null
-    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'x' }, minimalScenario)).not.toThrow();
+    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'x' })).not.toThrow();
     expect(store.getState().scoring.score).toBe(100); // no-active-step nie generuje violation
   });
 
@@ -89,7 +89,7 @@ describe('TrainingStore — startScenario / attemptStep (minimalScenario)', () =
     // Wymuszamy stan awarii: w-cyklu + oslona open
     store.setState({ machineState: 'w-cyklu', meshStates: { 'oslona-przednia': 'open' } });
     // Trigger pipeline — wrong intent na nieistniejący mesh, ale fault rules pojadą po
-    store.getState().attemptStep({ kind: 'click', meshId: 'mesh-A' }, minimalScenario);
+    store.getState().attemptStep({ kind: 'click', meshId: 'mesh-A' });
     const s = store.getState();
     expect(s.machineState).toBe('awaria');
     expect(s.events.some(e => e.type === 'fault.triggered' && e.faultId === 'oslona-otwarta-w-cyklu')).toBe(true);
@@ -104,13 +104,13 @@ describe('TrainingStore — spinUpTimer pod fake timers (D-07/D-08)', () => {
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(uruchomienie);
     // Advance through 7 steps (1-7) bez sprzegnij-po-rozpedzie
-    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' }, uruchomienie);
-    store.getState().attemptStep({ kind: 'check', stepId: 'kontrola-narzedzia' }, uruchomienie);
-    store.getState().attemptStep({ kind: 'check', stepId: 'kontrola-wzrokowa' }, uruchomienie);
-    store.getState().attemptStep({ kind: 'click', meshId: 'wziernik-smarowania' }, uruchomienie);
-    store.getState().attemptStep({ kind: 'click', meshId: 'oslona-przednia' }, uruchomienie);
-    store.getState().attemptStep({ kind: 'click', meshId: 'estop' }, uruchomienie);
-    store.getState().attemptStep({ kind: 'click', meshId: 'wylacznik-glowny' }, uruchomienie);
+    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    store.getState().attemptStep({ kind: 'check', stepId: 'kontrola-narzedzia' });
+    store.getState().attemptStep({ kind: 'check', stepId: 'kontrola-wzrokowa' });
+    store.getState().attemptStep({ kind: 'click', meshId: 'wziernik-smarowania' });
+    store.getState().attemptStep({ kind: 'click', meshId: 'oslona-przednia' });
+    store.getState().attemptStep({ kind: 'click', meshId: 'estop' });
+    store.getState().attemptStep({ kind: 'click', meshId: 'wylacznik-glowny' });
 
     // Po wlacz-zasilanie machineState powinien być 'rozpedzanie'
     expect(store.getState().machineState).toBe('rozpedzanie');
@@ -136,7 +136,7 @@ describe('TrainingStore — spinUpTimer pod fake timers (D-07/D-08)', () => {
     };
     const s2 = createTrainingStore({ now: () => 1000, scheduleTimer: customSchedule });
     s2.getState().startScenario(tinyScenario);
-    s2.getState().attemptStep({ kind: 'click', meshId: 'm' }, tinyScenario);
+    s2.getState().attemptStep({ kind: 'click', meshId: 'm' });
     expect(customSchedule).toHaveBeenCalled();
     expect(customSchedule.mock.calls[0][1]).toBe(1500);
   });
@@ -157,7 +157,7 @@ describe('TrainingStore — applyEffects branch coverage', () => {
     };
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(tinyScenario);
-    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'm' }, tinyScenario)).not.toThrow();
+    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'm' })).not.toThrow();
     // step.done event obecny (advance), playAudio nic nie robi
     expect(store.getState().events.some(e => e.type === 'step.done')).toBe(true);
   });
@@ -176,7 +176,7 @@ describe('TrainingStore — applyEffects branch coverage', () => {
     };
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(tinyScenario);
-    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'm' }, tinyScenario)).not.toThrow();
+    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'm' })).not.toThrow();
   });
 
   it('scoring minor severity obniża score o 2 (applyScoringEvent minor branch)', () => {
@@ -196,7 +196,7 @@ describe('TrainingStore — applyEffects branch coverage', () => {
     };
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(tinyScenario);
-    store.getState().attemptStep({ kind: 'click', meshId: 'm' }, tinyScenario);
+    store.getState().attemptStep({ kind: 'click', meshId: 'm' });
     expect(store.getState().scoring.minorCount).toBe(1);
     expect(store.getState().scoring.score).toBe(98);
   });
