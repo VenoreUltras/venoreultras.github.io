@@ -64,7 +64,7 @@ Brownfield extension layered over existing PM-300 simulator (Three.js r0.184 + G
   5. The cloned-material registry has a `dispose()` path that releases all GPU buffers on Vite HMR; `renderer.info.memory` material count does not grow across hot reloads.
 **Plans:** 6 plans
 Plans:
-- [ ] 02-01-PLAN.md - MaterialRegistry + pl.parts + interactable scaffolding (TWIN-11/12/13 base, D-Phase2-07/08)
+- [x] 02-01-PLAN.md - MaterialRegistry + pl.parts + interactable scaffolding (TWIN-11/12/13 base, D-Phase2-07/08)
 - [ ] 02-02-PLAN.md - Static meshes: flywheel + brake + oil sight + rear guard + light curtain (TWIN-01/03/04/06)
 - [ ] 02-03-PLAN.md - Nameplate with CanvasTexture (TWIN-10)
 - [ ] 02-04-PLAN.md - Safety panel cluster + E-stop (TWIN-07/08)
@@ -175,8 +175,8 @@ These are not requirements per se — they are the policies that prevent the cri
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Foundation | 2/5 | In progress | - |
-| 2. Digital Twin Geometry | 0/? | Not started | - |
+| 1. Foundation | 5/5 | Complete | 2026-05-05 |
+| 2. Digital Twin Geometry | 1/6 | In progress | - |
 | 3. Click-to-State Pipeline | 0/? | Not started | - |
 | 4. Visual Feedback Layer | 0/? | Not started | - |
 | 5. Educational Layer | 0/? | Not started | - |
