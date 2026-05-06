@@ -33,10 +33,19 @@ export function createTrainingStore(opts = {}) {
       meshStates: {},
       events: [],
       scoring: { score: 100, criticalCount: 0, mediumCount: 0, minorCount: 0 },
+      // D-Phase3-02: store cache'uje pełen scenario object — attemptStep(intent) (1-arg).
+      activeScenario: null,
+      // D-Phase3-14 / CRIT-8 / INTERACT-05: lock blokuje równoległe attemptStep
+      // (np. burst pointerdown podczas walidacji). Set true w try, false w finally.
+      isAnimating: false,
       _now: now,
       _spinUpTimerHandle: null,
 
       startScenario: (scenario) => set({
+        // D-Phase3-02: zapisujemy pełen obiekt scenariusza (nie tylko id) — attemptStep
+        // sięgnie po niego z state, dzięki czemu warstwa wywołująca (RaycastController,
+        // testy) nie musi już przekazywać scenario jako argument.
+        activeScenario: scenario,
         session: { scenarioId: scenario.id, startedAt: now(), finishedAt: null, retryCount: 0 },
         steps: Object.fromEntries(scenario.steps.map(s => [s.id, { status: 'pending' }])),
         currentStepId: scenario.steps[0].id,
@@ -46,14 +55,27 @@ export function createTrainingStore(opts = {}) {
         scoring: { score: 100, criticalCount: 0, mediumCount: 0, minorCount: 0 },
       }),
 
-      attemptStep: (intent, scenario) => {
+      // D-Phase3-02: sygnatura 1-argumentowa — scenariusz pochodzi z state.activeScenario.
+      // D-Phase3-14: isAnimating lock + try/finally. Lock NIE obejmuje 3-sekundowego
+      // rozpędu (timer odpalany przez scheduleTimer jest niezależny od attemptStep).
+      attemptStep: (intent) => {
         const state = get();
-        const result = validateStep(intent, state, scenario);
-        applyEffects(set, get, result.effects, scheduleTimer);
-        // Fault rules na nowym state (PO applied effects)
-        const faultEffects = evaluateFaultRules(get(), faultRules);
-        if (faultEffects.length > 0) {
-          applyEffects(set, get, faultEffects, scheduleTimer);
+        if (state.isAnimating) return; // CRIT-8: blokuje równoległy klik mid-walidacja
+        // Graceful no-op gdy startScenario jeszcze nie wywołany — attemptStep
+        // wywołany "zbyt wcześnie" (np. RaycastController odpalony przed Application
+        // auto-start) nie może rzucić. ProcedureEngine wymaga scenario.steps.find().
+        if (!state.activeScenario) return;
+        set({ isAnimating: true });
+        try {
+          const result = validateStep(intent, state, state.activeScenario);
+          applyEffects(set, get, result.effects, scheduleTimer);
+          // Fault rules na nowym state (PO applied effects)
+          const faultEffects = evaluateFaultRules(get(), faultRules);
+          if (faultEffects.length > 0) {
+            applyEffects(set, get, faultEffects, scheduleTimer);
+          }
+        } finally {
+          set({ isAnimating: false }); // zawsze zwalniamy, nawet gdy validateStep rzuci
         }
       },
 
@@ -88,6 +110,10 @@ function applyEffects(set, get, effects, scheduleTimer) {
       case 'advanceStep': {
         const state = get();
         if (!state.currentStepId) break;
+        // D-Phase3-14 idempotency guard: jeśli aktualny step jest już 'done',
+        // drugi advanceStep dla tego samego id NIE przesuwa currentStepId — chroni
+        // przed double-advance gdy applyEffects dostaje dwa advanceStep efekty pod rząd.
+        if (state.steps[state.currentStepId]?.status === 'done') break;
         const stepIds = Object.keys(state.steps);
         const currentIdx = stepIds.indexOf(state.currentStepId);
         const nextId = stepIds[currentIdx + 1] ?? null;

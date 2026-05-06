@@ -58,7 +58,7 @@ describe('TrainingStore — startScenario / attemptStep (minimalScenario)', () =
   it('attemptStep happy advansuje step i dodaje step.done event', () => {
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(minimalScenario);
-    store.getState().attemptStep({ kind: 'click', meshId: 'mesh-A' }, minimalScenario);
+    store.getState().attemptStep({ kind: 'click', meshId: 'mesh-A' });
     const s = store.getState();
     expect(s.currentStepId).toBe('step-visual-attest');
     expect(s.steps['step-visual-target'].status).toBe('done');
@@ -68,7 +68,7 @@ describe('TrainingStore — startScenario / attemptStep (minimalScenario)', () =
   it('attemptStep wrong-target NIE advansuje + dodaje step.violation + obniża score', () => {
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(minimalScenario);
-    store.getState().attemptStep({ kind: 'click', meshId: 'wrong-mesh' }, minimalScenario);
+    store.getState().attemptStep({ kind: 'click', meshId: 'wrong-mesh' });
     const s = store.getState();
     expect(s.currentStepId).toBe('step-visual-target'); // no advance
     expect(s.events.some(e => e.type === 'step.violation' && e.severity === 'medium')).toBe(true);
@@ -79,7 +79,7 @@ describe('TrainingStore — startScenario / attemptStep (minimalScenario)', () =
   it('attemptStep ignoruje gdy currentStepId === null (graceful)', () => {
     const store = createTrainingStore({ now: () => 1000 });
     // bez startScenario — currentStepId === null
-    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'x' }, minimalScenario)).not.toThrow();
+    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'x' })).not.toThrow();
     expect(store.getState().scoring.score).toBe(100); // no-active-step nie generuje violation
   });
 
@@ -89,7 +89,7 @@ describe('TrainingStore — startScenario / attemptStep (minimalScenario)', () =
     // Wymuszamy stan awarii: w-cyklu + oslona open
     store.setState({ machineState: 'w-cyklu', meshStates: { 'oslona-przednia': 'open' } });
     // Trigger pipeline — wrong intent na nieistniejący mesh, ale fault rules pojadą po
-    store.getState().attemptStep({ kind: 'click', meshId: 'mesh-A' }, minimalScenario);
+    store.getState().attemptStep({ kind: 'click', meshId: 'mesh-A' });
     const s = store.getState();
     expect(s.machineState).toBe('awaria');
     expect(s.events.some(e => e.type === 'fault.triggered' && e.faultId === 'oslona-otwarta-w-cyklu')).toBe(true);
@@ -104,13 +104,13 @@ describe('TrainingStore — spinUpTimer pod fake timers (D-07/D-08)', () => {
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(uruchomienie);
     // Advance through 7 steps (1-7) bez sprzegnij-po-rozpedzie
-    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' }, uruchomienie);
-    store.getState().attemptStep({ kind: 'check', stepId: 'kontrola-narzedzia' }, uruchomienie);
-    store.getState().attemptStep({ kind: 'check', stepId: 'kontrola-wzrokowa' }, uruchomienie);
-    store.getState().attemptStep({ kind: 'click', meshId: 'wziernik-smarowania' }, uruchomienie);
-    store.getState().attemptStep({ kind: 'click', meshId: 'oslona-przednia' }, uruchomienie);
-    store.getState().attemptStep({ kind: 'click', meshId: 'estop' }, uruchomienie);
-    store.getState().attemptStep({ kind: 'click', meshId: 'wylacznik-glowny' }, uruchomienie);
+    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    store.getState().attemptStep({ kind: 'check', stepId: 'kontrola-narzedzia' });
+    store.getState().attemptStep({ kind: 'check', stepId: 'kontrola-wzrokowa' });
+    store.getState().attemptStep({ kind: 'click', meshId: 'wziernik-smarowania' });
+    store.getState().attemptStep({ kind: 'click', meshId: 'oslona-przednia' });
+    store.getState().attemptStep({ kind: 'click', meshId: 'estop' });
+    store.getState().attemptStep({ kind: 'click', meshId: 'wylacznik-glowny' });
 
     // Po wlacz-zasilanie machineState powinien być 'rozpedzanie'
     expect(store.getState().machineState).toBe('rozpedzanie');
@@ -136,7 +136,7 @@ describe('TrainingStore — spinUpTimer pod fake timers (D-07/D-08)', () => {
     };
     const s2 = createTrainingStore({ now: () => 1000, scheduleTimer: customSchedule });
     s2.getState().startScenario(tinyScenario);
-    s2.getState().attemptStep({ kind: 'click', meshId: 'm' }, tinyScenario);
+    s2.getState().attemptStep({ kind: 'click', meshId: 'm' });
     expect(customSchedule).toHaveBeenCalled();
     expect(customSchedule.mock.calls[0][1]).toBe(1500);
   });
@@ -157,7 +157,7 @@ describe('TrainingStore — applyEffects branch coverage', () => {
     };
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(tinyScenario);
-    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'm' }, tinyScenario)).not.toThrow();
+    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'm' })).not.toThrow();
     // step.done event obecny (advance), playAudio nic nie robi
     expect(store.getState().events.some(e => e.type === 'step.done')).toBe(true);
   });
@@ -176,7 +176,7 @@ describe('TrainingStore — applyEffects branch coverage', () => {
     };
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(tinyScenario);
-    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'm' }, tinyScenario)).not.toThrow();
+    expect(() => store.getState().attemptStep({ kind: 'click', meshId: 'm' })).not.toThrow();
   });
 
   it('scoring minor severity obniża score o 2 (applyScoringEvent minor branch)', () => {
@@ -196,7 +196,7 @@ describe('TrainingStore — applyEffects branch coverage', () => {
     };
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(tinyScenario);
-    store.getState().attemptStep({ kind: 'click', meshId: 'm' }, tinyScenario);
+    store.getState().attemptStep({ kind: 'click', meshId: 'm' });
     expect(store.getState().scoring.minorCount).toBe(1);
     expect(store.getState().scoring.score).toBe(98);
   });
@@ -212,5 +212,75 @@ describe('TrainingStore — STATE-03 dispose pattern signals', () => {
     unsub();
     store.setState({ machineState: 'B' });
     expect(listener.mock.calls.length).toBe(callsBefore);
+  });
+});
+
+// Phase 3 (D-Phase3-02, D-Phase3-14, CRIT-8 / INTERACT-05): refaktor sygnatury
+// attemptStep(intent) + state.activeScenario + state.isAnimating lock + idempotent advanceStep.
+describe('Phase 3: attemptStep(intent) — single-arg signature + isAnimating lock + activeScenario', () => {
+  it('initial state: activeScenario=null, isAnimating=false', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    const s = store.getState();
+    expect(s.activeScenario).toBeNull();
+    expect(s.isAnimating).toBe(false);
+  });
+
+  it('startScenario zapisuje pełen obiekt scenariusza w state.activeScenario (identity)', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    expect(store.getState().activeScenario).toBe(uruchomienie); // identity, nie deep-equal
+  });
+
+  it('attemptStep(intent) — 1 argument — używa state.activeScenario', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    // Krok 1 to sprawdz-tabliczke (visual-target → tabliczka-znamionowa)
+    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    const done = store.getState().events.filter(e => e.type === 'step.done');
+    expect(done).toHaveLength(1);
+    expect(done[0].stepId).toBe('sprawdz-tabliczke');
+  });
+
+  it('isAnimating lock blokuje równoległe attemptStep (CRIT-8)', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    // Sztucznie ustawiamy lock — symulujemy wejście w równoległy attemptStep.
+    store.setState({ isAnimating: true });
+    const eventsBefore = store.getState().events.length;
+    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    const eventsAfter = store.getState().events.length;
+    expect(eventsAfter).toBe(eventsBefore); // lock zablokował, brak nowych eventów
+    // I lock pozostaje true (nie nadpisaliśmy go finally — early return przed try)
+    expect(store.getState().isAnimating).toBe(true);
+  });
+
+  it('try/finally zwalnia isAnimating po normalnym wywołaniu', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    expect(store.getState().isAnimating).toBe(false);
+  });
+
+  it('advanceStep idempotency — drugi advanceStep dla tego samego stepu nie nadpisuje state', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    // Pierwszy klik tabliczki → step #1 staje się done, currentStepId przesuwa się
+    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    const stepIdAfterFirst = store.getState().currentStepId;
+    expect(stepIdAfterFirst).not.toBe('sprawdz-tabliczke');
+    expect(store.getState().steps['sprawdz-tabliczke'].status).toBe('done');
+    // Sztucznie cofamy currentStepId na poprzedni (już done) i wywołujemy attemptStep
+    // z poprawnym mesh dla TEGO już-done kroku — gdyby idempotency nie zadziałała,
+    // advanceStep przeskakiwałby kolejny step.
+    store.setState({ currentStepId: 'sprawdz-tabliczke' });
+    const eventsBefore = store.getState().events.length;
+    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    // currentStepId NIE może przesunąć się dalej, bo step #1 już 'done' — guard zatrzymuje advanceStep
+    expect(store.getState().currentStepId).toBe('sprawdz-tabliczke');
+    expect(store.getState().steps['sprawdz-tabliczke'].status).toBe('done');
+    // Step.done nie jest emitowany ponownie dla tego samego stepu w applyEffects
+    // (sam advanceStep nie emituje eventu — appendEvent jest osobnym effectem;
+    // tutaj weryfikujemy tylko że state nie został nadpisany).
+    void eventsBefore;
   });
 });
