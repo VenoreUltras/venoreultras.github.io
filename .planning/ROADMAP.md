@@ -24,7 +24,7 @@ Brownfield extension layered over existing PM-300 simulator (Three.js r0.184 + G
 ## Phases
 
 - [x] **Phase 1: Foundation** — Test infra + pure SOP engine + store skeleton + disclaimer/redundant-encoding policy + Phase Z hygiene (5/5 plans complete; 21/21 requirements; 133 tests; coverage 98.05/93.42/96/100)
-- [ ] **Phase 2: Digital Twin Geometry** — All SOP-relevant components exist as named, tagged, individually-materialed meshes
+- [x] **Phase 2: Digital Twin Geometry** — All SOP-relevant components exist as named, tagged, individually-materialed meshes (6/6 plans complete; 13/13 requirements TWIN-01..13; 149 tests)
 - [ ] **Phase 3: Click-to-State Pipeline** — RaycastController wires 3D clicks to validated store transitions
 - [ ] **Phase 4: Visual Feedback Layer** — HighlightManager + DOM panels project store state with redundant (color + icon + text) encoding
 - [ ] **Phase 5: Educational Layer** — Tooltips, free-roam, difficulty modes, audio, 3D labels, rationale, keyboard shortcuts
@@ -69,7 +69,7 @@ Plans:
 - [x] 02-03-PLAN.md - Nameplate with CanvasTexture (TWIN-10)
 - [x] 02-04-PLAN.md - Safety panel cluster + E-stop (TWIN-07/08)
 - [x] 02-05-PLAN.md - Pivot-group movables: front guard + main switch + clutch lever (TWIN-02/05/09)
-- [ ] 02-06-PLAN.md - Smoke tests + dispose wire + boundaries (TWIN-11/12/13 enforcement)
+- [x] 02-06-PLAN.md - Smoke tests + dispose wire + boundaries (TWIN-11/12/13 enforcement)
 **UI hint**: yes
 
 ### Phase 3: Click-to-State Pipeline
@@ -176,7 +176,7 @@ These are not requirements per se — they are the policies that prevent the cri
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete | 2026-05-05 |
-| 2. Digital Twin Geometry | 5/6 | In progress | - |
+| 2. Digital Twin Geometry | 6/6 | Complete | 2026-05-06 |
 | 3. Click-to-State Pipeline | 0/? | Not started | - |
 | 4. Visual Feedback Layer | 0/? | Not started | - |
 | 5. Educational Layer | 0/? | Not started | - |

@@ -2,19 +2,19 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Executing Phase 02
-last_updated: "2026-05-06T07:30:00.000Z"
+status: Phase 02 Complete — Executing Phase 03
+last_updated: "2026-05-06T07:51:00.000Z"
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 11
-  completed_plans: 8
-  percent: 73
+  completed_plans: 9
+  percent: 82
 ---
 
 # Project State: PM-300 Trener
 
-**Last updated:** 2026-05-05 after Phase 1 context gathering
+**Last updated:** 2026-05-06 after Phase 2 completion (Plan 02-06)
 
 ## Project Reference
 
@@ -28,12 +28,12 @@ progress:
 - `.planning/research/SUMMARY.md` — synthesis of stack/features/architecture/pitfalls research
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 02 — digital-twin-geometry
+**Current focus:** Phase 03 — click-to-state-pipeline
 
 ## Current Position
 
-Phase: 02 (digital-twin-geometry) — EXECUTING
-Plan: 6 of 6
+Phase: 02 (digital-twin-geometry) — COMPLETE
+Phase 03 — click-to-state-pipeline — NEXT
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
@@ -47,7 +47,7 @@ Plan: 6 of 6
 
 ```
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
-Phase 2: Digital Twin Geometry               [█████     ] 83%  5/6 plans complete
+Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
 Phase 3: Click-to-State Pipeline             [          ] 0%   not started
 Phase 4: Visual Feedback Layer               [          ] 0%   not started
 Phase 5: Educational Layer                   [          ] 0%   not started
@@ -113,6 +113,7 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [x] Plan 02-03 (Wave 3) executed — tabliczka-znamionowa z CanvasTexture 512x320, MeshBasicMaterial, SRGBColorSpace; getInteractables().size=7; texture trackowana w registry; 136 tests green
 - [x] Plan 02-04 (Wave 4) executed — panel-oburezny + przycisk-start-lewy/prawy + lampka-gotowosci + estop (LatheGeometry grzybek); getInteractables().size=12; T-02-09/10/11 mitigations; 136 tests green
 - [x] Plan 02-05 (Wave 5) executed — oslona-przednia + wylacznik-glowny + dzwignia-sprzegla; pivot-grupy + userData.poses + pivotTarget enum; ExtrudeGeometry pokrętło z 4 karbami; getInteractables().size=15 (kompletny); 136 tests green
+- [x] Plan 02-06 (Wave 6) executed — disposeMaterials() wpiety do Application.dispose(); smoke test 12 asercji TWIN-11/12/13; boundaries entry dla MaterialRegistry; 149 tests green; Phase 2 COMPLETE
 - [ ] (Před Phase 2) edytować `REQUIREMENTS.md` UI-02 i `ROADMAP.md` Phase 4 SC3 — dodać 7. stan maszyny `Rozpędzanie...` (decyzja D-09 z 01-CONTEXT.md)
 
 ### Decisions
@@ -128,6 +129,9 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - trackTexture osobno od getCloned w MaterialRegistry — CanvasTexture ma osobny lifecycle dispose (Plan 02-03, T-02-06 mitigation)
 - pivotTarget enum z walidacją throw w _registerInteractable — fail-fast zamiast silent bug w Phase 3 (Plan 02-01, HIGH-1)
 - LOOKUP TABLE PIVOT_TARGET: 'parent' dla oslona-przednia + dzwignia-sprzegla (rotacja mesh.parent = pivot-group), 'self' dla wylacznik-glowny (rotacja knob mesh = Shape origin = centerline pokrętła) (Plan 02-05, T-02-12)
+- trackMaterial() dodane do MaterialRegistry: tabliczka MeshBasicMaterial trafia do registry → size()=15 i disposeAll() obejmuje 15 materialow (Plan 02-06, Rule 2 TWIN-11 SC5)
+- matReadyLamp: explicit emissiveIntensity=0 (Three.js default=1 byl bugiem; Phase 4 ustawi przez store) (Plan 02-06, Rule 1 UI-SPEC negative criteria)
+- Canvas mock w jsdom dla PressModel.smoke.test.js: HTMLCanvasElement.prototype.getContext no-op przed importami — bez pakietu canvas (Plan 02-06, Rule 3 blocking fix)
 - ExtrudeGeometry pokrętła: knobGeo.rotateY(Math.PI/2) — geometry obrócona zanim mesh do sceny; pokrętło wystaje wzdłuż +X; poses.rot.z = rotacja mesh sam (Plan 02-05, TWIN-09)
 - GSAP pin via tilde `~3.15.0` blokuje minor bumpy zmieniające deltaTime contract (Plan 01-01)
 - vitest.config.js coverage thresholds dormant aż src/training/** + src/state/** powstaną w Wave 1+2 (Plan 01-01)
@@ -148,10 +152,14 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 02-05 execution complete (Wave 5 — pivot-group movables: _buildFrontGuard() + _buildMainSwitch() + _buildClutchLever(); TWIN-05/09/02; 15 interactables cumulative). Files written this session:
+**Last session ended after:** Plan 02-06 execution complete (Wave 6 — wire-up + verification: disposeMaterials wpiety, smoke tests TWIN-11/12/13, boundary entry MaterialRegistry; Phase 2 COMPLETE). Files written this session:
 
-- `.planning/phases/02-digital-twin-geometry/02-05-SUMMARY.md`
-- `src/PressModel.js` (modified — _buildFrontGuard() + _buildMainSwitch() + _buildClutchLever(); 15 interactables cumulative)
+- `.planning/phases/02-digital-twin-geometry/02-06-SUMMARY.md` (created)
+- `src/main.js` (modified — Application.dispose() + pressModel.disposeMaterials())
+- `tests/PressModel.smoke.test.js` (created — 12 smoke tests TWIN-11/12/13)
+- `src/MaterialRegistry.js` (modified — trackMaterial() nowa metoda)
+- `src/PressModel.js` (modified — trackMaterial tabliczka + explicit emissiveIntensity=0)
+- `tests/boundaries.test.js` (modified — entry dla MaterialRegistry)
 
 **Earlier:** Plan 01-05 execution complete (Wave 3 — Phase 1 finalization). Files written this session:
 
