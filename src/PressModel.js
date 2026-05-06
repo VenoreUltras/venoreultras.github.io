@@ -141,8 +141,172 @@ export class PressModel {
     rightGuide.position.set(1.3, this.shaftY - 3, 0);
     this.group.add(rightGuide);
 
+    // Wave 2: statyczne i obrotowe meshes interactable
+    this._buildFlywheel();
+    this._buildBrake();
+    this._buildOilSightGlass();
+    this._buildRearGuard();
+    this._buildLightCurtain();
+
     // Inicjalizacja położenia
     this.update(0);
+  }
+
+  /**
+   * TWIN-01: Koło zamachowe (LEWA strona wału) + tarcza hamulcowa (PRAWA strona wału, visual-only).
+   * Oba dzieci this.shaftAxis — auto-rotują przez istniejący update(angle), bez rozszerzania update().
+   *
+   * Layout (D-Phase2-04 + Claude's Discretion):
+   *   - Koło zamachowe: lokalnie (-2.5, 0, 0) → świat (-2.5, 8, 0). Cementowane przez D-Phase2-04.
+   *   - Tarcza hamulcowa: lokalnie (1.7, 0, 0) → świat (1.7, 8, 0). Claude's Discretion (CONTEXT
+   *     §"Oddzielna tarcza hamulcowa"). PRAWA strona wału, by klocek hamulca (D-Phase2-04 @ x=2.5)
+   *     miał wizualny target.
+   *
+   * Koło zamachowe: 6 szprych, obwód r=1.5, materiał matFlywheel (metaliczność 0.85 — UI-SPEC).
+   * Tarcza hamulcowa: cylinder r=0.9, h=0.15, matBrakeSteel.
+   */
+  _buildFlywheel() {
+    // --- Koło zamachowe ---
+    const flywheelGroup = new THREE.Group();
+    // D-Phase2-04: pozycja (-2.5, 0, 0) lokalnie w shaftAxis → świat (-2.5, 8, 0).
+    flywheelGroup.position.set(-2.5, 0, 0);
+    this.shaftAxis.add(flywheelGroup); // KRYTYCZNE: dziecko shaftAxis (D-Phase2-05)
+
+    // Obwód koła: cylinder obracamy o 90° wokół Z tak, by obwód stał pionowo (oś X = oś wału)
+    const rimGeo = new THREE.CylinderGeometry(1.5, 1.5, 0.3, 32);
+    rimGeo.rotateZ(Math.PI / 2);
+    const rim = new THREE.Mesh(rimGeo, this.matFlywheel);
+    rim.castShadow = true;
+    rim.receiveShadow = true;
+    flywheelGroup.add(rim);
+
+    // 6 szprych (CONTEXT discretion §"6 szprych") — prostokątne belki co 60° wokół osi X
+    for (let i = 0; i < 6; i++) {
+      const spokeGeo = new THREE.BoxGeometry(0.1, 2.8, 0.1);
+      const spoke = new THREE.Mesh(spokeGeo, this.matFlywheel);
+      spoke.rotation.x = (Math.PI / 6) * i;
+      spoke.castShadow = true;
+      flywheelGroup.add(spoke);
+    }
+
+    // Rejestracja interactable koła zamachowego (PRIMARY mesh = rim)
+    this._registerInteractable({
+      mesh: rim,
+      id: 'kolo-zamachowe',
+      kind: 'visual-target',
+      baseMaterial: this.matFlywheel,
+    });
+
+    // Tarcza hamulcowa: Claude's Discretion z CONTEXT §"Oddzielna tarcza hamulcowa wbudowana w wał".
+    // Wizualnie ważna jako target dla klocka hamulca (TWIN-03). Visual-only — brak interactable
+    // rejestracji (CRIT-7: tylko mesze klikalne mają userData kontrakt).
+    // Pozycja x=+1.7 lokalnie: PRAWA strona wału, blisko prawej krawędzi ramki, gdzie klocek
+    // hamulca (D-Phase2-04 @ x=2.5) ma do niej dostęp z prawej strony.
+    const brakeDiscGeo = new THREE.CylinderGeometry(0.9, 0.9, 0.15, 32);
+    brakeDiscGeo.rotateZ(Math.PI / 2); // pionowo, oś obrotu wzdłuż X (jak koło zamachowe)
+    const brakeDisc = new THREE.Mesh(brakeDiscGeo, this.matBrakeSteel);
+    brakeDisc.position.set(1.7, 0, 0); // PRAWA strona wału (lokalnie w shaftAxis); świat = (1.7, 8, 0)
+    brakeDisc.castShadow = true;
+    this.shaftAxis.add(brakeDisc);
+    // NIE _registerInteractable — visual-only (CONTEXT Claude's Discretion).
+  }
+
+  /**
+   * TWIN-03: Klocek hamulca (HIGH-2: D-Phase2-04 ZACHOWANE — PRAWA strona wału, x=2.9 ∈ [2.0, 3.0]).
+   * Statyczny dziecko this.group (D-Phase2-05). Odstęp ~0.1 od tarczy hamulcowej (UI-SPEC negative).
+   */
+  _buildBrake() {
+    const brakeGeo = new THREE.BoxGeometry(0.4, 0.4, 0.4);
+    const brake = new THREE.Mesh(brakeGeo, this.matBrakeSteel);
+
+    // HIGH-2 / D-Phase2-04: klocek hamulca po PRAWEJ stronie wału (x≈2.9, w range 2.5±0.5).
+    // Tarcza hamulcowa (Task 1, x=1.7, r=0.9) jest po prawej stronie wału — klocek docika z prawej
+    // z odstępem ~0.1 (UI-SPEC negative criteria: "klocek w pozycji released NIE dotyka tarczy").
+    // STATYCZNY (D-Phase2-05) — dziecko this.group, nie shaftAxis. Phase 4 wizualizuje stan
+    // hamulca przez przesuwanie klocka o ~0.1 jednostki (czyta state.meshStates['hamulec']).
+    brake.position.set(2.9, this.shaftY, 0); // y=shaftY=8 (na wysokości tarczy)
+    brake.castShadow = true;
+    this.group.add(brake); // STATYCZNY — D-Phase2-05; NIE shaftAxis.
+
+    this._registerInteractable({
+      mesh: brake,
+      id: 'hamulec',
+      kind: 'manipulation', // klikalny, ale brak poses (D-Phase2-06)
+      baseMaterial: this.matBrakeSteel,
+    });
+  }
+
+  /**
+   * TWIN-04: Wziernik smarowania — mała okrągła szybka na froncie korpusu (D-Phase2-04 @ (0,7,1.1)).
+   * Kolor bursztynowy (UI-SPEC visual fidelity). Statyczny, dziecko this.group.
+   */
+  _buildOilSightGlass() {
+    const sightGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.05, 24);
+    sightGeo.rotateX(Math.PI / 2);
+    const sight = new THREE.Mesh(sightGeo, this.matOilSightYellow);
+    sight.position.set(0, 7, 1.1);
+    sight.castShadow = true;
+    this.group.add(sight);
+
+    this._registerInteractable({
+      mesh: sight,
+      id: 'wziernik-smarowania',
+      kind: 'visual-target',
+      baseMaterial: this.matOilSightYellow,
+    });
+  }
+
+  /**
+   * TWIN-06a: Osłona tylna stała (D-Phase2-04 @ (0,4,-1.5)).
+   * Kolor ciemny #2a2a2a (UI-SPEC). Statyczny, dziecko this.group.
+   */
+  _buildRearGuard() {
+    const rearGuardGeo = new THREE.BoxGeometry(2.5, 3, 0.05);
+    const rearGuard = new THREE.Mesh(rearGuardGeo, this.matGuardRearBlack);
+    rearGuard.position.set(0, 4, -1.5);
+    rearGuard.castShadow = true;
+    rearGuard.receiveShadow = true;
+    this.group.add(rearGuard);
+
+    this._registerInteractable({
+      mesh: rearGuard,
+      id: 'oslona-tylna',
+      kind: 'visual-target',
+      baseMaterial: this.matGuardRearBlack,
+    });
+  }
+
+  /**
+   * TWIN-06b: Dwie kolumny kurtyny świetlnej (D-Phase2-04 @ (±1.7, 4, 1.5)).
+   * Shared geometry, ale każda kolumna dostaje sklonowany materiał (CRIT-6).
+   * Statyczne, dzieci this.group.
+   */
+  _buildLightCurtain() {
+    const curtainGeo = new THREE.CylinderGeometry(0.1, 0.1, 3, 16);
+
+    // Lewa kolumna
+    const curtainLeft = new THREE.Mesh(curtainGeo, this.matLightCurtainBlack);
+    curtainLeft.position.set(-1.7, 4, 1.5);
+    curtainLeft.castShadow = true;
+    this.group.add(curtainLeft);
+    this._registerInteractable({
+      mesh: curtainLeft,
+      id: 'kurtyna-lewa',
+      kind: 'visual-target',
+      baseMaterial: this.matLightCurtainBlack,
+    });
+
+    // Prawa kolumna — ta sama geometria (shared), ale sklonowany materiał (CRIT-6)
+    const curtainRight = new THREE.Mesh(curtainGeo, this.matLightCurtainBlack);
+    curtainRight.position.set(1.7, 4, 1.5);
+    curtainRight.castShadow = true;
+    this.group.add(curtainRight);
+    this._registerInteractable({
+      mesh: curtainRight,
+      id: 'kurtyna-prawa',
+      kind: 'visual-target',
+      baseMaterial: this.matLightCurtainBlack,
+    });
   }
 
   // === CRIT-6 + CRIT-7 INVARIANT (Phase 1 lock-in, Phase 2 enforcement) ===
