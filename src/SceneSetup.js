@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { gsap } from 'gsap';
 import { pl } from './i18n/pl.js';
 
@@ -26,6 +27,15 @@ export class SceneSetup {
     this.renderer.setPixelRatio(window.devicePixelRatio);
     this.renderer.shadowMap.enabled = true;
     this.container.appendChild(this.renderer.domElement);
+
+    this.controls = new OrbitControls(this.camera, this.renderer.domElement);
+    this.controls.target.set(0, 4, 0);
+    this.controls.enableDamping = true;
+    this.controls.dampingFactor = 0.08;
+    this.controls.minDistance = 5;
+    this.controls.maxDistance = 60;
+    this.controls.maxPolarAngle = Math.PI * 0.49;
+    this.controls.update();
 
     // INFRA-05: WebGL context-loss handling.
     // KRYTYCZNE: event.preventDefault() w pierwszej linii listener'a — bez tego
@@ -70,6 +80,7 @@ export class SceneSetup {
   }
 
   render() {
+    if (this.controls) this.controls.update();
     this.renderer.render(this.scene, this.camera);
   }
 
@@ -108,6 +119,7 @@ export class SceneSetup {
     if (this._overlayEl && this._overlayEl.parentNode) {
       this._overlayEl.parentNode.removeChild(this._overlayEl);
     }
+    if (this.controls) this.controls.dispose();
     this.renderer.dispose();
   }
 }

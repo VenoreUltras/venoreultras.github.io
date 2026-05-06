@@ -83,7 +83,13 @@ Plans:
   3. The first end-to-end happy path (Phase 1's `uruchomienie` scenario) is now fully playable in the browser: hover lights the target, click advances the step, scoring updates, status badge updates.
   4. A 100-click stress test on the E-stop mesh (Vitest with mocked raycaster outputs) records exactly one step completion — synchronous validator + `isAnimating` lock prevents double-counting (CRIT-8).
   5. Hover over a tagged mesh produces a visible hint highlight (lighter emissive, no GSAP pulse yet) within one tick; hovering off clears it within one tick. Adjacent-mesh flicker is bounded by hysteresis (≥2 consecutive hits or 50ms dwell).
-**Plans**: TBD
+**Plans:** 5 plans
+Plans:
+- [ ] 03-01-PLAN.md — TrainingStore refactor: attemptStep(intent), activeScenario, isAnimating, idempotent advanceStep + boundary entry
+- [ ] 03-02-PLAN.md — RaycastController + tests (INTERACT-01/02/03/05; TEST-04 100-click stress; hysteresis 4-tick; drag<5px)
+- [ ] 03-03-PLAN.md — DOM scaffolding + CSS (#phase3-step-readout + #phase3-attest-container; glassmorphism Wong palette)
+- [ ] 03-04-PLAN.md — Application wiring: auto-start, RaycastController DI, 3 store subscribers, visual-attest button, dispose hook
+- [ ] 03-05-PLAN.md — E2E happy path 8/8 kroków + MANUAL CHECKPOINT (60 FPS, hover hint, full uruchomienie w przeglądarce)
 **UI hint**: yes
 
 ### Phase 4: Visual Feedback Layer
@@ -177,7 +183,7 @@ These are not requirements per se — they are the policies that prevent the cri
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete | 2026-05-05 |
 | 2. Digital Twin Geometry | 6/6 | Complete | 2026-05-06 |
-| 3. Click-to-State Pipeline | 0/? | Not started | - |
+| 3. Click-to-State Pipeline | 0/5 | Not started | - |
 | 4. Visual Feedback Layer | 0/? | Not started | - |
 | 5. Educational Layer | 0/? | Not started | - |
 | 6. Scenarios + Replay + Retry + Export | 0/? | Not started | - |
