@@ -21,6 +21,9 @@ export class PressModel {
     this.shaftY = 8.0; // Wysokość wału nad podstawą
     // ==========================================
 
+    // Pre-alokowany Vector3 reused per-frame w update() — eliminuje GC pressure z dotychczasowych 60 alokacji/sek.
+    this._pinPosition = new THREE.Vector3();
+
     this.group = new THREE.Group();
     this.scene.add(this.group);
 
@@ -826,8 +829,8 @@ export class PressModel {
     // Wał obraca się wokół własnej osi (Z)
     this.shaftAxis.rotation.z = -angle;
 
-    // Pobieramy aktualną globalną pozycję sworznia mimośrodu
-    const pinPosition = new THREE.Vector3();
+    // Pobieramy aktualną globalną pozycję sworznia mimośrodu (reuse pre-allocated Vector3, zero GC).
+    const pinPosition = this._pinPosition;
     this.eccentricPin.getWorldPosition(pinPosition);
 
     // Obliczamy pozycję y suwaka używając PhysicsEngine (odległość od wału w dół)
