@@ -29,6 +29,8 @@ const FORBIDDEN_PAIRS = [
   { file: 'src/training/faultRules.js',       mustNotImport: ['three', 'gsap', '../state/', './state/'] },
   // PressModel — bez DOM/store/training (THREE/gsap allowed for geometry/animations)
   { file: 'src/PressModel.js',     mustNotImport: ['../state/', '../training/', './state/', './training/'] },
+  // MaterialRegistry — scene resources layer; nie wolno importowac store/training
+  { file: 'src/MaterialRegistry.js', mustNotImport: ['../state/', '../training/', './state/', './training/'] },
   // PhysicsEngine — pure math, zero deps
   { file: 'src/PhysicsEngine.js',  mustNotImport: ['three', 'gsap', '../state/', '../training/'] },
   // SceneSetup — może używać THREE i gsap (context-loss listener) — NIE store/training
