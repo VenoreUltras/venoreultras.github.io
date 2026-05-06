@@ -156,6 +156,11 @@ export class PressModel {
     // UWAGA: _buildEStop() MUSI być wywołany PO _buildSafetyPanel() — wymaga this.safetyPanel
     this._buildEStop();
 
+    // Wave 5: ruchome interactable z pivot-grupami i poses (TWIN-05/09/02)
+    this._buildFrontGuard();
+    this._buildMainSwitch();
+    this._buildClutchLever();
+
     // Inicjalizacja położenia
     this.update(0);
   }
@@ -537,6 +542,190 @@ export class PressModel {
     //        T-02-09: this.safetyPanel guard na początku metody. ✓
     //        T-02-10: TYLKO head zarejestrowany (nie stem) → cumulative size = 12, nie 13. ✓
     //        T-02-11: matReadyLamp bez emissiveIntensity > 0 w Phase 2 (domyślnie 0). ✓
+  }
+
+  /**
+   * TWIN-05: Osłona przednia ruchoma — pivot u GÓRY (zawias). Otwiera się do góry (rotacja wokół X).
+   * Pre-translate geometry (RESEARCH §Pivot pre-translate gotcha): origin grupy = górna krawędź osłony.
+   *
+   * Default pose: closed (rot.x=0). Phase 3+ wykona gsap.to(group.rotation, {x: -Math.PI/2}) na "open".
+   *
+   * Pozycja per D-Phase2-04: (0, 5, 1.5) — przed dolną częścią prasy, na wysokości 5.
+   *
+   * KONWENCJA poses dla Phase 3 animator:
+   *   userData.poses.{closed|open}.rot — semantycznie dotyczy rotacji MESH.PARENT (guardGroup).
+   *   Phase 3: const pivot = guard.parent; gsap.to(pivot.rotation, poses[targetPose].rot).
+   *   pivotTarget: 'parent' (HIGH-1 kontrakt).
+   */
+  _buildFrontGuard() {
+    const guardGroup = new THREE.Group();
+    guardGroup.position.set(0, 5, 1.5);  // pozycja zawiasu (D-Phase2-04)
+    this.group.add(guardGroup);
+
+    const guardGeo = new THREE.BoxGeometry(2.5, 1.8, 0.05);
+    // Pre-translate: origin grupy ma być GÓRNĄ krawędzią osłony (zawias).
+    // BoxGeometry default: origin w środku (Y ∈ [-h/2, +h/2]). Po translate(0, -h/2, 0) = translate(0, -0.9, 0)
+    // origin staje się górną krawędzią osłony — pivot "zawias u góry".
+    guardGeo.translate(0, -0.9, 0);
+
+    const guard = new THREE.Mesh(guardGeo, this.matGuardOrange);
+    guard.castShadow = true;
+    guard.receiveShadow = true;
+    guardGroup.add(guard);
+
+    this._registerInteractable({
+      mesh: guard,
+      id: 'oslona-przednia',
+      kind: 'manipulation',
+      baseMaterial: this.matGuardOrange,
+      poses: {
+        closed: { rot: { x: 0, y: 0, z: 0 } },
+        open:   { rot: { x: -Math.PI / 2, y: 0, z: 0 } },
+      },
+      pivotTarget: 'parent',
+    });
+    // Default pose: closed → guardGroup.rotation.x = 0 (już domyślne).
+  }
+
+  /**
+   * TWIN-09: Wyłącznik główny — cylindryczny korpus (LatheGeometry) + pokrętło z karbami
+   * (ExtrudeGeometry z 4 Path holes).
+   *
+   * Pivot pokrętła: origin Shape'a (0,0) = centerline pokrętła. ExtrudeGeometry ekstruduje wzdłuż +Z;
+   * knobGeo.rotateY(Math.PI/2) obraca geometrię tak, że pokrętło "wystaje" wzdłuż +X (na zewnątrz boku prasy).
+   *
+   * Default pose: off (rot.z=0). Phase 3+ tween do rot.z=Math.PI/2 na "on".
+   *
+   * Pozycja per D-Phase2-04: (2.5, 4, -0.5) — bok korpusu prawy.
+   *
+   * KONWENCJA poses dla Phase 3 animator:
+   *   userData.poses.{off|on}.rot — semantycznie dotyczy rotacji MESH SAMEGO (knob).
+   *   Phase 3: gsap.to(knob.rotation, poses[targetPose].rot).
+   *   pivotTarget: 'self' (HIGH-1 kontrakt — różnica vs oslona-przednia i dzwignia-sprzegla).
+   */
+  _buildMainSwitch() {
+    const switchGroup = new THREE.Group();
+    switchGroup.position.set(2.5, 4, -0.5);
+    this.group.add(switchGroup);
+
+    // 1. Korpus wyłącznika (LatheGeometry, decorative) — krótki cylindryczny "kubek" do montażu pokrętła.
+    //    Lathe rotuje wokół Y lokalnie. rotateZ(-Math.PI/2) → oś Y staje się osią X → korpus wystaje z +X.
+    const bodyPoints = [
+      new THREE.Vector2(0.0,  0.0),
+      new THREE.Vector2(0.18, 0.0),
+      new THREE.Vector2(0.18, 0.10),
+      new THREE.Vector2(0.0,  0.10),
+    ];
+    const bodyGeo = new THREE.LatheGeometry(bodyPoints, 24);
+    bodyGeo.rotateZ(-Math.PI / 2);  // korpus wystaje wzdłuż +X (na zewnątrz boku prasy)
+    const body = new THREE.Mesh(bodyGeo, this.matSwitchBody);
+    body.castShadow = true;
+    switchGroup.add(body);
+    // Korpus NIE jest interactable (decorative, shared this.matSwitchBody).
+
+    // 2. Pokrętło — ExtrudeGeometry koło z 4 prostokątnymi karbami (RESEARCH recipe).
+    //    Shape: okrąg r=0.15 z 4 wgłębieniami (Path holes) co 90°.
+    const knobShape = new THREE.Shape();
+    knobShape.absellipse(0, 0, 0.15, 0.15, 0, Math.PI * 2, false);
+
+    // 4 karby co 90° jako Path holes (rowki w pokrętle)
+    for (let i = 0; i < 4; i++) {
+      const angle = (Math.PI / 2) * i;
+      const cx = Math.cos(angle) * 0.10;
+      const cy = Math.sin(angle) * 0.10;
+      const notch = new THREE.Path();
+      notch.moveTo(cx - 0.015, cy - 0.025);
+      notch.lineTo(cx + 0.015, cy - 0.025);
+      notch.lineTo(cx + 0.015, cy + 0.025);
+      notch.lineTo(cx - 0.015, cy + 0.025);
+      notch.lineTo(cx - 0.015, cy - 0.025);
+      knobShape.holes.push(notch);
+    }
+
+    const knobGeo = new THREE.ExtrudeGeometry(knobShape, {
+      depth: 0.04,
+      bevelEnabled: true,
+      bevelThickness: 0.003,
+      bevelSize: 0.003,
+      bevelSegments: 2,
+      curveSegments: 24,
+    });
+    // ExtrudeGeometry domyślnie ekstruduje wzdłuż +Z. rotateY(Math.PI/2) → pokrętło wystaje wzdłuż +X.
+    knobGeo.rotateY(Math.PI / 2);
+
+    const knob = new THREE.Mesh(knobGeo, this.matSwitchBody);
+    knob.position.set(0.10, 0, 0);  // pokrętło wystaje z korpusu w +X
+    knob.castShadow = true;
+    switchGroup.add(knob);
+
+    this._registerInteractable({
+      mesh: knob,
+      id: 'wylacznik-glowny',
+      kind: 'manipulation',
+      baseMaterial: this.matSwitchBody,
+      poses: {
+        off: { rot: { x: 0, y: 0, z: 0 } },
+        on:  { rot: { x: 0, y: 0, z: Math.PI / 2 } },
+      },
+      pivotTarget: 'self',
+    });
+    // Default pose: off → knob.rotation.z = 0 (default).
+    // poses.{off|on}.rot.z odnosi się do rotacji SAMEGO KNOB (pivotTarget: 'self').
+    // Pivot pokrętła = origin Shape'a (0,0) = centerline cylindra pokrętła.
+  }
+
+  /**
+   * TWIN-02: Dźwignia sprzęgła ruchoma — pivot u PODSTAWY przy wale.
+   * Pre-translate geometry: origin grupy = dolny koniec dźwigni (punkt obrotu).
+   * Pręt (CylinderGeometry) + gałka (SphereGeometry) na końcu — visual cue gdzie operator chwyta.
+   *
+   * Default pose: released (rot.z=0, dźwignia pionowa). Phase 3+ tween do rot.z=0.7 na "engaged".
+   *
+   * Pozycja per D-Phase2-04: (-3, 7, 0.5) — lewa strona prasy przy wale.
+   *
+   * KONWENCJA poses dla Phase 3 animator:
+   *   userData.poses.{released|engaged}.rot — semantycznie dotyczy rotacji MESH.PARENT (leverGroup).
+   *   Phase 3: const pivot = lever.parent; gsap.to(pivot.rotation, poses[targetPose].rot).
+   *   pivotTarget: 'parent' (HIGH-1 kontrakt — spójne z oslona-przednia).
+   *
+   * Gałka NIE jest osobnym interactable — dzieli interactable z prętem (raycaster trafi w gałkę,
+   * Phase 3 walk-up do parent grupy i odczyta userData z pręta PRIMARY mesh).
+   */
+  _buildClutchLever() {
+    const leverGroup = new THREE.Group();
+    leverGroup.position.set(-3, 7, 0.5);  // podstawa dźwigni przy wale (D-Phase2-04)
+    this.group.add(leverGroup);
+
+    // Pręt — pre-translate: origin grupy = dolny koniec dźwigni (punkt obrotu).
+    // CylinderGeometry default: origin w środku (Y ∈ [-h/2, +h/2]). translate(0, h/2, 0) = translate(0, 0.75, 0)
+    // przesuwa origin do dolnego końca walca.
+    const leverGeo = new THREE.CylinderGeometry(0.05, 0.05, 1.5, 12);
+    leverGeo.translate(0, 0.75, 0);  // origin po translate: dolny koniec dźwigni = punkt obrotu
+    const lever = new THREE.Mesh(leverGeo, this.matBrakeSteel);
+    lever.castShadow = true;
+    leverGroup.add(lever);
+
+    // Gałka — wizualna podpowiedź gdzie chwytać (CONTEXT discretion rekomendacja)
+    const leverKnobGeo = new THREE.SphereGeometry(0.1, 16, 12);
+    const leverKnob = new THREE.Mesh(leverKnobGeo, this.matSafetyButtonGreen);  // zielona gałka — accent czytelności
+    leverKnob.position.set(0, 1.5, 0);  // koniec dźwigni w lokalnym frame'a grupy (po pre-translate)
+    leverKnob.castShadow = true;
+    leverGroup.add(leverKnob);
+    // Gałka NIE jest osobnym interactable — dzieli wizualny obszar z prętem.
+
+    this._registerInteractable({
+      mesh: lever,
+      id: 'dzwignia-sprzegla',
+      kind: 'manipulation',
+      baseMaterial: this.matBrakeSteel,
+      poses: {
+        released: { rot: { x: 0, y: 0, z: 0 } },
+        engaged:  { rot: { x: 0, y: 0, z: 0.7 } },
+      },
+      pivotTarget: 'parent',
+    });
+    // Default pose: released → leverGroup.rotation.z = 0 (dźwignia pionowa, domyślne).
+    // poses.{released|engaged}.rot.z odnosi się do rotacji leverGroup (pivotTarget: 'parent').
   }
 
   // === CRIT-6 + CRIT-7 INVARIANT (Phase 1 lock-in, Phase 2 enforcement) ===
