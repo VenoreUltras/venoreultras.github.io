@@ -22,6 +22,11 @@ export const pl = {
   ui: {
     statusRunning: 'Praca ciągła',
     statusStopped: 'Zatrzymana',
+    // Phase 3 — Plan 03-04 (UI-06 boundary compliance: zero polskich literałów w src/main.js)
+    attestPrefix: 'Potwierdź: ',
+    attestAriaPrefix: 'Potwierdź krok: ',
+    procedureComplete: 'Procedura zakończona',
+    stepFormatPrefix: 'Krok ',
   },
 
   // Komunikaty bledow PhysicsEngine (UI-06 enforcement — wczesniej inline w throw)
