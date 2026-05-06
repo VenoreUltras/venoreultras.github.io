@@ -44,7 +44,7 @@ Wymagania dla pierwszego wydania. Każde mapowane na fazę roadmapy.
 - [ ] **TWIN-07**: Geometria PM-300 rozszerzona o **panel sterowania oburęczny** — 2 zielone przyciski startu, lampka gotowości
 - [ ] **TWIN-08**: Geometria PM-300 rozszerzona o **przycisk E-stop** (czerwony grzyb, clickable)
 - [ ] **TWIN-09**: Geometria PM-300 rozszerzona o **wyłącznik główny** (clickable, animowane przekręcenie)
-- [ ] **TWIN-10**: Geometria PM-300 rozszerzona o **tabliczka znamionowa** PM-300
+- [x] **TWIN-10**: Geometria PM-300 rozszerzona o **tabliczka znamionowa** PM-300
 - [ ] **TWIN-11**: Każdy interactable mesh ma sklonowany własny `MeshStandardMaterial` (zapobiega CRIT-6 — wszystko świeci)
 - [ ] **TWIN-12**: `PressModel.getInteractables()` i `PressModel.getMeshDictionary()` zwracają rejestr klikalnych części
 - [ ] **TWIN-13**: Każdy interactable ma `userData = { id, kind, restPosition, labelPL, descriptionPL }`
@@ -179,7 +179,7 @@ Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera 2026-05-05.
 | TWIN-07 | Phase 2 | Pending |
 | TWIN-08 | Phase 2 | Pending |
 | TWIN-09 | Phase 2 | Pending |
-| TWIN-10 | Phase 2 | Pending |
+| TWIN-10 | Phase 2 | Complete |
 | TWIN-11 | Phase 2 | Pending |
 | TWIN-12 | Phase 2 | Pending |
 | TWIN-13 | Phase 2 | Pending |

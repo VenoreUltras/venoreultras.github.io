@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Executing Phase 02
-last_updated: "2026-05-06T07:20:00.000Z"
+last_updated: "2026-05-06T07:30:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 11
-  completed_plans: 6
-  percent: 55
+  completed_plans: 7
+  percent: 64
 ---
 
 # Project State: PM-300 Trener
@@ -33,7 +33,7 @@ progress:
 ## Current Position
 
 Phase: 02 (digital-twin-geometry) — EXECUTING
-Plan: 3 of 6
+Plan: 4 of 6
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
@@ -47,7 +47,7 @@ Plan: 3 of 6
 
 ```
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
-Phase 2: Digital Twin Geometry               [██        ] 33%  2/6 plans complete
+Phase 2: Digital Twin Geometry               [███       ] 50%  3/6 plans complete
 Phase 3: Click-to-State Pipeline             [          ] 0%   not started
 Phase 4: Visual Feedback Layer               [          ] 0%   not started
 Phase 5: Educational Layer                   [          ] 0%   not started
@@ -110,6 +110,7 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [x] Plan 01-05 (Wave 3) executed — DisclaimerBanner (UI-05) + WebGL context-loss (INFRA-05) + boundaries.test.js (INFRA-02 + UI-06 + TEST-03) + brownfield UI-06 migration
 - [x] Plan 02-01 (Wave 1) executed — MaterialRegistry + pl.parts + PressModel scaffolding; 136 tests green
 - [x] Plan 02-02 (Wave 2) executed — 6 interactable meshes: kolo-zamachowe + hamulec + wziernik-smarowania + oslona-tylna + kurtyna-lewa + kurtyna-prawa; getInteractables().size=6; 136 tests green
+- [x] Plan 02-03 (Wave 3) executed — tabliczka-znamionowa z CanvasTexture 512x320, MeshBasicMaterial, SRGBColorSpace; getInteractables().size=7; texture trackowana w registry; 136 tests green
 - [ ] (Před Phase 2) edytować `REQUIREMENTS.md` UI-02 i `ROADMAP.md` Phase 4 SC3 — dodać 7. stan maszyny `Rozpędzanie...` (decyzja D-09 z 01-CONTEXT.md)
 
 ### Decisions
@@ -119,6 +120,8 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - Klocek hamulca kind='manipulation' bez poses — Phase 4 przesunie go o ~0.1 jednostki na podstawie meshStates['hamulec'] (Plan 02-02)
 - MaterialRegistry jako osobna klasa (nie inline w PressModel) — testowalność i separacja odpowiedzialności (Plan 02-01, D-Phase2-07)
 - baseMaterial===null path w _registerInteractable dla CanvasTexture — tabliczka-znamionowa zachowuje własny MeshBasicMaterial (Plan 02-01, MEDIUM-5)
+- MeshBasicMaterial (nie MeshStandardMaterial) dla tabliczki znamionowej — tekst ASCII czytelny niezaleznie od oswietlenia sceny (Plan 02-03, TWIN-10)
+- trackTexture osobno od getCloned w MaterialRegistry — CanvasTexture ma osobny lifecycle dispose (Plan 02-03, T-02-06 mitigation)
 - pivotTarget enum z walidacją throw w _registerInteractable — fail-fast zamiast silent bug w Phase 3 (Plan 02-01, HIGH-1)
 - GSAP pin via tilde `~3.15.0` blokuje minor bumpy zmieniające deltaTime contract (Plan 01-01)
 - vitest.config.js coverage thresholds dormant aż src/training/** + src/state/** powstaną w Wave 1+2 (Plan 01-01)
@@ -139,10 +142,10 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 02-02 execution complete (Wave 2 — 6 static meshes: flywheel + brake + oil sight + rear guard + light curtain). Files written this session:
+**Last session ended after:** Plan 02-03 execution complete (Wave 3 — tabliczka znamionowa: CanvasTexture + MeshBasicMaterial + trackTexture). Files written this session:
 
-- `.planning/phases/02-digital-twin-geometry/02-02-SUMMARY.md`
-- `src/PressModel.js` (modified — _buildFlywheel + _buildBrake + _buildOilSightGlass + _buildRearGuard + _buildLightCurtain; 6 interactables registered)
+- `.planning/phases/02-digital-twin-geometry/02-03-SUMMARY.md`
+- `src/PressModel.js` (modified — _buildNameplate(); 7 interactables cumulative)
 
 **Earlier:** Plan 01-05 execution complete (Wave 3 — Phase 1 finalization). Files written this session:
 
