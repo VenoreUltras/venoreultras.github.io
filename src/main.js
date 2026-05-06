@@ -10,7 +10,7 @@ import { RaycastController } from './RaycastController.js';
 import uruchomienie from './training/scenarios/uruchomienie.js';
 import { pl } from './i18n/pl.js';
 
-class Application {
+export class Application {
   constructor() {
     this.sceneSetup = new SceneSetup('three-canvas');
     this.pressModel = new PressModel(this.sceneSetup.scene);
