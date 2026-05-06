@@ -25,7 +25,7 @@ Brownfield extension layered over existing PM-300 simulator (Three.js r0.184 + G
 
 - [x] **Phase 1: Foundation** — Test infra + pure SOP engine + store skeleton + disclaimer/redundant-encoding policy + Phase Z hygiene (5/5 plans complete; 21/21 requirements; 133 tests; coverage 98.05/93.42/96/100)
 - [x] **Phase 2: Digital Twin Geometry** — All SOP-relevant components exist as named, tagged, individually-materialed meshes (6/6 plans complete; 13/13 requirements TWIN-01..13; 149 tests)
-- [ ] **Phase 3: Click-to-State Pipeline** — RaycastController wires 3D clicks to validated store transitions
+- [~] **Phase 3: Click-to-State Pipeline** — RaycastController wires 3D clicks to validated store transitions (5/5 plans complete; 176 tests; PASS-WITH-PENDING — manual checkpoint 60 FPS+hover odroczony)
 - [ ] **Phase 4: Visual Feedback Layer** — HighlightManager + DOM panels project store state with redundant (color + icon + text) encoding
 - [ ] **Phase 5: Educational Layer** — Tooltips, free-roam, difficulty modes, audio, 3D labels, rationale, keyboard shortcuts
 - [ ] **Phase 6: Scenarios + Replay + Retry + Export** — All four SOP scenarios playable, session replayable, exportable as JSON + Polish PDF
@@ -85,11 +85,11 @@ Plans:
   5. Hover over a tagged mesh produces a visible hint highlight (lighter emissive, no GSAP pulse yet) within one tick; hovering off clears it within one tick. Adjacent-mesh flicker is bounded by hysteresis (≥2 consecutive hits or 50ms dwell).
 **Plans:** 5 plans
 Plans:
-- [ ] 03-01-PLAN.md — TrainingStore refactor: attemptStep(intent), activeScenario, isAnimating, idempotent advanceStep + boundary entry
-- [ ] 03-02-PLAN.md — RaycastController + tests (INTERACT-01/02/03/05; TEST-04 100-click stress; hysteresis 4-tick; drag<5px)
-- [ ] 03-03-PLAN.md — DOM scaffolding + CSS (#phase3-step-readout + #phase3-attest-container; glassmorphism Wong palette)
-- [ ] 03-04-PLAN.md — Application wiring: auto-start, RaycastController DI, 3 store subscribers, visual-attest button, dispose hook
-- [ ] 03-05-PLAN.md — E2E happy path 8/8 kroków + MANUAL CHECKPOINT (60 FPS, hover hint, full uruchomienie w przeglądarce)
+- [x] 03-01-PLAN.md — TrainingStore refactor: attemptStep(intent), activeScenario, isAnimating, idempotent advanceStep + boundary entry
+- [x] 03-02-PLAN.md — RaycastController + tests (INTERACT-01/02/03/05; TEST-04 100-click stress; hysteresis 4-tick; drag<5px)
+- [x] 03-03-PLAN.md — DOM scaffolding + CSS (#phase3-step-readout + #phase3-attest-container; glassmorphism Wong palette)
+- [x] 03-04-PLAN.md — Application wiring: auto-start, RaycastController DI, 3 store subscribers, visual-attest button, dispose hook
+- [~] 03-05-PLAN.md — E2E happy path 8/8 kroków zacommitowany; MANUAL CHECKPOINT (60 FPS, hover hint, full uruchomienie w przeglądarce) ODROCZONY przez użytkownika
 **UI hint**: yes
 
 ### Phase 4: Visual Feedback Layer

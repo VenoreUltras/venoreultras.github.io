@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 03 context gathered — ready for plan-phase
-last_updated: "2026-05-06T08:30:00.000Z"
+status: Phase 03 executed — PASS-WITH-PENDING (manual checkpoint 60 FPS+hover odroczony)
+last_updated: "2026-05-06T11:50:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 11
-  completed_plans: 9
-  percent: 82
+  total_plans: 16
+  completed_plans: 14
+  percent: 88
 ---
 
 # Project State: PM-300 Trener
@@ -28,12 +28,12 @@ progress:
 - `.planning/research/SUMMARY.md` — synthesis of stack/features/architecture/pitfalls research
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 03 — click-to-state-pipeline
+**Current focus:** Phase 03 — code complete (PASS-WITH-PENDING); Phase 04 next po manual checkpoint
 
 ## Current Position
 
-Phase: 02 (digital-twin-geometry) — COMPLETE
-Phase 03 — click-to-state-pipeline — NEXT
+Phase: 03 (click-to-state-pipeline) — CODE COMPLETE; manual checkpoint 60 FPS+hover hint ODROCZONY
+Phase 04 — visual-feedback-layer — NEXT (po sign-off manual checkpoint phase 3)
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
@@ -48,7 +48,7 @@ Phase 03 — click-to-state-pipeline — NEXT
 ```
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
 Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
-Phase 3: Click-to-State Pipeline             [          ] 0%   not started
+Phase 3: Click-to-State Pipeline             [█████████░] 95%  code complete (5/5 plans, manual checkpoint pending)
 Phase 4: Visual Feedback Layer               [          ] 0%   not started
 Phase 5: Educational Layer                   [          ] 0%   not started
 Phase 6: Scenarios + Replay + Retry + Export [          ] 0%   not started
