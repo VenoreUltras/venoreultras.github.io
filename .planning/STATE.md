@@ -33,7 +33,7 @@ progress:
 ## Current Position
 
 Phase: 02 (digital-twin-geometry) — EXECUTING
-Plan: 4 of 6
+Plan: 5 of 6
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
@@ -47,7 +47,7 @@ Plan: 4 of 6
 
 ```
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
-Phase 2: Digital Twin Geometry               [███       ] 50%  3/6 plans complete
+Phase 2: Digital Twin Geometry               [████      ] 67%  4/6 plans complete
 Phase 3: Click-to-State Pipeline             [          ] 0%   not started
 Phase 4: Visual Feedback Layer               [          ] 0%   not started
 Phase 5: Educational Layer                   [          ] 0%   not started
@@ -111,11 +111,14 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [x] Plan 02-01 (Wave 1) executed — MaterialRegistry + pl.parts + PressModel scaffolding; 136 tests green
 - [x] Plan 02-02 (Wave 2) executed — 6 interactable meshes: kolo-zamachowe + hamulec + wziernik-smarowania + oslona-tylna + kurtyna-lewa + kurtyna-prawa; getInteractables().size=6; 136 tests green
 - [x] Plan 02-03 (Wave 3) executed — tabliczka-znamionowa z CanvasTexture 512x320, MeshBasicMaterial, SRGBColorSpace; getInteractables().size=7; texture trackowana w registry; 136 tests green
+- [x] Plan 02-04 (Wave 4) executed — panel-oburezny + przycisk-start-lewy/prawy + lampka-gotowosci + estop (LatheGeometry grzybek); getInteractables().size=12; T-02-09/10/11 mitigations; 136 tests green
 - [ ] (Před Phase 2) edytować `REQUIREMENTS.md` UI-02 i `ROADMAP.md` Phase 4 SC3 — dodać 7. stan maszyny `Rozpędzanie...` (decyzja D-09 z 01-CONTEXT.md)
 
 ### Decisions
 
 - HIGH-2 (D-Phase2-04 ZACHOWANE): klocek hamulca po PRAWEJ stronie walu x=2.9 w [2.0, 3.0]; kolo zamachowe po LEWEJ x=-2.5 (Plan 02-02)
+- this.safetyPanel jako instance field (nie lokalna zmienna) — _buildEStop() musi dodac E-stop jako dziecko grupy panelu (Plan 02-04, T-02-09 mitigation)
+- Stem E-stopa decorative bez rejestracji — tylko head (PRIMARY) w registry; cumulative size = 12 nie 13 (Plan 02-04, T-02-10)
 - MEDIUM-3 (Claude's Discretion): tarcza hamulcowa visual-only na prawej stronie walu (x=1.7) jako dziecko shaftAxis — rotuje z walem, sluzy jako wizualny target dla klocka hamulca (Plan 02-02)
 - Klocek hamulca kind='manipulation' bez poses — Phase 4 przesunie go o ~0.1 jednostki na podstawie meshStates['hamulec'] (Plan 02-02)
 - MaterialRegistry jako osobna klasa (nie inline w PressModel) — testowalność i separacja odpowiedzialności (Plan 02-01, D-Phase2-07)
@@ -142,10 +145,10 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 02-03 execution complete (Wave 3 — tabliczka znamionowa: CanvasTexture + MeshBasicMaterial + trackTexture). Files written this session:
+**Last session ended after:** Plan 02-04 execution complete (Wave 4 — panel oburezny + E-stop: _buildSafetyPanel() + _buildEStop(); TWIN-07/08; 12 interactables cumulative). Files written this session:
 
-- `.planning/phases/02-digital-twin-geometry/02-03-SUMMARY.md`
-- `src/PressModel.js` (modified — _buildNameplate(); 7 interactables cumulative)
+- `.planning/phases/02-digital-twin-geometry/02-04-SUMMARY.md`
+- `src/PressModel.js` (modified — _buildSafetyPanel() + _buildEStop(); 12 interactables cumulative)
 
 **Earlier:** Plan 01-05 execution complete (Wave 3 — Phase 1 finalization). Files written this session:
 
