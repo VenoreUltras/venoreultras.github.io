@@ -362,3 +362,61 @@ input[type=range]::-webkit-slider-thumb:hover {
 .webgl-overlay--hidden {
   display: none;
 }
+
+/* ──────────────────────────────────────────────────────────
+   Phase 3 — INTERACT-04: visual-attest checkbox + step readout
+   Spójne z dark glassmorphism — dziedziczy z .glass-panel.
+   Wong success #009E73 statycznie; Phase 4 zastąpi state-driven encoding.
+   ────────────────────────────────────────────────────────── */
+#phase3-panel {
+  /* Dziedziczy całość z .glass-panel (tło, blur, border, padding). */
+}
+
+.phase3-readout {
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 400;
+  color: var(--text-main);
+  opacity: 0.92;
+  margin-bottom: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.04);
+  border-left: 3px solid rgba(0, 158, 115, 0.6); /* Wong #009E73 */
+  border-radius: 4px;
+  letter-spacing: 0.01em;
+}
+
+.phase3-attest-container {
+  /* Pusty container — przycisk wstrzykiwany dynamicznie przez subscriber (Plan 03-04). */
+  min-height: 0;
+}
+
+.phase3-attest-check {
+  display: block;
+  width: 100%;
+  padding: 0.65rem 1rem;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #ffffff;
+  background: rgba(0, 158, 115, 0.18); /* Wong #009E73 tint */
+  border: 1px solid rgba(0, 158, 115, 0.5);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  letter-spacing: 0.01em;
+}
+
+.phase3-attest-check:hover {
+  background: rgba(0, 158, 115, 0.32);
+  border-color: rgba(0, 158, 115, 0.8);
+}
+
+.phase3-attest-check:active {
+  background: rgba(0, 158, 115, 0.45);
+}
+
+.phase3-attest-check:focus-visible {
+  outline: 2px solid rgba(0, 158, 115, 0.9);
+  outline-offset: 2px;
+}
