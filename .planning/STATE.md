@@ -8,8 +8,8 @@ progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 11
-  completed_plans: 7
-  percent: 64
+  completed_plans: 8
+  percent: 73
 ---
 
 # Project State: PM-300 Trener
@@ -33,7 +33,7 @@ progress:
 ## Current Position
 
 Phase: 02 (digital-twin-geometry) — EXECUTING
-Plan: 5 of 6
+Plan: 6 of 6
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
@@ -47,7 +47,7 @@ Plan: 5 of 6
 
 ```
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
-Phase 2: Digital Twin Geometry               [████      ] 67%  4/6 plans complete
+Phase 2: Digital Twin Geometry               [█████     ] 83%  5/6 plans complete
 Phase 3: Click-to-State Pipeline             [          ] 0%   not started
 Phase 4: Visual Feedback Layer               [          ] 0%   not started
 Phase 5: Educational Layer                   [          ] 0%   not started
@@ -112,6 +112,7 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [x] Plan 02-02 (Wave 2) executed — 6 interactable meshes: kolo-zamachowe + hamulec + wziernik-smarowania + oslona-tylna + kurtyna-lewa + kurtyna-prawa; getInteractables().size=6; 136 tests green
 - [x] Plan 02-03 (Wave 3) executed — tabliczka-znamionowa z CanvasTexture 512x320, MeshBasicMaterial, SRGBColorSpace; getInteractables().size=7; texture trackowana w registry; 136 tests green
 - [x] Plan 02-04 (Wave 4) executed — panel-oburezny + przycisk-start-lewy/prawy + lampka-gotowosci + estop (LatheGeometry grzybek); getInteractables().size=12; T-02-09/10/11 mitigations; 136 tests green
+- [x] Plan 02-05 (Wave 5) executed — oslona-przednia + wylacznik-glowny + dzwignia-sprzegla; pivot-grupy + userData.poses + pivotTarget enum; ExtrudeGeometry pokrętło z 4 karbami; getInteractables().size=15 (kompletny); 136 tests green
 - [ ] (Před Phase 2) edytować `REQUIREMENTS.md` UI-02 i `ROADMAP.md` Phase 4 SC3 — dodać 7. stan maszyny `Rozpędzanie...` (decyzja D-09 z 01-CONTEXT.md)
 
 ### Decisions
@@ -126,6 +127,8 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - MeshBasicMaterial (nie MeshStandardMaterial) dla tabliczki znamionowej — tekst ASCII czytelny niezaleznie od oswietlenia sceny (Plan 02-03, TWIN-10)
 - trackTexture osobno od getCloned w MaterialRegistry — CanvasTexture ma osobny lifecycle dispose (Plan 02-03, T-02-06 mitigation)
 - pivotTarget enum z walidacją throw w _registerInteractable — fail-fast zamiast silent bug w Phase 3 (Plan 02-01, HIGH-1)
+- LOOKUP TABLE PIVOT_TARGET: 'parent' dla oslona-przednia + dzwignia-sprzegla (rotacja mesh.parent = pivot-group), 'self' dla wylacznik-glowny (rotacja knob mesh = Shape origin = centerline pokrętła) (Plan 02-05, T-02-12)
+- ExtrudeGeometry pokrętła: knobGeo.rotateY(Math.PI/2) — geometry obrócona zanim mesh do sceny; pokrętło wystaje wzdłuż +X; poses.rot.z = rotacja mesh sam (Plan 02-05, TWIN-09)
 - GSAP pin via tilde `~3.15.0` blokuje minor bumpy zmieniające deltaTime contract (Plan 01-01)
 - vitest.config.js coverage thresholds dormant aż src/training/** + src/state/** powstaną w Wave 1+2 (Plan 01-01)
 - PhysicsEngine input validation runs every tick; cost negligible (Plan 01-01)
@@ -145,10 +148,10 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 02-04 execution complete (Wave 4 — panel oburezny + E-stop: _buildSafetyPanel() + _buildEStop(); TWIN-07/08; 12 interactables cumulative). Files written this session:
+**Last session ended after:** Plan 02-05 execution complete (Wave 5 — pivot-group movables: _buildFrontGuard() + _buildMainSwitch() + _buildClutchLever(); TWIN-05/09/02; 15 interactables cumulative). Files written this session:
 
-- `.planning/phases/02-digital-twin-geometry/02-04-SUMMARY.md`
-- `src/PressModel.js` (modified — _buildSafetyPanel() + _buildEStop(); 12 interactables cumulative)
+- `.planning/phases/02-digital-twin-geometry/02-05-SUMMARY.md`
+- `src/PressModel.js` (modified — _buildFrontGuard() + _buildMainSwitch() + _buildClutchLever(); 15 interactables cumulative)
 
 **Earlier:** Plan 01-05 execution complete (Wave 3 — Phase 1 finalization). Files written this session:
 

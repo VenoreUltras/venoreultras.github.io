@@ -68,7 +68,7 @@ Plans:
 - [x] 02-02-PLAN.md - Static meshes: flywheel + brake + oil sight + rear guard + light curtain (TWIN-01/03/04/06)
 - [x] 02-03-PLAN.md - Nameplate with CanvasTexture (TWIN-10)
 - [x] 02-04-PLAN.md - Safety panel cluster + E-stop (TWIN-07/08)
-- [ ] 02-05-PLAN.md - Pivot-group movables: front guard + main switch + clutch lever (TWIN-02/05/09)
+- [x] 02-05-PLAN.md - Pivot-group movables: front guard + main switch + clutch lever (TWIN-02/05/09)
 - [ ] 02-06-PLAN.md - Smoke tests + dispose wire + boundaries (TWIN-11/12/13 enforcement)
 **UI hint**: yes
 
@@ -176,7 +176,7 @@ These are not requirements per se — they are the policies that prevent the cri
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Foundation | 5/5 | Complete | 2026-05-05 |
-| 2. Digital Twin Geometry | 4/6 | In progress | - |
+| 2. Digital Twin Geometry | 5/6 | In progress | - |
 | 3. Click-to-State Pipeline | 0/? | Not started | - |
 | 4. Visual Feedback Layer | 0/? | Not started | - |
 | 5. Educational Layer | 0/? | Not started | - |
