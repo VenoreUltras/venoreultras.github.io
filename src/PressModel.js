@@ -151,6 +151,11 @@ export class PressModel {
     // Wave 3: tabliczka znamionowa (TWIN-10)
     this._buildNameplate();
 
+    // Wave 4: panel oburęczny + E-stop (TWIN-07/08)
+    this._buildSafetyPanel();
+    // UWAGA: _buildEStop() MUSI być wywołany PO _buildSafetyPanel() — wymaga this.safetyPanel
+    this._buildEStop();
+
     // Inicjalizacja położenia
     this.update(0);
   }
@@ -395,6 +400,143 @@ export class PressModel {
       kind: 'visual-target',
       baseMaterial: null, // CanvasTexture path — material juz ustawiony explicit
     });
+  }
+
+  /**
+   * TWIN-07: Panel oburęczny (pulpit) + 4 dzieci klikalnych:
+   * - przycisk-start-lewy (manipulation, zielony)
+   * - przycisk-start-prawy (manipulation, zielony)
+   * - lampka-gotowosci (visual-target, zielona; emissive #000000 w Phase 2 — Phase 4 zaświeca)
+   * - estop (manipulation) — dodawany w _buildEStop() (osobna metoda, ten sam plan).
+   *
+   * Panel = grupa-rodzic; dzieci pozycjonowane w lokalnym frame'a panelu (przesunięcie panelu propaguje).
+   * Sam pulpit (panel) = osobny visual-target wpis w registry — kursant może najechać i dostać tooltip
+   * "Panel oburęczny" z opisem dydaktycznym (Phase 5 EDU-*).
+   */
+  _buildSafetyPanel() {
+    // 1. Grupa panelu — kontener dla pulpitu + 4 dzieci. Pozycja w świecie per D-Phase2-04.
+    this.safetyPanel = new THREE.Group();
+    this.safetyPanel.position.set(0, 2, 2.5);
+    this.group.add(this.safetyPanel);
+
+    // 2. Sam pulpit (mesh) — wystarczająco duży żeby pomieścić E-stop + 2 buttony + lampkę
+    //    Dimensions: szerokość ~1.6, głębokość ~0.7, grubość ~0.1 (widoczna z pozycji frontalnej kamery)
+    const pulpitGeo = new THREE.BoxGeometry(1.6, 0.1, 0.7);
+    const pulpit = new THREE.Mesh(pulpitGeo, this.matSafetyPanelGray);
+    pulpit.position.set(0, 0, 0);  // origin grupy panelu = środek pulpitu
+    pulpit.castShadow = true;
+    pulpit.receiveShadow = true;
+    this.safetyPanel.add(pulpit);
+
+    this._registerInteractable({
+      mesh: pulpit,
+      id: 'panel-oburezny',
+      kind: 'visual-target',
+      baseMaterial: this.matSafetyPanelGray,
+    });
+
+    // 3. Lewy zielony przycisk startu — walec 0.08r, h=0.06, na pulpicie po lewej
+    const buttonGeo = new THREE.CylinderGeometry(0.08, 0.08, 0.06, 24);
+    // Geometria: oś walca po Y (default Cylinder) → przycisk wystaje "do góry" z pulpitu = +Y
+    const startLeft = new THREE.Mesh(buttonGeo, this.matSafetyButtonGreen);
+    startLeft.position.set(-0.5, 0.08, 0.15);  // lewa strona pulpitu, lekko z przodu
+    startLeft.castShadow = true;
+    this.safetyPanel.add(startLeft);
+    this._registerInteractable({
+      mesh: startLeft,
+      id: 'przycisk-start-lewy',
+      kind: 'manipulation',
+      baseMaterial: this.matSafetyButtonGreen,
+    });
+
+    // 4. Prawy zielony przycisk startu — symetryczny do lewego
+    const startRight = new THREE.Mesh(buttonGeo, this.matSafetyButtonGreen);
+    startRight.position.set(0.5, 0.08, 0.15);
+    startRight.castShadow = true;
+    this.safetyPanel.add(startRight);
+    this._registerInteractable({
+      mesh: startRight,
+      id: 'przycisk-start-prawy',
+      kind: 'manipulation',
+      baseMaterial: this.matSafetyButtonGreen,
+    });
+
+    // 5. Lampka gotowości — mała półsfera/walec, wyżej na pulpicie (UI-SPEC: "wyżej niż przyciski")
+    //    Phase 2: emissive zostaje #000000 / emissiveIntensity=0 (UI-SPEC negative criteria — Phase 4 territory)
+    const lampGeo = new THREE.SphereGeometry(0.05, 16, 12);
+    const lamp = new THREE.Mesh(lampGeo, this.matReadyLamp);
+    lamp.position.set(0, 0.1, -0.2);  // środek pulpitu, dalej (wyżej w lokalnym Z na panelu = bliżej tyłu pulpitu)
+    lamp.castShadow = true;
+    this.safetyPanel.add(lamp);
+    this._registerInteractable({
+      mesh: lamp,
+      id: 'lampka-gotowosci',
+      kind: 'visual-target',
+      baseMaterial: this.matReadyLamp,
+    });
+
+    // E-stop dodawany w _buildEStop() — Task 2.
+  }
+
+  /**
+   * TWIN-08: E-stop — czerwony grzybek wyłącznika awaryjnego.
+   * Dwa LatheGeometry meshe (stem + head) pod jedną grupą; head jest PRIMARY (klikalny),
+   * stem jest decorative.
+   *
+   * Pozycja: dziecko this.safetyPanel @ lokalna pozycja (0, 0.05, 0) — środek pulpitu, lekko wyżej niż base.
+   *
+   * Guard: T-02-09 mitigation — explicit throw jeśli this.safetyPanel nie istnieje.
+   */
+  _buildEStop() {
+    if (!this.safetyPanel) {
+      throw new Error('_buildEStop wymaga _buildSafetyPanel uprzednio (this.safetyPanel undefined)');
+    }
+
+    const estopGroup = new THREE.Group();
+    estopGroup.position.set(0, 0.05, 0);  // środek pulpitu, tuż nad powierzchnią
+    this.safetyPanel.add(estopGroup);
+
+    // 1. Stem — czarny walec u dołu (RESEARCH profile)
+    const stemPoints = [
+      new THREE.Vector2(0.0,  0.0),
+      new THREE.Vector2(0.06, 0.0),
+      new THREE.Vector2(0.06, 0.18),
+      new THREE.Vector2(0.0,  0.18),
+    ];
+    const stemGeo = new THREE.LatheGeometry(stemPoints, 24);
+    const stem = new THREE.Mesh(stemGeo, this.matSwitchBody);
+    stem.castShadow = true;
+    estopGroup.add(stem);
+    // Stem NIE jest interactable — używa shared this.matSwitchBody (visual-only, decorative).
+
+    // 2. Head — czerwony grzybek (PRIMARY mesh, interactable)
+    const headPoints = [
+      new THREE.Vector2(0.0,  0.18),
+      new THREE.Vector2(0.06, 0.18),  // nasada grzybka, wąska
+      new THREE.Vector2(0.13, 0.21),  // rozszerza się
+      new THREE.Vector2(0.13, 0.25),  // płasko-cylindryczny rant
+      new THREE.Vector2(0.10, 0.27),  // zaokrąglona kopuła
+      new THREE.Vector2(0.0,  0.27),
+    ];
+    const headGeo = new THREE.LatheGeometry(headPoints, 32);
+    const head = new THREE.Mesh(headGeo, this.matEStopRed);
+    head.castShadow = true;
+    estopGroup.add(head);
+
+    this._registerInteractable({
+      mesh: head,
+      id: 'estop',
+      kind: 'manipulation',
+      baseMaterial: this.matEStopRed,
+    });
+
+    // UWAGA: head.position = (0,0,0) w lokalnym frame'a estopGroup; estopGroup @ (0, 0.05, 0) w panelu;
+    //        panel @ (0, 2, 2.5) w świecie. Końcowa pozycja head w świecie: (0, 2.05, 2.5) + lathe profile y.
+    //        UI-SPEC "wyraźnie większy niż zielone przyciski (r=0.08)" — head r=0.13 → ✓ większy.
+    //        UI-SPEC "na środkowej osi panelu" — head x=0 (jest na osi). ✓
+    //        T-02-09: this.safetyPanel guard na początku metody. ✓
+    //        T-02-10: TYLKO head zarejestrowany (nie stem) → cumulative size = 12, nie 13. ✓
+    //        T-02-11: matReadyLamp bez emissiveIntensity > 0 w Phase 2 (domyślnie 0). ✓
   }
 
   // === CRIT-6 + CRIT-7 INVARIANT (Phase 1 lock-in, Phase 2 enforcement) ===
