@@ -700,7 +700,7 @@ attemptStep: (intent) => {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED 2026-05-06 — patrz CONTEXT.md D-Phase3-03 Update i revision iteracja 1)
 
 1. **Visual-attest intent `kind` field**
    - Co wiemy: ProcedureEngine Branch 3 waliduje `intent.kind === 'check'` dla visual-attest kroków. D-Phase3-03 definiuje `{kind:'visual-attest', meshId:null}`.
@@ -797,8 +797,8 @@ attemptStep: (intent) => {
 | Pitfalls | HIGH | Pitfall #2 (intent.kind mismatch) zweryfikowany kodem — `validateStep({kind:'visual-attest',...})` zwraca `ok:false` |
 | Test Architecture | HIGH | Istniejące testy przeczytane; wzorce mockowania zweryfikowane w PressModel.smoke.test.js |
 
-### Open Questions
-- Pitfall 2: intent.kind dla visual-attest — Opcja A vs B (rekomendacja: A)
+### Open Questions (RESOLVED 2026-05-06)
+- Pitfall 2: intent.kind dla visual-attest — Opcja A wybrana (`{kind:'check', stepId}`), patrz CONTEXT.md D-Phase3-03 Update
 - Pixel threshold: 5px vs 8px dla touch (rekomendacja: 5px, tuning w QA)
 - `pl.machineState` vs `pl.machineStates` — użyj istniejącej singular formy
 
