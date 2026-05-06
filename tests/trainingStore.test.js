@@ -214,3 +214,73 @@ describe('TrainingStore — STATE-03 dispose pattern signals', () => {
     expect(listener.mock.calls.length).toBe(callsBefore);
   });
 });
+
+// Phase 3 (D-Phase3-02, D-Phase3-14, CRIT-8 / INTERACT-05): refaktor sygnatury
+// attemptStep(intent) + state.activeScenario + state.isAnimating lock + idempotent advanceStep.
+describe('Phase 3: attemptStep(intent) — single-arg signature + isAnimating lock + activeScenario', () => {
+  it('initial state: activeScenario=null, isAnimating=false', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    const s = store.getState();
+    expect(s.activeScenario).toBeNull();
+    expect(s.isAnimating).toBe(false);
+  });
+
+  it('startScenario zapisuje pełen obiekt scenariusza w state.activeScenario (identity)', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    expect(store.getState().activeScenario).toBe(uruchomienie); // identity, nie deep-equal
+  });
+
+  it('attemptStep(intent) — 1 argument — używa state.activeScenario', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    // Krok 1 to sprawdz-tabliczke (visual-target → tabliczka-znamionowa)
+    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    const done = store.getState().events.filter(e => e.type === 'step.done');
+    expect(done).toHaveLength(1);
+    expect(done[0].stepId).toBe('sprawdz-tabliczke');
+  });
+
+  it('isAnimating lock blokuje równoległe attemptStep (CRIT-8)', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    // Sztucznie ustawiamy lock — symulujemy wejście w równoległy attemptStep.
+    store.setState({ isAnimating: true });
+    const eventsBefore = store.getState().events.length;
+    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    const eventsAfter = store.getState().events.length;
+    expect(eventsAfter).toBe(eventsBefore); // lock zablokował, brak nowych eventów
+    // I lock pozostaje true (nie nadpisaliśmy go finally — early return przed try)
+    expect(store.getState().isAnimating).toBe(true);
+  });
+
+  it('try/finally zwalnia isAnimating po normalnym wywołaniu', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    expect(store.getState().isAnimating).toBe(false);
+  });
+
+  it('advanceStep idempotency — drugi advanceStep dla tego samego stepu nie nadpisuje state', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    // Pierwszy klik tabliczki → step #1 staje się done, currentStepId przesuwa się
+    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    const stepIdAfterFirst = store.getState().currentStepId;
+    expect(stepIdAfterFirst).not.toBe('sprawdz-tabliczke');
+    expect(store.getState().steps['sprawdz-tabliczke'].status).toBe('done');
+    // Sztucznie cofamy currentStepId na poprzedni (już done) i wywołujemy attemptStep
+    // z poprawnym mesh dla TEGO już-done kroku — gdyby idempotency nie zadziałała,
+    // advanceStep przeskakiwałby kolejny step.
+    store.setState({ currentStepId: 'sprawdz-tabliczke' });
+    const eventsBefore = store.getState().events.length;
+    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    // currentStepId NIE może przesunąć się dalej, bo step #1 już 'done' — guard zatrzymuje advanceStep
+    expect(store.getState().currentStepId).toBe('sprawdz-tabliczke');
+    expect(store.getState().steps['sprawdz-tabliczke'].status).toBe('done');
+    // Step.done nie jest emitowany ponownie dla tego samego stepu w applyEffects
+    // (sam advanceStep nie emituje eventu — appendEvent jest osobnym effectem;
+    // tutaj weryfikujemy tylko że state nie został nadpisany).
+    void eventsBefore;
+  });
+});
