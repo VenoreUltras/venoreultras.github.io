@@ -8,13 +8,13 @@ import uruchomienie from '../src/training/scenarios/uruchomienie.js';
 
 function playSteps1to7(store) {
   // Visual + manipulation kroki 1-7 (BEZ sprzegnij-po-rozpedzie).
-  store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' }, uruchomienie);
-  store.getState().attemptStep({ kind: 'check', stepId: 'kontrola-narzedzia' }, uruchomienie);
-  store.getState().attemptStep({ kind: 'check', stepId: 'kontrola-wzrokowa' }, uruchomienie);
-  store.getState().attemptStep({ kind: 'click', meshId: 'wziernik-smarowania' }, uruchomienie);
-  store.getState().attemptStep({ kind: 'click', meshId: 'oslona-przednia' }, uruchomienie);
-  store.getState().attemptStep({ kind: 'click', meshId: 'estop' }, uruchomienie);
-  store.getState().attemptStep({ kind: 'click', meshId: 'wylacznik-glowny' }, uruchomienie);
+  store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+  store.getState().attemptStep({ kind: 'check', stepId: 'kontrola-narzedzia' });
+  store.getState().attemptStep({ kind: 'check', stepId: 'kontrola-wzrokowa' });
+  store.getState().attemptStep({ kind: 'click', meshId: 'wziernik-smarowania' });
+  store.getState().attemptStep({ kind: 'click', meshId: 'oslona-przednia' });
+  store.getState().attemptStep({ kind: 'click', meshId: 'estop' });
+  store.getState().attemptStep({ kind: 'click', meshId: 'wylacznik-glowny' });
 }
 
 describe('uruchomienie integration — happy path (SOP-03/SOP-09)', () => {
@@ -33,7 +33,7 @@ describe('uruchomienie integration — happy path (SOP-03/SOP-09)', () => {
     expect(store.getState().machineState).toBe('gotowa-do-pracy');
 
     // Step 8: sprzegnij-po-rozpedzie
-    store.getState().attemptStep({ kind: 'click', meshId: 'dzwignia-sprzegla' }, uruchomienie);
+    store.getState().attemptStep({ kind: 'click', meshId: 'dzwignia-sprzegla' });
 
     const final = store.getState();
     expect(final.machineState).toBe('w-cyklu');
@@ -54,7 +54,7 @@ describe('uruchomienie integration — failure path: out-of-order (SOP-08, SOP-0
     store.getState().startScenario(uruchomienie);
 
     // Powinno czekać tabliczki, ale klikamy estop
-    store.getState().attemptStep({ kind: 'click', meshId: 'estop' }, uruchomienie);
+    store.getState().attemptStep({ kind: 'click', meshId: 'estop' });
 
     const s = store.getState();
     expect(s.currentStepId).toBe('sprawdz-tabliczke'); // no advance
@@ -79,7 +79,7 @@ describe('uruchomienie integration — failure path: forbidden-state (SOP-08, SO
     expect(store.getState().machineState).toBe('rozpedzanie');
 
     // NIE czekamy 3 sekund. Klikamy dzwignia-sprzegla zbyt wcześnie.
-    store.getState().attemptStep({ kind: 'click', meshId: 'dzwignia-sprzegla' }, uruchomienie);
+    store.getState().attemptStep({ kind: 'click', meshId: 'dzwignia-sprzegla' });
 
     const s = store.getState();
     const violation = s.events.find(
@@ -104,7 +104,7 @@ describe('uruchomienie integration — double-click stress (TEST-04 zalążek)',
     store.getState().startScenario(uruchomienie);
     // 100 razy klik tabliczki
     for (let i = 0; i < 100; i++) {
-      store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' }, uruchomienie);
+      store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
     }
     const s = store.getState();
     // Pierwszy klik advansuje currentStepId; kolejne 99 to wrong-target (mesh nie pasuje do step 2)

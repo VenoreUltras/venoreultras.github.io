@@ -41,6 +41,12 @@ const FORBIDDEN_PAIRS = [
   { file: 'src/state/trainingStore.js', mustNotImport: ['three', 'gsap'] },
   // DisclaimerBanner — pure DOM, no THREE/gsap/store/training
   { file: 'src/DisclaimerBanner.js', mustNotImport: ['three', 'gsap', '../state/', '../training/'] },
+  // Phase 3 (Plan 03-01): RaycastController — integration boundary.
+  // Może importować THREE i ../state/ (store.attemptStep), ale NIE wolno mu
+  // bezpośrednio importować ProcedureEngine/faultRules/scenarios — engine wywoływany
+  // wyłącznie przez store.attemptStep (D-Phase3-04). Plik zostanie utworzony w Plan 03-02;
+  // boundaries.test.js ma `if (!existsSync(filePath)) return;` więc do tego czasu test pomija.
+  { file: 'src/RaycastController.js', mustNotImport: ['../training/', './training/'] },
 ];
 
 /** Regex: static + dynamic imports. Capturuje string specifier. */
