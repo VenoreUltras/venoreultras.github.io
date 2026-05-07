@@ -104,7 +104,14 @@ Plans:
   3. The status badge (`StatusPanel`) displays one of six Polish states ("Oczekiwanie na inspekcję" / "Gotowa do pracy" / "W cyklu" / "Zatrzymana" / "Awaria — błąd procedury" / "Tryb wolny") plus a current score readout, all driven from store selectors.
   4. Every status change presents **color + icon + text** simultaneously (Wong palette #D55E00 for error / #009E73 for success). Toggling the high-contrast outline mode swaps emissive for an outline-shader presentation that still distinguishes error/success without color reliance.
   5. The full Phase 3 happy path now produces visible green/red feedback; viewed through a deuteranopia simulator the error/success distinction remains unambiguous (manual QA pass).
-**Plans**: TBD
+**Plans:** 6 plans
+Plans:
+- [ ] 04-01-PLAN.md — i18n rozszerzenie (pl.stepStates/Icons + machineStateIcons + ui.scorePrefix/hcToggle*) + store hcOutlineMode flag
+- [ ] 04-02-PLAN.md — EmissiveController (channel/priority stack: hover < state) + GSAP timeline lifecycle + tests
+- [ ] 04-03-PLAN.md — HighlightManager (FEEDBACK-01/02) + EdgeOutlineController (FEEDBACK-05 HC outline) + tests
+- [ ] 04-04-PLAN.md — StatusPanel (UI-02 top bar) + StepPanel (UI-01 left column) + jsdom tests
+- [ ] 04-05-PLAN.md — index.html restructure + style.css migracja Wong palette + RaycastController port D-Phase4-13
+- [ ] 04-06-PLAN.md — Application wiring + boundaries.test.js update + integration test + manual deuteranopia checkpoint
 **UI hint**: yes
 
 ### Phase 5: Educational Layer
