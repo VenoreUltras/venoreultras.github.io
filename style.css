@@ -364,59 +364,131 @@ input[type=range]::-webkit-slider-thumb:hover {
 }
 
 /* ──────────────────────────────────────────────────────────
-   Phase 3 — INTERACT-04: visual-attest checkbox + step readout
-   Spójne z dark glassmorphism — dziedziczy z .glass-panel.
-   Wong success #009E73 statycznie; Phase 4 zastąpi state-driven encoding.
+   Phase 4 — visual-feedback-layer (FEEDBACK-04/05, UI-01/02)
+   D-Phase4-01 layout: top bar (#status-panel) + left column (#step-panel).
+   D-Phase4-03 glassmorphism reuse z .glass-panel + :root variables.
+   D-Phase4-06 Wong palette: #D55E00 (error), #009E73 (success), #E69F00 (warn).
    ────────────────────────────────────────────────────────── */
-#phase3-panel {
-  /* Dziedziczy całość z .glass-panel (tło, blur, border, padding). */
+
+/* === Phase 4 — top bar StatusPanel === */
+.status-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1.5rem;
+  margin-top: 0;
+  width: auto;
+  border-radius: 0 0 16px 16px;
 }
 
-.phase3-readout {
-  font-family: var(--font-sans);
-  font-size: 0.95rem;
-  font-weight: 400;
-  color: var(--text-main);
-  opacity: 0.92;
-  margin-bottom: 0.75rem;
-  padding: 0.5rem 0.75rem;
-  background: rgba(255, 255, 255, 0.04);
-  border-left: 3px solid rgba(0, 158, 115, 0.6); /* Wong #009E73 */
-  border-radius: 4px;
-  letter-spacing: 0.01em;
-}
-
-.phase3-attest-container {
-  /* Pusty container — przycisk wstrzykiwany dynamicznie przez subscriber (Plan 03-04). */
-  min-height: 0;
-}
-
-.phase3-attest-check {
-  display: block;
+.status-panel__bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
   width: 100%;
-  padding: 0.65rem 1rem;
-  font-family: var(--font-sans);
-  font-size: 0.9rem;
+}
+
+.status-panel__icon {
+  font-size: 1.5rem;
+}
+
+.status-panel__state {
   font-weight: 600;
-  color: #ffffff;
-  background: rgba(0, 158, 115, 0.18); /* Wong #009E73 tint */
-  border: 1px solid rgba(0, 158, 115, 0.5);
-  border-radius: 6px;
+  color: var(--text-main);
+}
+
+.status-panel__score {
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+}
+
+.status-panel__hc-toggle {
+  margin-left: auto;
+  padding: 0.4rem 0.8rem;
+  background: transparent;
+  border: 1px solid var(--glass-border);
+  color: var(--text-main);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease;
-  letter-spacing: 0.01em;
+  border-radius: 6px;
+  font-family: var(--font-sans);
 }
 
-.phase3-attest-check:hover {
-  background: rgba(0, 158, 115, 0.32);
-  border-color: rgba(0, 158, 115, 0.8);
+.status-panel__hc-toggle[aria-pressed="true"] {
+  background: var(--accent-primary);
+  color: var(--text-main);
 }
 
-.phase3-attest-check:active {
-  background: rgba(0, 158, 115, 0.45);
+/* === Phase 4 — left column StepPanel === */
+.step-panel {
+  position: absolute;
+  top: 5rem; /* poniżej #status-panel */
+  left: 1rem;
+  bottom: 1rem;
+  width: 22rem;
+  overflow-y: auto;
+  padding: 1rem;
+  margin-top: 0;
 }
 
-.phase3-attest-check:focus-visible {
-  outline: 2px solid rgba(0, 158, 115, 0.9);
+.step-panel__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.step-item {
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border-left: 3px solid var(--glass-border);
+  color: var(--text-muted);
+  transition: border-color 0.2s, color 0.2s;
+}
+
+.step-item--oczekuje {
+  border-left-color: var(--glass-border);
+}
+
+.step-item--aktywny {
+  border-left-color: var(--accent-primary);
+  color: var(--text-main);
+  font-weight: 600;
+}
+
+.step-item--poprawny {
+  border-left-color: #009E73; /* Wong success — D-Phase4-06 */
+  color: var(--text-main);
+}
+
+.step-item--blad {
+  border-left-color: #D55E00; /* Wong error — D-Phase4-06 */
+  color: var(--text-main);
+}
+
+/* === Phase 4 — visual-attest inline button (renamed z Phase 3 attest-check) === */
+.phase4-attest-check {
+  margin-top: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: var(--accent-primary);
+  color: var(--text-main);
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  font-family: var(--font-sans);
+}
+
+.phase4-attest-check:disabled {
+  background: var(--text-muted);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.phase4-attest-check:focus-visible {
+  outline: 2px solid var(--accent-hover);
   outline-offset: 2px;
 }
