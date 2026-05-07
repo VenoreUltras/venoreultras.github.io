@@ -61,7 +61,7 @@ Wymagania dla pierwszego wydania. Każde mapowane na fazę roadmapy.
 ### Visual Feedback (FEEDBACK)
 
 - [ ] **FEEDBACK-01**: HighlightManager subskrybuje store i aplikuje emissive material toggling — czerwone pulsowanie dla pominiętych/błędnych elementów, zielone podświetlenie dla poprawnie wykonanych
-- [ ] **FEEDBACK-02**: Pulsowanie animowane przez `gsap.to(material, { emissiveIntensity, yoyo, repeat:-1 })` — animowane są liczby, nie obiekty Color (zapobiega GC churn)
+- [x] **FEEDBACK-02**: Pulsowanie animowane przez `gsap.to(material, { emissiveIntensity, yoyo, repeat:-1 })` — animowane są liczby, nie obiekty Color (zapobiega GC churn) [Plan 04-02]
 - [ ] **FEEDBACK-03**: NIE używamy `OutlinePass` w v1 — emissive + GSAP wystarczy bez extra render pass
 - [ ] **FEEDBACK-04**: Redundantne kodowanie colorblind-safe — każda zmiana statusu wyświetla **kolor + ikonę + tekst** (paleta Wong: #D55E00 dla błędu / #009E73 dla sukcesu)
 - [ ] **FEEDBACK-05**: Tryb high-contrast outline — toggle dla użytkowników z deuteranopia/protanopia
@@ -190,7 +190,7 @@ Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera 2026-05-05.
 | INTERACT-05 | Phase 3 | Pending |
 | INTERACT-06 | Phase 5 | Pending |
 | FEEDBACK-01 | Phase 4 | Pending |
-| FEEDBACK-02 | Phase 4 | Pending |
+| FEEDBACK-02 | Phase 4 | Done (Plan 04-02) |
 | FEEDBACK-03 | Phase 4 | Pending |
 | FEEDBACK-04 | Phase 4 | Pending |
 | FEEDBACK-05 | Phase 4 | Pending |

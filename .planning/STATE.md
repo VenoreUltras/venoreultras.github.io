@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 04 in progress — Plan 04-01 complete (i18n + hcOutlineMode foundation)
-last_updated: "2026-05-07T12:20:00.000Z"
+status: Phase 04 in progress — Plan 04-02 complete (EmissiveController stack + GSAP timelines)
+last_updated: "2026-05-07T12:25:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 22
-  completed_plans: 17
-  percent: 77
+  completed_plans: 18
+  percent: 81
 ---
 
 # Project State: PM-300 Trener
@@ -28,13 +28,13 @@ progress:
 - `.planning/research/SUMMARY.md` — synthesis of stack/features/architecture/pitfalls research
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 03 — code complete (PASS-WITH-PENDING); Phase 04 next po manual checkpoint
+**Current focus:** Phase 04 in progress — Wave 1 (Plan 04-01) i Wave 2 (Plan 04-02) complete
 
 ## Current Position
 
-Phase: 04 (visual-feedback-layer) — IN PROGRESS; Plan 04-01 (Wave 1) complete
+Phase: 04 (visual-feedback-layer) — IN PROGRESS; Plan 04-01 (Wave 1) + Plan 04-02 (Wave 2) complete
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
-Next: Plan 04-02 EmissiveController (Wave 2)
+Next: Plan 04-03 HighlightManager + EdgeOutlineController (Wave 3)
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
@@ -50,7 +50,7 @@ Next: Plan 04-02 EmissiveController (Wave 2)
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
 Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
 Phase 3: Click-to-State Pipeline             [█████████░] 95%  code complete (5/5 plans, manual checkpoint pending)
-Phase 4: Visual Feedback Layer               [█▌        ] 17%  Plan 04-01 complete (1/6 plans)
+Phase 4: Visual Feedback Layer               [███▎      ] 33%  Plan 04-01 + 04-02 complete (2/6 plans)
 Phase 5: Educational Layer                   [          ] 0%   not started
 Phase 6: Scenarios + Replay + Retry + Export [          ] 0%   not started
 Phase 7: (v2) Differentiators                [    v2    ] —    deferred
@@ -149,6 +149,10 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - pl.machineStateIcons keys 1:1 z pl.machineState; pl.stepStateIcons keys 1:1 z pl.stepStates — wymuszone przez `Object.keys(...).sort()` equality test (Plan 04-01, D-Phase4-05)
 - hcOutlineMode jest user-preference, NIE scenario-state — startScenario NIE resetuje flagi; Application bootstrap (Plan 04-06) odczyta localStorage i wywoła setState (Plan 04-01, D-Phase4-09)
 - trainingStore nie zna localStorage — persist warstwa należy do Application bootstrap; store pozostaje pure boundary-clean (Plan 04-01, D-Phase4-09)
+- EmissiveController: per-mesh stack {hover, state} z deterministic priority resolver `state > hover > baseline`; GSAP target = NUMBER na material.emissiveIntensity (CRIT-5/FEEDBACK-02), NIGDY THREE.Color (Plan 04-02, D-Phase4-13)
+- EmissiveController._applyTopLayer ZAWSZE killuje aktualny timeline przed recompute warstwy — eliminuje collateral writes ze starej animacji do material po zmianie warstwy (Plan 04-02, Discretion T-04-03)
+- EmissiveController boundary clean: tylko THREE+gsap importy, zero state/training/DOM (Plan 04-02; Plan 04-06 doda formal entry do boundaries.test.js)
+- CRIT-5 invariant testowany przez regex sourcefile (anti-pattern `gsap.to(*.emissive,…)` MUST NOT match; positive `gsap.to(material, {emissiveIntensity:…})` MUST match) — bardziej restrykcyjne niż mock GSAP (Plan 04-02)
 
 ### Blockers
 
@@ -156,7 +160,16 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 04-01 execution (Wave 1 — i18n + store foundation for Phase 4). Files written:
+**Last session ended after:** Plan 04-02 execution (Wave 2 — EmissiveController stack + GSAP timeline lifecycle). Files written:
+
+- `.planning/phases/04-visual-feedback-layer/04-02-SUMMARY.md` (created)
+- `src/highlight/EmissiveController.js` (created — class EmissiveController z setLayer/clearLayer/_applyTopLayer/dispose; per-mesh stack {hover, state}; GSAP pulse yoyo + flash 800ms)
+- `tests/EmissiveController.test.js` (created — 13 testów: 5 stack priority + 5 GSAP lifecycle + 1 dispose + 2 CRIT-5 regex)
+- 203/203 tests green; commits: 790a046 (impl), 26f9885 (testy)
+
+**Next session should:** Run Plan 04-03 (HighlightManager subskrybujący state.steps + EdgeOutlineController prebuild EdgesGeometry/LineSegments).
+
+**Earlier:** Plan 04-01 execution (Wave 1 — i18n + store foundation for Phase 4). Files written:
 
 - `.planning/phases/04-visual-feedback-layer/04-01-SUMMARY.md` (created)
 - `src/i18n/pl.js` (modified — +stepStates/stepStateIcons/machineStateIcons + ui.scorePrefix/hcToggleOn/hcToggleOff)
@@ -164,8 +177,6 @@ None.
 - `tests/i18n.pl.test.js` (created — 10 asercji)
 - `tests/trainingStore.test.js` (modified — +4 asercji hcOutlineMode)
 - 190/190 tests green; commits: a048ed1 (i18n), 083ad52 (store)
-
-**Next session should:** Run Plan 04-02 (EmissiveController — channel/priority stack + GSAP timeline lifecycle).
 
 **Earlier:** Phase 3 context gathering (`/gsd-discuss-phase 3`). Files written:
 

@@ -107,7 +107,7 @@ Plans:
 **Plans:** 6 plans
 Plans:
 - [x] 04-01-PLAN.md — i18n rozszerzenie (pl.stepStates/Icons + machineStateIcons + ui.scorePrefix/hcToggle*) + store hcOutlineMode flag (190 tests green; +14 new asercji)
-- [ ] 04-02-PLAN.md — EmissiveController (channel/priority stack: hover < state) + GSAP timeline lifecycle + tests
+- [x] 04-02-PLAN.md — EmissiveController (channel/priority stack: hover < state) + GSAP timeline lifecycle + tests (203 tests green; +13 nowych asercji)
 - [ ] 04-03-PLAN.md — HighlightManager (FEEDBACK-01/02) + EdgeOutlineController (FEEDBACK-05 HC outline) + tests
 - [ ] 04-04-PLAN.md — StatusPanel (UI-02 top bar) + StepPanel (UI-01 left column) + jsdom tests
 - [ ] 04-05-PLAN.md — index.html restructure + style.css migracja Wong palette + RaycastController port D-Phase4-13
@@ -191,7 +191,7 @@ These are not requirements per se — they are the policies that prevent the cri
 | 1. Foundation | 5/5 | Complete | 2026-05-05 |
 | 2. Digital Twin Geometry | 6/6 | Complete | 2026-05-06 |
 | 3. Click-to-State Pipeline | 0/5 | Not started | - |
-| 4. Visual Feedback Layer | 0/? | Not started | - |
+| 4. Visual Feedback Layer | 2/6 | In progress (Plan 04-01 + 04-02 done; 33%) | - |
 | 5. Educational Layer | 0/? | Not started | - |
 | 6. Scenarios + Replay + Retry + Export | 0/? | Not started | - |
 | 7. (v2) Differentiators | 0/? | v2 frontier | - |
