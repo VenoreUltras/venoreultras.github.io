@@ -6,6 +6,7 @@
 // statycznie sprawdza obecność wzorców w pliku (uniknięcie WebGLRenderer w jsdom — MOD-6).
 // Phase 3 (Plan 03-04) dodaje describe block "Phase 3 wiring" z mockowanym SceneSetup
 // dla pełnej dynamicznej weryfikacji konstruktor + subscribers + dispose.
+// Phase 4 (Plan 04-06): describe block "Phase 4 wiring" — 5 nowych controllerów + dispose chain.
 
 // Canvas mock dla CanvasTexture (PressModel._buildNameplate woła getContext('2d')) — musi być
 // PRZED importem src/main.js (hoisting). Pattern z tests/PressModel.smoke.test.js.
@@ -18,6 +19,12 @@ HTMLCanvasElement.prototype.getContext = function(type) {
   if (type === '2d') return mock2DContext;
   return null;
 };
+
+// Phase 4: jsdom <26 nie ma scrollIntoView (StepPanel._render woła feature-detected, ale
+// dla pewności stub na prototypie żeby brak metody nie psuł ewentualnych innych testów).
+if (typeof Element.prototype.scrollIntoView !== 'function') {
+  Element.prototype.scrollIntoView = function() { /* noop */ };
+}
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
@@ -101,18 +108,36 @@ describe('Application.dispose() (STATE-03 smoke)', () => {
     expect(src).toMatch(/dispose\s*\(/);
     expect(src).toMatch(/removeEventListener\(['"]resize['"]/);
   });
+
+  // Phase 4 (Plan 04-06): legacy renderery + UI.updateStatus zostały usunięte
+  it('src/main.js NIE zawiera już Phase 3 _renderStatusText/_renderStepAndAttest/_wireStoreSubscribers', () => {
+    const src = readFileSync('src/main.js', 'utf-8');
+    expect(src).not.toMatch(/_renderStatusText/);
+    expect(src).not.toMatch(/_renderStepAndAttest/);
+    expect(src).not.toMatch(/_wireStoreSubscribers/);
+  });
+
+  it('src/UI.js NIE zawiera już updateStatus() projekcji isRunning → #status-text', () => {
+    const src = readFileSync('src/UI.js', 'utf-8');
+    expect(src).not.toMatch(/updateStatus/);
+    // Slider RPM tor pozostaje (D-Phase4-17)
+    expect(src).toMatch(/this\.isRunning/);
+    expect(src).toMatch(/getAngularVelocity/);
+  });
 });
 
 // ---------------------------------------------------------------------------
-// Phase 3 wiring (Plan 03-04) — dynamiczne testy konstruktor + subscribers + dispose
+// Phase 4 wiring (Plan 04-06) — 5 nowych controllerów + dispose chain
 // ---------------------------------------------------------------------------
-describe('Application — Phase 3 wiring (Plan 03-04)', () => {
+describe('Application — Phase 4 wiring (Plan 04-06)', () => {
   let app;
   let Application;
 
   beforeEach(async () => {
     document.body.innerHTML = `
       <div id="three-canvas"></div>
+      <div id="status-panel"></div>
+      <aside id="step-panel"></aside>
       <span id="status-dot" class="dot"></span>
       <span id="status-text"></span>
       <input type="range" id="speed-slider" min="10" max="120" value="30">
@@ -120,14 +145,14 @@ describe('Application — Phase 3 wiring (Plan 03-04)', () => {
       <button id="btn-toggle">Start/Stop</button>
       <span id="val-angle">0</span>
       <span id="val-displacement">0</span>
-      <div id="phase3-step-readout"></div>
-      <div id="phase3-attest-container"></div>
     `;
+    // localStorage clean (HC bootstrap fallback do false)
+    try { localStorage.removeItem('pm300:hc-outline:v1'); } catch { /* noop */ }
     vi.resetModules();
     const mod = await import('../src/main.js');
     Application = mod.Application;
     if (!Application) {
-      throw new Error('src/main.js musi eksportować klasę Application dla testów Phase 3 (Plan 03-04)');
+      throw new Error('src/main.js musi eksportować klasę Application');
     }
     app = new Application();
   });
@@ -140,50 +165,84 @@ describe('Application — Phase 3 wiring (Plan 03-04)', () => {
     document.body.innerHTML = '';
   });
 
-  it('konstruktor wpina raycastController (instance of RaycastController)', () => {
+  it('konstruktor wpina raycastController (instance of RaycastController z DI emissive)', () => {
     expect(app.raycastController).toBeDefined();
-    expect(app.raycastController._raycaster).toBeDefined(); // RaycastController._raycaster instance check
+    expect(app.raycastController._raycaster).toBeDefined();
+    // D-Phase4-13: RaycastController dostaje DI emissive
+    expect(app.raycastController._emissive).toBe(app.emissiveController);
+  });
+
+  it('konstruktor instantiuje wszystkie 5 nowych Phase 4 controllerów jako pola', () => {
+    expect(app.emissiveController).toBeDefined();
+    expect(app.raycastController).toBeDefined();
+    expect(app.highlightManager).toBeDefined();
+    expect(app.edgeOutlineController).toBeDefined();
+    expect(app.statusPanel).toBeDefined();
+    expect(app.stepPanel).toBeDefined();
   });
 
   it('konstruktor auto-startuje scenariusz uruchomienie (D-Phase3-01)', () => {
     const s = app.store.getState();
     expect(s.activeScenario).toBeDefined();
     expect(s.activeScenario.id).toBe('uruchomienie');
-    expect(s.currentStepId).toBe('sprawdz-tabliczke'); // pierwszy krok
+    expect(s.currentStepId).toBe('sprawdz-tabliczke');
   });
 
-  it('konstruktor wpina ≥3 store subscribers (machineState/score/currentStepId)', () => {
-    expect(app._unsubscribers.length).toBeGreaterThanOrEqual(3);
+  it('konstruktor bootstrap-uje hcOutlineMode z localStorage (D-Phase4-09) — domyślnie false', () => {
+    expect(app.store.getState().hcOutlineMode).toBe(false);
   });
 
   it('tickables zawiera simulationTick + raycastController._runHysteresis (≥2 callbacks)', () => {
     expect(app.tickables.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('initial render — #phase3-step-readout zawiera "Krok 1/" po konstruktorze', () => {
-    const readout = document.getElementById('phase3-step-readout').textContent;
-    expect(readout).toMatch(/Krok 1\//);
+  it('StatusPanel renderuje Polish state + score po konstruktorze', () => {
+    const statusPanelText = document.getElementById('status-panel').textContent;
+    expect(statusPanelText).toContain('Oczekiwanie na inspekcję');
+    expect(statusPanelText).toContain('100/100');
   });
 
-  it('subscriber currentStepId reaguje — kliknięcie tabliczki przesuwa readout do "Krok 2/"', () => {
-    // intent.kind LITERAŁ 'click' (D-Phase3-03 Opcja A) — kompatybilne z ProcedureEngine Branch 3
+  it('StepPanel renderuje 8 kroków uruchomienia z aktywnym pierwszym', () => {
+    const items = document.querySelectorAll('#step-panel .step-item');
+    expect(items.length).toBe(8);
+    const active = document.querySelector('.step-item--aktywny');
+    expect(active).not.toBeNull();
+    expect(active.textContent).toContain('1.');
+  });
+
+  it('subscriber currentStepId reaguje — kliknięcie tabliczki advansuje StepPanel do "2."', () => {
     app.store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
-    const readout = document.getElementById('phase3-step-readout').textContent;
-    expect(readout).toMatch(/Krok 2\//);
+    const active = document.querySelector('.step-item--aktywny');
+    expect(active).not.toBeNull();
+    expect(active.textContent).toContain('2.');
+    // I poprzedni krok ma klasę --poprawny
+    const done = document.querySelectorAll('.step-item--poprawny');
+    expect(done.length).toBe(1);
   });
 
-  it('subscriber machineState aktualizuje #status-text z formatem "{label} — {score}/100"', () => {
-    // initial machineState dla uruchomienie === 'oczekiwanie-na-inspekcje'
-    const statusText = document.getElementById('status-text').textContent;
-    expect(statusText).toContain('Oczekiwanie na inspekcję');
-    expect(statusText).toContain('100/100');
-  });
+  it('dispose() chain: woła wszystkie 5 nowych dispose w odpowiedniej kolejności', () => {
+    const stepSpy = vi.spyOn(app.stepPanel, 'dispose');
+    const statusSpy = vi.spyOn(app.statusPanel, 'dispose');
+    const hmSpy = vi.spyOn(app.highlightManager, 'dispose');
+    const edgeSpy = vi.spyOn(app.edgeOutlineController, 'dispose');
+    const raycastSpy = vi.spyOn(app.raycastController, 'dispose');
+    const emissiveSpy = vi.spyOn(app.emissiveController, 'dispose');
 
-  it('dispose() wywołuje raycastController.dispose() i czyści _unsubscribers', () => {
-    const spy = vi.spyOn(app.raycastController, 'dispose');
     app.dispose();
-    expect(spy).toHaveBeenCalled();
+
+    expect(stepSpy).toHaveBeenCalled();
+    expect(statusSpy).toHaveBeenCalled();
+    expect(hmSpy).toHaveBeenCalled();
+    expect(edgeSpy).toHaveBeenCalled();
+    expect(raycastSpy).toHaveBeenCalled();
+    expect(emissiveSpy).toHaveBeenCalled();
     expect(app._unsubscribers).toEqual([]);
-    app = null; // afterEach nie wywoła ponownie
+
+    // T-04-14: RaycastController.dispose PRZED emissiveController.dispose
+    const raycastOrder = raycastSpy.mock.invocationCallOrder[0];
+    const emissiveOrder = emissiveSpy.mock.invocationCallOrder[0];
+    expect(raycastOrder).toBeLessThan(emissiveOrder);
+
+    app = null;
   });
 });

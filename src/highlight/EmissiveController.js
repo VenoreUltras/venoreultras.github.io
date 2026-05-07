@@ -70,6 +70,11 @@ export class EmissiveController {
    * Recompute top warstwy dla mesha. ZAWSZE killuje aktualny timeline przed zmianą
    * (Discretion: GSAP timeline cleanup → unikamy collateral animacji starej warstwy
    * pisującej do material po zmianie).
+   *
+   * Phase 4 (Plan 04-06, Rule 1): graceful skip dla materiałów bez `emissive`
+   * (np. MeshBasicMaterial — tabliczka znamionowa, Phase 2 D-Phase2-08). HighlightManager
+   * iteruje po wszystkich krokach scenariusza, w tym `sprawdz-tabliczke` z targetMeshId
+   * `tabliczka-znamionowa` która używa MeshBasicMaterial bez pola `emissive`.
    * @param {THREE.Mesh} mesh
    */
   _applyTopLayer(mesh) {
@@ -79,6 +84,10 @@ export class EmissiveController {
       tl.kill();
       this._timelines.delete(mesh);
     }
+
+    // Guard: material bez `emissive` (MeshBasicMaterial) — no-op (visual feedback przez inne kanały:
+    // ikona DOM + tekst step state w StepPanel + HC outline LineSegments).
+    if (!mesh.material || !mesh.material.emissive) return;
 
     if (slot.state) {
       // state — najwyższy priorytet
@@ -124,6 +133,8 @@ export class EmissiveController {
     for (const tl of this._timelines.values()) tl.kill();
     this._timelines.clear();
     for (const mesh of this._meshes) {
+      // Guard: graceful skip dla materiałów bez `emissive` (MeshBasicMaterial).
+      if (!mesh.material || !mesh.material.emissive) continue;
       mesh.material.emissive.setHex(BASELINE_HEX);
       mesh.material.emissiveIntensity = BASELINE_INTENSITY;
     }
