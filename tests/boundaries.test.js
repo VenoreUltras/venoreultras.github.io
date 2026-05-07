@@ -47,6 +47,22 @@ const FORBIDDEN_PAIRS = [
   // wyłącznie przez store.attemptStep (D-Phase3-04). Plik zostanie utworzony w Plan 03-02;
   // boundaries.test.js ma `if (!existsSync(filePath)) return;` więc do tego czasu test pomija.
   { file: 'src/RaycastController.js', mustNotImport: ['../training/', './training/'] },
+
+  // Phase 4 (Plan 04-06): visual feedback layer boundaries.
+  // src/highlight/* mogą THREE+gsap (animacje emissive); store/training/DOM dostają TYLKO przez DI w ctor.
+  // EmissiveController jest pure 3D — zero importów store; HighlightManager/EdgeOutlineController
+  // dostają store przez DI (zero runtime importu state/), ale nadal NIE mogą importować training/.
+  { file: 'src/highlight/EmissiveController.js',
+    mustNotImport: ['../state/', '../training/', './state/', './training/'] },
+  { file: 'src/highlight/HighlightManager.js',
+    mustNotImport: ['../training/', './training/'] },
+  { file: 'src/highlight/EdgeOutlineController.js',
+    mustNotImport: ['../training/', './training/'] },
+  // src/ui/* mogą DOM+store+pl; NIE THREE/gsap/training (D-Phase4 boundary z 04-CONTEXT linia 83).
+  { file: 'src/ui/StepPanel.js',
+    mustNotImport: ['three', 'gsap', '../training/', './training/'] },
+  { file: 'src/ui/StatusPanel.js',
+    mustNotImport: ['three', 'gsap', '../training/', './training/'] },
 ];
 
 /** Regex: static + dynamic imports. Capturuje string specifier. */
