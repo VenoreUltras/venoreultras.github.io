@@ -27,6 +27,10 @@ export const pl = {
     attestAriaPrefix: 'Potwierdź krok: ',
     procedureComplete: 'Procedura zakończona',
     stepFormatPrefix: 'Krok ',
+    // Phase 4 — Plan 04-01 (D-Phase4-08, D-Phase4-16): StatusPanel + HC outline toggle
+    scorePrefix: 'Wynik: ',
+    hcToggleOn: 'Wysoki kontrast: WŁ',
+    hcToggleOff: 'Wysoki kontrast: WYŁ',
   },
 
   // Komunikaty bledow PhysicsEngine (UI-06 enforcement — wczesniej inline w throw)
@@ -46,6 +50,35 @@ export const pl = {
     'zatrzymana': 'Zatrzymana',
     'awaria': 'Awaria — błąd procedury',
     'tryb-wolny': 'Tryb wolny',
+  },
+
+  // Phase 4 — Plan 04-01 (D-Phase4-05): emoji ikony 7 stanów maszyny.
+  // Klucze MUSZĄ pokrywać się 1:1 z pl.machineState (test wymusza).
+  machineStateIcons: {
+    'oczekiwanie-na-inspekcje': '🔍',
+    'gotowa-do-pracy': '🟢',
+    'rozpedzanie': '🔄',
+    'w-cyklu': '⚙️',
+    'zatrzymana': '⏸️',
+    'awaria': '⚠️',
+    'tryb-wolny': '🆓',
+  },
+
+  // Phase 4 — Plan 04-01 (D-Phase4-04/05): etykiety statusów kroku procedury.
+  stepStates: {
+    oczekuje: 'Oczekuje',
+    aktywny: 'Aktywny',
+    poprawny: 'Poprawny',
+    blad: 'Błąd',
+  },
+
+  // Phase 4 — Plan 04-01 (D-Phase4-05): emoji ikony 4 statusów kroku.
+  // Klucze MUSZĄ pokrywać się 1:1 z pl.stepStates.
+  stepStateIcons: {
+    oczekuje: '⏳',
+    aktywny: '▶️',
+    poprawny: '✅',
+    blad: '❌',
   },
 
   // D-04 mapowanie errorCode → komunikat (Phase 4 wykorzysta w czerwonym pulse)
