@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 04 in progress — Plan 04-05 complete (DOM/CSS restructure + RaycastController port D-Phase4-13)
-last_updated: "2026-05-07T12:55:00.000Z"
+status: Phase 04 CODE COMPLETE — Plan 04-06 done (Application wiring + UI.updateStatus removal + boundaries +5 + integration FEEDBACK-04); manual deuteranopia checkpoint PENDING
+last_updated: "2026-05-07T13:01:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 22
-  completed_plans: 21
-  percent: 95
+  completed_plans: 22
+  percent: 100
 ---
 
 # Project State: PM-300 Trener
@@ -28,13 +28,13 @@ progress:
 - `.planning/research/SUMMARY.md` — synthesis of stack/features/architecture/pitfalls research
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 04 in progress — Wave 1 (04-01), Wave 2 (04-02), Wave 3 (04-03 + 04-04), Wave 4 (04-05) complete
+**Current focus:** Phase 04 CODE COMPLETE — Wave 1 (04-01), Wave 2 (04-02), Wave 3 (04-03 + 04-04), Wave 4 (04-05), Wave 5 (04-06) complete; manual deuteranopia QA checkpoint PENDING przed `/gsd-verify-work 4`
 
 ## Current Position
 
-Phase: 04 (visual-feedback-layer) — IN PROGRESS; Plan 04-01..04-05 complete (Wave 1+2+3+4)
+Phase: 04 (visual-feedback-layer) — CODE COMPLETE; Plan 04-01..04-06 complete (6/6 plans, 267 tests green)
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
-Next: Plan 04-06 (Application bootstrap wire — EmissiveController + StatusPanel + StepPanel + HighlightManager + EdgeOutlineController DI w main.js + dispose chain + cleanup _renderStepAndAttest/_renderStatusText Phase 3 subskrybierów)
+Next: Manual deuteranopia QA checkpoint (Task 5 z Plan 04-06; SC5 Phase 4) → po approval `/gsd-verify-work 4`, potem `/gsd-discuss-phase 5`
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
@@ -50,7 +50,7 @@ Next: Plan 04-06 (Application bootstrap wire — EmissiveController + StatusPane
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
 Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
 Phase 3: Click-to-State Pipeline             [█████████░] 95%  code complete (5/5 plans, manual checkpoint pending)
-Phase 4: Visual Feedback Layer               [████████▌ ] 83%  Plan 04-01..04-05 complete (5/6 plans)
+Phase 4: Visual Feedback Layer               [█████████░] 95%  CODE COMPLETE Plan 04-01..04-06 (6/6 plans, manual deuteranopia QA pending)
 Phase 5: Educational Layer                   [          ] 0%   not started
 Phase 6: Scenarios + Replay + Retry + Export [          ] 0%   not started
 Phase 7: (v2) Differentiators                [    v2    ] —    deferred
@@ -167,6 +167,12 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - RaycastController port D-Phase4-13: konstruktor wymaga DI emissive (no fallback) — single-source-of-truth dla warstwy 'hover'; brak defensywnego `if(this._emissive)` eliminuje cichą regresję (Plan 04-05)
 - Test hysteresis A->B przepisany na real EmissiveController + spy: sprawdza wywołanie setLayer/clearLayer JAK i końcowy material.emissive — semantyka clearLayer('hover') gdy brak warstwy 'state' = baseline 0x000000, NIE pre-hover snapshot z Phase 3 (Plan 04-05)
 - main.js wire emissive DI dla RaycastController + cleanup _renderStepAndAttest/_renderStatusText Phase 3 subscribers ODROCZONY do Plan 04-06 — brownfield-port intentionally leaves transition state (file-level → wiring sequence per 04-PATTERNS.md) (Plan 04-05)
+- Application bootstrap kolejność: EmissiveController PRZED RaycastController (DI emissive dla warstwy 'hover'); HighlightManager + EdgeOutlineController + StatusPanel + StepPanel po RaycastController (Plan 04-06, D-Phase4-14)
+- Bootstrap localStorage 'pm300:hc-outline:v1' → store.setState({hcOutlineMode}) PRZED store.startScenario — wszystkie subskrybery widzą poprawny initial state w ctor (Plan 04-06, D-Phase4-09)
+- Dispose chain order T-04-14: panele/managers → RaycastController → EmissiveController; RaycastController.dispose() woła _commitLeave() → emissive.clearLayer('hover'), więc emissive musi przeżyć do końca (Plan 04-06)
+- EmissiveController._applyTopLayer + dispose: graceful skip dla materiałów bez `emissive` field (MeshBasicMaterial — tabliczka znamionowa Phase 2 D-Phase2-08); HighlightManager iteruje po wszystkich krokach scenariusza w tym sprawdz-tabliczke. Bug ujawnił się w integration; Rule 1 fix w Plan 04-06 (testy jednostkowe Plan 04-02 używały tylko MeshStandardMaterial)
+- src/UI.js: updateStatus() projekcja isRunning → #status-text USUNIĘTE (D-Phase4-17); btn-toggle nadal flipuje this.isRunning (slider RPM tor zachowany — ortogonalny kanał kontroli wału, niezależny od machineState w storze) (Plan 04-06)
+- tests/application.test.js Phase 3 wiring describe wycofany — placeholder DOM nodes (#phase3-step-readout/#phase3-attest-container) usunięte z index.html w Plan 04-05; zastąpione Phase 4 wiring describe z 9 assercjami w tym dispose order spy via `mock.invocationCallOrder` (Plan 04-06)
 
 ### Blockers
 
@@ -174,7 +180,20 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 04-05 execution (Wave 4 — DOM/CSS restructure + RaycastController port D-Phase4-13; 4 commits: 26017f0 task1 / 2d95899 task2 / f40964f RED / 5ee9be3 GREEN). Files written:
+**Last session ended after:** Plan 04-06 execution (Wave 5 — Application wiring + UI.updateStatus removal + boundaries +5 + integration FEEDBACK-04; 4 commits: 3390ba2 task1 / cd16546 task2 / fb363ec task3 / 092114c task4). Files written:
+
+- `.planning/phases/04-visual-feedback-layer/04-06-SUMMARY.md` (created)
+- `src/main.js` (modified — Application z 5 nowymi controllerami; bootstrap localStorage 'pm300:hc-outline:v1' PRZED startScenario; dispose chain T-04-14 — RaycastController PRZED EmissiveController; usunięte _wireStoreSubscribers/_renderStatusText/_renderStepAndAttest)
+- `src/UI.js` (modified — updateStatus() USUNIĘTE; btn-toggle nadal flipuje this.isRunning dla slider RPM tor)
+- `src/highlight/EmissiveController.js` (modified — Rule 1 guard: graceful skip dla materiałów bez `emissive` w _applyTopLayer + dispose; MeshBasicMaterial tabliczki nie ma pola)
+- `tests/application.test.js` (modified — Phase 3 wiring describe wycofany; Phase 4 wiring describe z 9 assercjami w tym dispose order spy via mock.invocationCallOrder T-04-14)
+- `tests/boundaries.test.js` (modified — +5 entries: src/highlight/{EmissiveController,HighlightManager,EdgeOutlineController}.js + src/ui/{StepPanel,StatusPanel}.js)
+- `tests/uruchomienie.integration.test.js` (modified — +2 testy FEEDBACK-04 redundant encoding: error step → emissive #D55E00 + ❌ + 'Błąd'; happy step → emissive #009E73 + ✅ + 'Poprawny')
+- 267/267 tests green (257 baseline + 10 nowych Phase 4 wiring + redundant encoding)
+
+**Next session should:** Manual deuteranopia QA checkpoint (Task 5 Plan 04-06; SC5 Phase 4) — `npm run dev` + 9-punktowa procedura w przeglądarce (StatusPanel/StepPanel render, happy path 8/8 zielone flashe, error step czerwony pulse, HC outline persist localStorage, deuteranopia simulator distinguishability, 60 FPS hold, console clean). Po user approval → `/gsd-verify-work 4` zamyka Phase 4, potem `/gsd-discuss-phase 5`.
+
+**Earlier:** Plan 04-05 execution (Wave 4 — DOM/CSS restructure + RaycastController port D-Phase4-13; 4 commits: 26017f0 task1 / 2d95899 task2 / f40964f RED / 5ee9be3 GREEN). Files written:
 
 - `.planning/phases/04-visual-feedback-layer/04-05-SUMMARY.md` (created)
 - `index.html` (modified — usunięty #phase3-panel; dorzucone #status-panel top bar + #step-panel left column)

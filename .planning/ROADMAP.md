@@ -26,7 +26,7 @@ Brownfield extension layered over existing PM-300 simulator (Three.js r0.184 + G
 - [x] **Phase 1: Foundation** — Test infra + pure SOP engine + store skeleton + disclaimer/redundant-encoding policy + Phase Z hygiene (5/5 plans complete; 21/21 requirements; 133 tests; coverage 98.05/93.42/96/100)
 - [x] **Phase 2: Digital Twin Geometry** — All SOP-relevant components exist as named, tagged, individually-materialed meshes (6/6 plans complete; 13/13 requirements TWIN-01..13; 149 tests)
 - [~] **Phase 3: Click-to-State Pipeline** — RaycastController wires 3D clicks to validated store transitions (5/5 plans complete; 176 tests; PASS-WITH-PENDING — manual checkpoint 60 FPS+hover odroczony)
-- [ ] **Phase 4: Visual Feedback Layer** — HighlightManager + DOM panels project store state with redundant (color + icon + text) encoding
+- [~] **Phase 4: Visual Feedback Layer** — HighlightManager + DOM panels project store state with redundant (color + icon + text) encoding (6/6 plans CODE COMPLETE; 267 tests green; manual deuteranopia QA checkpoint pending — SC5)
 - [ ] **Phase 5: Educational Layer** — Tooltips, free-roam, difficulty modes, audio, 3D labels, rationale, keyboard shortcuts
 - [ ] **Phase 6: Scenarios + Replay + Retry + Export** — All four SOP scenarios playable, session replayable, exportable as JSON + Polish PDF
 - [ ] **Phase 7 (v2 frontier): Differentiators** — Exploded view, randomized faults, supervisor recommendations, scalable font (no v1 requirements)
@@ -111,7 +111,7 @@ Plans:
 - [x] 04-03-PLAN.md — HighlightManager (FEEDBACK-01/03/04) + EdgeOutlineController (FEEDBACK-05 HC outline) + tests (235 tests green; +32 nowych asercji; pełny TDD 4 commity RED/GREEN)
 - [x] 04-04-PLAN.md — StatusPanel (UI-02 top bar) + StepPanel (UI-01 left column) + jsdom tests (256 tests green; +21 nowych asercji; pełny TDD 4 commity RED/GREEN)
 - [x] 04-05-PLAN.md — index.html restructure + style.css migracja Wong palette + RaycastController port D-Phase4-13 (257 tests green; brownfield-port 4 commity 1 task1 + 1 task2 + RED/GREEN dla task3)
-- [ ] 04-06-PLAN.md — Application wiring + boundaries.test.js update + integration test + manual deuteranopia checkpoint
+- [x] 04-06-PLAN.md — Application wiring (5 controllerów + bootstrap localStorage HC + dispose chain T-04-14) + UI.updateStatus removal + boundaries.test.js +5 entries + integration test FEEDBACK-04 redundant encoding (267 tests green; +10 nowych asercji; 4 commity refactor/test; manual deuteranopia checkpoint Task 5 PENDING)
 **UI hint**: yes
 
 ### Phase 5: Educational Layer
