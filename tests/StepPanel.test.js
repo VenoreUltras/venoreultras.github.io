@@ -126,9 +126,15 @@ describe('StepPanel — visual-attest inline button (D-Phase4-04)', () => {
 });
 
 describe('StepPanel — auto-scroll do aktywnego (D-Phase4-04)', () => {
-  let store, panel, scrollSpy;
+  let store, panel, scrollSpy, hadScrollIntoView;
   beforeEach(() => {
     document.body.innerHTML = '<aside id="step-panel"></aside>';
+    // jsdom nie implementuje Element.prototype.scrollIntoView — definiujemy stub
+    // na prototypie ZANIM spy'ujemy (vi.spyOn wymaga existing property).
+    hadScrollIntoView = typeof Element.prototype.scrollIntoView === 'function';
+    if (!hadScrollIntoView) {
+      Element.prototype.scrollIntoView = function () {};
+    }
     scrollSpy = vi.spyOn(Element.prototype, 'scrollIntoView').mockImplementation(() => {});
     store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(uruchomienie);
@@ -137,7 +143,10 @@ describe('StepPanel — auto-scroll do aktywnego (D-Phase4-04)', () => {
   afterEach(() => {
     if (panel) panel.dispose();
     panel = null;
-    scrollSpy.mockRestore();
+    if (scrollSpy) scrollSpy.mockRestore();
+    if (!hadScrollIntoView) {
+      delete Element.prototype.scrollIntoView;
+    }
     document.body.innerHTML = '';
   });
 
