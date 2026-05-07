@@ -63,14 +63,14 @@ Wymagania dla pierwszego wydania. Każde mapowane na fazę roadmapy.
 - [x] **FEEDBACK-01**: HighlightManager subskrybuje store i aplikuje emissive material toggling — czerwone pulsowanie dla pominiętych/błędnych elementów, zielone podświetlenie dla poprawnie wykonanych [Plan 04-03]
 - [x] **FEEDBACK-02**: Pulsowanie animowane przez `gsap.to(material, { emissiveIntensity, yoyo, repeat:-1 })` — animowane są liczby, nie obiekty Color (zapobiega GC churn) [Plan 04-02]
 - [x] **FEEDBACK-03**: NIE używamy `OutlinePass` w v1 — emissive + GSAP wystarczy bez extra render pass [Plan 04-03 — EdgeOutlineController używa THREE.EdgesGeometry+LineSegments z core; SC1 regex test]
-- [ ] **FEEDBACK-04**: Redundantne kodowanie colorblind-safe — każda zmiana statusu wyświetla **kolor + ikonę + tekst** (paleta Wong: #D55E00 dla błędu / #009E73 dla sukcesu)
-- [ ] **FEEDBACK-05**: Tryb high-contrast outline — toggle dla użytkowników z deuteranopia/protanopia
+- [x] **FEEDBACK-04**: Redundantne kodowanie colorblind-safe — każda zmiana statusu wyświetla **kolor + ikonę + tekst** (paleta Wong: #D55E00 dla błędu / #009E73 dla sukcesu) [Plan 04-04 panele + Plan 04-05 CSS Wong palette]
+- [x] **FEEDBACK-05**: Tryb high-contrast outline — toggle dla użytkowników z deuteranopia/protanopia [Plan 04-03 EdgeOutlineController + Plan 04-04 HC toggle UI + Plan 04-05 .status-panel__hc-toggle CSS]
 - [ ] **FEEDBACK-06**: Etykiety części 3D przez `CSS2DRenderer` — toggleable klawiszem `L`, polskie nazwy z `userData.labelPL`
 
 ### UI Panels (UI)
 
-- [ ] **UI-01**: Panel boczny `StepPanel` — checklist kroków po polsku, status każdego kroku (oczekuje / aktywny / poprawny / błąd), auto-scroll do aktywnego kroku
-- [ ] **UI-02**: Panel statusu `StatusPanel` — 6 stanów maszyny po polsku: "Oczekiwanie na inspekcję", "Gotowa do pracy", "W cyklu", "Zatrzymana", "Awaria — błąd procedury", "Tryb wolny" + score readout
+- [x] **UI-01**: Panel boczny `StepPanel` — checklist kroków po polsku, status każdego kroku (oczekuje / aktywny / poprawny / błąd), auto-scroll do aktywnego kroku [Plan 04-04 class + Plan 04-05 DOM/CSS]
+- [x] **UI-02**: Panel statusu `StatusPanel` — 6 stanów maszyny po polsku: "Oczekiwanie na inspekcję", "Gotowa do pracy", "W cyklu", "Zatrzymana", "Awaria — błąd procedury", "Tryb wolny" + score readout [Plan 04-04 class + Plan 04-05 DOM/CSS]
 - [ ] **UI-03**: TooltipManager używa `@floating-ui/dom` z 600ms hover delay, pozycjonowanie auto-update przy ruchu
 - [ ] **UI-04**: Każdy aktywny krok wyświetla pole `rationale` po polsku ("po co ten krok") — pod krokiem lub za przyciskiem `?`
 - [ ] **UI-05**: Banner disclaimera widoczny stale — informuje że symulator NIE zastępuje rzeczywistego szkolenia BHP (CRIT-1)
@@ -192,11 +192,11 @@ Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera 2026-05-05.
 | FEEDBACK-01 | Phase 4 | Done (Plan 04-03) |
 | FEEDBACK-02 | Phase 4 | Done (Plan 04-02) |
 | FEEDBACK-03 | Phase 4 | Done (Plan 04-03) |
-| FEEDBACK-04 | Phase 4 | Pending |
-| FEEDBACK-05 | Phase 4 | Pending |
+| FEEDBACK-04 | Phase 4 | Done (Plan 04-04 + 04-05) |
+| FEEDBACK-05 | Phase 4 | Done (Plan 04-03 + 04-04 + 04-05) |
 | FEEDBACK-06 | Phase 5 | Pending |
-| UI-01 | Phase 4 | Pending |
-| UI-02 | Phase 4 | Pending |
+| UI-01 | Phase 4 | Done (Plan 04-04 + 04-05) |
+| UI-02 | Phase 4 | Done (Plan 04-04 + 04-05) |
 | UI-03 | Phase 5 | Pending |
 | UI-04 | Phase 5 | Pending |
 | UI-05 | Phase 1 | Complete (Plan 01-05) |

@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 04 in progress — Plan 04-04 complete (StatusPanel + StepPanel DOM warstwa)
-last_updated: "2026-05-07T12:42:00.000Z"
+status: Phase 04 in progress — Plan 04-05 complete (DOM/CSS restructure + RaycastController port D-Phase4-13)
+last_updated: "2026-05-07T12:55:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 22
-  completed_plans: 20
-  percent: 91
+  completed_plans: 21
+  percent: 95
 ---
 
 # Project State: PM-300 Trener
@@ -28,13 +28,13 @@ progress:
 - `.planning/research/SUMMARY.md` — synthesis of stack/features/architecture/pitfalls research
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 04 in progress — Wave 1 (04-01), Wave 2 (04-02), Wave 3 (04-03 + 04-04) complete
+**Current focus:** Phase 04 in progress — Wave 1 (04-01), Wave 2 (04-02), Wave 3 (04-03 + 04-04), Wave 4 (04-05) complete
 
 ## Current Position
 
-Phase: 04 (visual-feedback-layer) — IN PROGRESS; Plan 04-01..04-04 complete (Wave 1+2+3 częściowo)
+Phase: 04 (visual-feedback-layer) — IN PROGRESS; Plan 04-01..04-05 complete (Wave 1+2+3+4)
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
-Next: Plan 04-05 (index.html restructure + style.css migracja + RaycastController port D-Phase4-13)
+Next: Plan 04-06 (Application bootstrap wire — EmissiveController + StatusPanel + StepPanel + HighlightManager + EdgeOutlineController DI w main.js + dispose chain + cleanup _renderStepAndAttest/_renderStatusText Phase 3 subskrybierów)
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
@@ -50,7 +50,7 @@ Next: Plan 04-05 (index.html restructure + style.css migracja + RaycastControlle
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
 Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
 Phase 3: Click-to-State Pipeline             [█████████░] 95%  code complete (5/5 plans, manual checkpoint pending)
-Phase 4: Visual Feedback Layer               [██████▌   ] 67%  Plan 04-01..04-04 complete (4/6 plans)
+Phase 4: Visual Feedback Layer               [████████▌ ] 83%  Plan 04-01..04-05 complete (5/6 plans)
 Phase 5: Educational Layer                   [          ] 0%   not started
 Phase 6: Scenarios + Replay + Retry + Export [          ] 0%   not started
 Phase 7: (v2) Differentiators                [    v2    ] —    deferred
@@ -164,6 +164,9 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - StepPanel: visual-attest button warunkowo renderowany tylko dla aktywnego non-done kroku visual-attest — po sukcesie button znika z DOM przez re-render (UX clean state) (Plan 04-04, D-Phase4-04)
 - jsdom <26 nie implementuje Element.prototype.scrollIntoView — production code feature-detect (typeof === 'function'); test stub'uje na prototypie przed vi.spyOn i czyści w afterEach (Plan 04-04, Rule 3 blocking fix; production Chromium zawsze ma metodę)
 - 3 osobne subscribery per panel zamiast jednego shallow-equal — fine-grained, analog main.js _wireStoreSubscribers; każdy slice (machineState/scoring.score/hcOutlineMode dla StatusPanel; currentStepId/steps/isAnimating dla StepPanel) ma własne unsub w _unsubscribers list (Plan 04-04)
+- RaycastController port D-Phase4-13: konstruktor wymaga DI emissive (no fallback) — single-source-of-truth dla warstwy 'hover'; brak defensywnego `if(this._emissive)` eliminuje cichą regresję (Plan 04-05)
+- Test hysteresis A->B przepisany na real EmissiveController + spy: sprawdza wywołanie setLayer/clearLayer JAK i końcowy material.emissive — semantyka clearLayer('hover') gdy brak warstwy 'state' = baseline 0x000000, NIE pre-hover snapshot z Phase 3 (Plan 04-05)
+- main.js wire emissive DI dla RaycastController + cleanup _renderStepAndAttest/_renderStatusText Phase 3 subscribers ODROCZONY do Plan 04-06 — brownfield-port intentionally leaves transition state (file-level → wiring sequence per 04-PATTERNS.md) (Plan 04-05)
 
 ### Blockers
 
@@ -171,7 +174,18 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 04-04 execution (Wave 3 część 2 — StatusPanel + StepPanel DOM warstwa; pełny TDD 4 commity RED/GREEN). Files written:
+**Last session ended after:** Plan 04-05 execution (Wave 4 — DOM/CSS restructure + RaycastController port D-Phase4-13; 4 commits: 26017f0 task1 / 2d95899 task2 / f40964f RED / 5ee9be3 GREEN). Files written:
+
+- `.planning/phases/04-visual-feedback-layer/04-05-SUMMARY.md` (created)
+- `index.html` (modified — usunięty #phase3-panel; dorzucone #status-panel top bar + #step-panel left column)
+- `style.css` (modified — usunięte .phase3-*/#phase3-* reguły; dorzucone .status-panel/.step-panel/.step-item/.step-item--{oczekuje,aktywny,poprawny,blad}/.phase4-attest-check/.status-panel__hc-toggle z Wong palette #D55E00/#009E73)
+- `src/RaycastController.js` (modified — port D-Phase4-13: konstruktor DI emissive, _commitHover deleguje do setLayer('hover',...), _commitLeave do clearLayer('hover',...), pole _hoverPrevEmissive USUNIĘTE)
+- `tests/RaycastController.test.js` (modified — helper makeEmissiveWithSpies + real EmissiveController + spy setLayer/clearLayer; hysteresis A->B przepisany na nowy kontrakt; dorzucony test no-op safety dispose; 11/11 zielone)
+- 257/257 pełny suite zielony
+
+**Next session should:** Run Plan 04-06 (Wave 5 — Application bootstrap wire 5 nowych klas: EmissiveController PRZED RaycastController + DI emissive; HighlightManager + EdgeOutlineController + StatusPanel + StepPanel; cleanup main.js _renderStepAndAttest/_renderStatusText Phase 3 subskrybierów; dispose chain; localStorage hcOutlineMode bootstrap; boundaries.test.js entries).
+
+**Earlier:** Plan 04-04 execution (Wave 3 część 2 — StatusPanel + StepPanel DOM warstwa; pełny TDD 4 commity RED/GREEN). Files written:
 
 - `.planning/phases/04-visual-feedback-layer/04-04-SUMMARY.md` (created)
 - `src/ui/StatusPanel.js` (created — class StatusPanel: top-bar 4-elementowa belka icon emoji + Polish state + 'Wynik: N/100' + HC toggle button; localStorage 'pm300:hc-outline:v1' persist z try/catch; aria-pressed; 3 subscribery + initial render w ctor; dispose removeEventListener + odpinacze)
