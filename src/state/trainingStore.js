@@ -38,6 +38,12 @@ export function createTrainingStore(opts = {}) {
       // D-Phase3-14 / CRIT-8 / INTERACT-05: lock blokuje równoległe attemptStep
       // (np. burst pointerdown podczas walidacji). Set true w try, false w finally.
       isAnimating: false,
+      // D-Phase4-09: single runtime source dla high-contrast outline mode.
+      // Persist warstwa to localStorage 'pm300:hc-outline:v1' — bootstrap w Application
+      // (Plan 04-06) odczytuje persist i wywołuje setState({ hcOutlineMode: ... }).
+      // Default false (większość użytkowników bez wymagania HC). Flag NIE jest resetowany
+      // przez startScenario — to user preference, nie scenario state.
+      hcOutlineMode: false,
       _now: now,
       _spinUpTimerHandle: null,
 

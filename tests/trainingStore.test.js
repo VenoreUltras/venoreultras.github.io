@@ -215,6 +215,38 @@ describe('TrainingStore — STATE-03 dispose pattern signals', () => {
   });
 });
 
+// Phase 4 (D-Phase4-09): hcOutlineMode flag — single runtime source dla high-contrast outline
+// (persist w Application bootstrap przez localStorage; store nie zna localStorage).
+describe('hcOutlineMode (Phase 4 D-Phase4-09)', () => {
+  it('initial state ma hcOutlineMode === false', () => {
+    const store = createTrainingStore();
+    expect(store.getState().hcOutlineMode).toBe(false);
+  });
+
+  it('setState({ hcOutlineMode: true }) zmienia wartość na true', () => {
+    const store = createTrainingStore();
+    store.setState({ hcOutlineMode: true });
+    expect(store.getState().hcOutlineMode).toBe(true);
+  });
+
+  it('subscribeWithSelector na hcOutlineMode emituje na zmianę', () => {
+    const store = createTrainingStore();
+    const listener = vi.fn();
+    store.subscribe((s) => s.hcOutlineMode, listener);
+    store.setState({ hcOutlineMode: true });
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener.mock.calls[0][0]).toBe(true);  // new value
+    expect(listener.mock.calls[0][1]).toBe(false); // previous value
+  });
+
+  it('startScenario NIE resetuje hcOutlineMode (user preference persist)', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.setState({ hcOutlineMode: true });
+    store.getState().startScenario(uruchomienie);
+    expect(store.getState().hcOutlineMode).toBe(true);
+  });
+});
+
 // Phase 3 (D-Phase3-02, D-Phase3-14, CRIT-8 / INTERACT-05): refaktor sygnatury
 // attemptStep(intent) + state.activeScenario + state.isAnimating lock + idempotent advanceStep.
 describe('Phase 3: attemptStep(intent) — single-arg signature + isAnimating lock + activeScenario', () => {
