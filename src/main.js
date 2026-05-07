@@ -7,8 +7,14 @@ import { PhysicsEngine } from './PhysicsEngine';
 import { createTrainingStore } from './state/trainingStore.js';
 import { DisclaimerBanner } from './DisclaimerBanner';
 import { RaycastController } from './RaycastController.js';
+import { EmissiveController } from './highlight/EmissiveController.js';
+import { HighlightManager } from './highlight/HighlightManager.js';
+import { EdgeOutlineController } from './highlight/EdgeOutlineController.js';
+import { StatusPanel } from './ui/StatusPanel.js';
+import { StepPanel } from './ui/StepPanel.js';
 import uruchomienie from './training/scenarios/uruchomienie.js';
-import { pl } from './i18n/pl.js';
+
+const HC_STORAGE_KEY = 'pm300:hc-outline:v1'; // D-Phase4-09
 
 export class Application {
   constructor() {
@@ -32,106 +38,52 @@ export class Application {
     // STATE-03 (T-04-01): capture każde unsubscribe handle, zwalniane w dispose().
     this._unsubscribers = [];
 
+    // D-Phase4-09: bootstrap hcOutlineMode z localStorage PRZED konstruktorami subskryberów.
+    // EdgeOutlineController/StatusPanel czytają już ustawioną wartość w swoim ctor.
+    // Silent catch dla private mode/quota — graceful degradacja do false (T-04-13).
+    const hcInitial = (() => {
+      try { return localStorage.getItem(HC_STORAGE_KEY) === 'true'; }
+      catch { return false; }
+    })();
+    this.store.setState({ hcOutlineMode: hcInitial });
+
     // D-Phase3-01: auto-start scenariusza uruchomienie (Phase 6 doda dropdown wyboru).
     this.store.getState().startScenario(uruchomienie);
 
+    // D-Phase4-14: EmissiveController PRZED RaycastController (RaycastController potrzebuje go w DI dla warstwy 'hover').
+    this.emissiveController = new EmissiveController({
+      interactables: this.pressModel.getInteractables(),
+    });
+
     // INTERACT-01..05: RaycastController jako DI z pressModel.getInteractables() (Phase 2 contract).
-    // Tickable rejestrowany w GSAP ticker (single source of timing — INTERACT-01).
+    // D-Phase4-13: hover read-modify-restore zastąpione przez EmissiveController.setLayer/clearLayer.
     this.raycastController = new RaycastController({
       renderer: this.sceneSetup.renderer,
       camera: this.sceneSetup.camera,
       interactables: this.pressModel.getInteractables(),
       store: this.store,
+      emissive: this.emissiveController,
     });
     this.tickables.push((dt) => this.raycastController._runHysteresis(dt));
 
-    // Plan 03-04: store subscribery dla DOM (status text + step readout + visual-attest button)
-    this._wireStoreSubscribers();
-    // Initial render — subscribery odpalają się dopiero przy CHANGE; renderujemy stan początkowy ręcznie.
-    this._renderStatusText();
-    this._renderStepAndAttest(this.store.getState().currentStepId);
-  }
+    // D-Phase4-15: HighlightManager subskrybuje state.steps → emissive layer 'state' (error pulse / done flash).
+    this.highlightManager = new HighlightManager({
+      store: this.store,
+      emissive: this.emissiveController,
+      interactables: this.pressModel.getInteractables(),
+    });
 
-  /**
-   * Rejestruje 3 store subscribery (D-Phase3-10/11/12) — wszystkie wpinane w _unsubscribers (STATE-03).
-   * Fine-grained przez subscribeWithSelector (już aktywne w trainingStore.js middleware).
-   */
-  _wireStoreSubscribers() {
-    const unsub1 = this.store.subscribe(
-      (s) => s.machineState,
-      () => this._renderStatusText(),
-    );
-    const unsub2 = this.store.subscribe(
-      (s) => s.scoring.score,
-      () => this._renderStatusText(),
-    );
-    const unsub3 = this.store.subscribe(
-      (s) => s.currentStepId,
-      (next) => this._renderStepAndAttest(next),
-    );
-    this._unsubscribers.push(unsub1, unsub2, unsub3);
-  }
+    // FEEDBACK-05 (D-Phase4-10): EdgeOutlineController prebuilduje LineSegments + subskrybuje hcOutlineMode.
+    this.edgeOutlineController = new EdgeOutlineController({
+      interactables: this.pressModel.getInteractables(),
+      store: this.store,
+    });
 
-  /**
-   * Aktualizuje #status-text do formatu "{Polski state} — {score}/100" (D-Phase3-10/11).
-   * Reuse istniejącego elementu (Phase 4 wymieni na pełny StatusPanel).
-   * Pitfall 5: pl.machineState (singular) — sekcja istnieje od Phase 1 D-09.
-   */
-  _renderStatusText() {
-    const state = this.store.getState();
-    const label = pl.machineState[state.machineState] ?? state.machineState;
-    const text = `${label} — ${state.scoring.score}/100`;
-    if (this.ui?.elements?.statusText) {
-      this.ui.elements.statusText.textContent = text;
-    }
-  }
-
-  /**
-   * Renderuje step readout "Krok N/M: {labelPL}" + dynamicznie wstrzykuje visual-attest
-   * button gdy aktywny step jest typu 'visual-attest' (D-Phase3-09/12).
-   *
-   * Pitfall 2 / Opcja A: button emituje intent {kind:'check', stepId} — NIE 'visual-attest'.
-   * ProcedureEngine Branch 3 oczekuje kind:'check' dla visual-attest kroków; D-Phase3-03
-   * (Update 2026-05-06) opisuje pełny mapping. Zachowuje ProcedureEngine pure.
-   *
-   * UWAGA: wszystkie polskie stringi z pl.ui.* — UI-06 boundary scanner egzekwuje zero
-   * polskich literałów w src/main.js.
-   */
-  _renderStepAndAttest(currentStepId) {
-    const readoutEl = document.getElementById('phase3-step-readout');
-    const containerEl = document.getElementById('phase3-attest-container');
-    if (!readoutEl || !containerEl) return; // DOM nie zamontowany (test bez DOM)
-
-    const activeScenario = this.store.getState().activeScenario;
-    if (!activeScenario || !currentStepId) {
-      readoutEl.textContent = pl.ui.procedureComplete;
-      containerEl.replaceChildren(); // clear (XSS-safe)
-      return;
-    }
-
-    const steps = activeScenario.steps;
-    const idx = steps.findIndex((s) => s.id === currentStepId);
-    const step = idx >= 0 ? steps[idx] : null;
-    if (!step) {
-      readoutEl.textContent = pl.ui.procedureComplete;
-      containerEl.replaceChildren();
-      return;
-    }
-    readoutEl.textContent = `${pl.ui.stepFormatPrefix}${idx + 1}/${steps.length}: ${step.labelPL}`;
-
-    // Clear + opcjonalnie wstrzyknij visual-attest button
-    containerEl.replaceChildren();
-    if (step.kind === 'visual-attest') {
-      const btn = document.createElement('button');
-      btn.className = 'phase3-attest-check';
-      btn.textContent = `${pl.ui.attestPrefix}${step.labelPL}`;
-      btn.setAttribute('aria-label', `${pl.ui.attestAriaPrefix}${step.labelPL}`);
-      btn.addEventListener('click', () => {
-        // Opcja A z Pitfall 2: intent.kind 'check' (NIE 'visual-attest') — kompatybilne z istniejącym ProcedureEngine.
-        this.store.getState().attemptStep({ kind: 'check', stepId: currentStepId });
-      });
-      containerEl.appendChild(btn);
-    }
+    // UI-01/02 (D-Phase4-03/04): DOM panele top bar + lewa kolumna.
+    // Zastępują Phase 3 placeholdery (#phase3-step-readout/#phase3-attest-container) i projekcję
+    // isRunning → #status-text z UI.updateStatus() (D-Phase4-02/D-Phase4-17).
+    this.statusPanel = new StatusPanel({ store: this.store });
+    this.stepPanel = new StepPanel({ store: this.store });
   }
 
   simulationTick(deltaTime) {
@@ -159,14 +111,24 @@ export class Application {
    * Zwalnia wszystkie subskrypcje + GSAP ticker callback + komponenty (STATE-03).
    * Wywoływane przez Vite HMR `import.meta.hot.dispose()` aby uniknąć leaków
    * subscriberów (T-04-01) i resize listenerów (T-04-02) między hot reloadami.
+   *
+   * KOLEJNOŚĆ DISPOSE (T-04-14): RaycastController PRZED emissiveController.
+   * RaycastController.dispose() woła _commitLeave() → emissive.clearLayer('hover', target),
+   * więc EmissiveController musi jeszcze żyć w tym momencie. EmissiveController na końcu
+   * killuje wszystkie GSAP timelines i restoruje baseline.
    */
   dispose() {
     gsap.ticker.remove(this._tickerCallback);
     for (const unsub of this._unsubscribers) unsub();
     this._unsubscribers = [];
     if (this.disclaimerBanner) this.disclaimerBanner.dispose();
+    if (this.stepPanel) this.stepPanel.dispose();                       // Phase 4
+    if (this.statusPanel) this.statusPanel.dispose();                   // Phase 4
+    if (this.highlightManager) this.highlightManager.dispose();         // Phase 4
+    if (this.edgeOutlineController) this.edgeOutlineController.dispose(); // Phase 4
+    if (this.raycastController) this.raycastController.dispose();       // PRZED emissive — _commitLeave woła clearLayer
+    if (this.emissiveController) this.emissiveController.dispose();     // PO RaycastController (T-04-14)
     this.pressModel.disposeMaterials();  // TWIN-11 SC5 — release GPU buffers (materials + textures) na HMR
-    if (this.raycastController) this.raycastController.dispose();
     this.sceneSetup.dispose();
   }
 }
