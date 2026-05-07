@@ -9,8 +9,20 @@
 import { describe, it, expect, vi } from 'vitest';
 import * as THREE from 'three';
 import { RaycastController } from '../src/RaycastController.js';
+import { EmissiveController } from '../src/highlight/EmissiveController.js';
 import { createTrainingStore } from '../src/state/trainingStore.js';
 import uruchomienie from '../src/training/scenarios/uruchomienie.js';
+
+/**
+ * Helper — buduje EmissiveController + spy na setLayer/clearLayer.
+ * D-Phase4-13: RaycastController._commitHover/_commitLeave delegują do warstwy 'hover'.
+ */
+function makeEmissiveWithSpies(interactables) {
+  const emissive = new EmissiveController({ interactables });
+  const setLayerSpy = vi.spyOn(emissive, 'setLayer');
+  const clearLayerSpy = vi.spyOn(emissive, 'clearLayer');
+  return { emissive, setLayerSpy, clearLayerSpy };
+}
 
 /** Mock renderer — bez WebGL, z Pointer event API surface */
 function makeMockRenderer() {
@@ -49,8 +61,9 @@ describe('RaycastController — konstruktor i dispose', () => {
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
     const interactables = new Map([['estop', makeMesh('estop', 'manipulation')]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
 
-    const controller = new RaycastController({ renderer, camera, interactables, store });
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
 
     expect(renderer.domElement.addEventListener).toHaveBeenCalledTimes(3);
     const calls = renderer.domElement.addEventListener.mock.calls.map(c => c[0]);
@@ -65,7 +78,8 @@ describe('RaycastController — konstruktor i dispose', () => {
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
     const interactables = new Map([['estop', makeMesh('estop', 'manipulation')]]);
-    const controller = new RaycastController({ renderer, camera, interactables, store });
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
 
     // Symuluj jakis pending state
     controller._pendingTarget = interactables.get('estop');
@@ -78,13 +92,14 @@ describe('RaycastController — konstruktor i dispose', () => {
     expect(controller._pendingCount).toBe(0);
   });
 
-  it('dispose() defensywnie restoruje emissive committed hover', () => {
+  it('dispose() defensywnie deleguje clearLayer hover do EmissiveController (D-Phase4-13)', () => {
     const renderer = makeMockRenderer();
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
     const mesh = makeMesh('estop', 'manipulation', 0x111111);
     const interactables = new Map([['estop', mesh]]);
-    const controller = new RaycastController({ renderer, camera, interactables, store });
+    const { emissive, setLayerSpy, clearLayerSpy } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
 
     // Symulujemy committed hover
     vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: mesh }]);
@@ -92,12 +107,25 @@ describe('RaycastController — konstruktor i dispose', () => {
     controller._runHysteresis(16);  // tick 1: pending count=1
     controller._pointerDirty = true;
     controller._runHysteresis(16);  // sam target, count=2 -> commit
-    expect(mesh.material.emissive.getHex()).toBe(0x222222);
+    expect(setLayerSpy).toHaveBeenCalledWith('hover', mesh, { color: 0x222222 });
 
+    clearLayerSpy.mockClear();
     controller.dispose();
-    expect(mesh.material.emissive.getHex()).toBe(0x111111); // restored
+    expect(clearLayerSpy).toHaveBeenCalledWith('hover', mesh); // delegacja restore
     expect(controller._pendingTarget).toBeNull(); // warning #6
     expect(controller._pendingCount).toBe(0);     // warning #6
+  });
+
+  it('dispose() bez committed hover NIE wywoluje clearLayer (no-op safety)', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    const interactables = new Map([['estop', makeMesh('estop', 'manipulation')]]);
+    const { emissive, clearLayerSpy } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
+
+    expect(() => controller.dispose()).not.toThrow();
+    expect(clearLayerSpy).not.toHaveBeenCalled();
   });
 });
 
@@ -107,7 +135,8 @@ describe('RaycastController — INTERACT-01 SC1: idle = zero raycaster calls', (
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
     const interactables = new Map([['estop', makeMesh('estop', 'manipulation')]]);
-    const controller = new RaycastController({ renderer, camera, interactables, store });
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
 
     const spy = vi.spyOn(controller._raycaster, 'intersectObjects');
     // Symuluj pointermove
@@ -125,7 +154,8 @@ describe('RaycastController — INTERACT-01 SC1: idle = zero raycaster calls', (
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
     const interactables = new Map([['estop', makeMesh('estop', 'manipulation')]]);
-    const controller = new RaycastController({ renderer, camera, interactables, store });
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
 
     const intersectObjectsSpy = vi.spyOn(controller._raycaster, 'intersectObjects');
     // Bez zadnego pointermove — _pointerDirty===false; brak committed target
@@ -137,14 +167,18 @@ describe('RaycastController — INTERACT-01 SC1: idle = zero raycaster calls', (
 });
 
 describe('RaycastController — INTERACT-03: hysteresis 4-tick A->B (D-Phase3-06)', () => {
-  it('commit A po 2 tickach, leave A + commit B po 2 tickach z B', () => {
+  it('commit A po 2 tickach, leave A + commit B po 2 tickach z B (delegacja przez EmissiveController)', () => {
     const renderer = makeMockRenderer();
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
-    const meshA = makeMesh('estop', 'manipulation', 0x111111);
-    const meshB = makeMesh('wylacznik-glowny', 'manipulation', 0x222200);
+    // D-Phase4-13: warstwa 'hover' EmissiveController nadpisuje material.emissive na 0x000000 baseline
+    // gdy clearLayer('hover'), bo prevHex z Phase 3 NIE jest już zachowywane (warstwa 'state' dba o własny color).
+    // Test odzwierciedla nową semantykę: zero state-layer + clearLayer hover -> baseline 0x000000.
+    const meshA = makeMesh('estop', 'manipulation', 0x000000);
+    const meshB = makeMesh('wylacznik-glowny', 'manipulation', 0x000000);
     const interactables = new Map([['estop', meshA], ['wylacznik-glowny', meshB]]);
-    const controller = new RaycastController({ renderer, camera, interactables, store });
+    const { emissive, setLayerSpy, clearLayerSpy } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
 
     const spy = vi.spyOn(controller._raycaster, 'intersectObjects');
 
@@ -152,25 +186,31 @@ describe('RaycastController — INTERACT-03: hysteresis 4-tick A->B (D-Phase3-06
     spy.mockReturnValue([{ object: meshA }]);
     controller._pointerDirty = true;
     controller._runHysteresis(16);
-    expect(meshA.material.emissive.getHex()).toBe(0x111111);
+    expect(setLayerSpy).not.toHaveBeenCalled();
 
     // tick 2: A znowu -> count=2 -> commit A
     controller._pointerDirty = true;
     controller._runHysteresis(16);
-    expect(meshA.material.emissive.getHex()).toBe(0x222222);
+    expect(setLayerSpy).toHaveBeenCalledWith('hover', meshA, { color: 0x222222 });
+    expect(meshA.material.emissive.getHex()).toBe(0x222222); // EmissiveController applied
     expect(renderer.domElement.style.cursor).toBe('pointer');
 
     // tick 3: B -> reset pending, A wciaz committed
+    setLayerSpy.mockClear();
+    clearLayerSpy.mockClear();
     spy.mockReturnValue([{ object: meshB }]);
     controller._pointerDirty = true;
     controller._runHysteresis(16);
+    expect(setLayerSpy).not.toHaveBeenCalled();
+    expect(clearLayerSpy).not.toHaveBeenCalled();
     expect(meshA.material.emissive.getHex()).toBe(0x222222); // A wciaz committed
-    expect(meshB.material.emissive.getHex()).toBe(0x222200); // B nie committed yet
 
     // tick 4: B znowu -> count=2 -> leave A + commit B
     controller._pointerDirty = true;
     controller._runHysteresis(16);
-    expect(meshA.material.emissive.getHex()).toBe(0x111111); // A restored
+    expect(clearLayerSpy).toHaveBeenCalledWith('hover', meshA);
+    expect(setLayerSpy).toHaveBeenCalledWith('hover', meshB, { color: 0x222222 });
+    expect(meshA.material.emissive.getHex()).toBe(0x000000); // A baseline po clearLayer
     expect(meshB.material.emissive.getHex()).toBe(0x222222); // B committed
 
     controller.dispose();
@@ -186,7 +226,8 @@ describe('RaycastController — INTERACT-02: click-vs-drag pixel threshold + int
     // userData.kind='visual-target' celowo — zeby zweryfikowac ze intent.kind to LITERAL 'click', NIE userData.kind
     const mesh = makeMesh('tabliczka-znamionowa', 'visual-target');
     const interactables = new Map([['tabliczka-znamionowa', mesh]]);
-    const controller = new RaycastController({ renderer, camera, interactables, store });
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
 
     vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: mesh }]);
     const spy = vi.spyOn(store.getState(), 'attemptStep');
@@ -206,7 +247,8 @@ describe('RaycastController — INTERACT-02: click-vs-drag pixel threshold + int
     store.getState().startScenario(uruchomienie);
     const mesh = makeMesh('tabliczka-znamionowa', 'visual-target');
     const interactables = new Map([['tabliczka-znamionowa', mesh]]);
-    const controller = new RaycastController({ renderer, camera, interactables, store });
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
 
     vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: mesh }]);
     const spy = vi.spyOn(store.getState(), 'attemptStep');
@@ -240,7 +282,8 @@ describe('RaycastController — TEST-04 (INTERACT-05): 100-click stress na estop
 
     const meshEstop = makeMesh('estop', 'manipulation');
     const interactables = new Map([['estop', meshEstop]]);
-    const controller = new RaycastController({ renderer, camera, interactables, store });
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
 
     vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: meshEstop }]);
 
@@ -268,7 +311,8 @@ describe('RaycastController — D-Phase3-04: wrong-mesh emituje engine-side viol
 
     const meshEstop = makeMesh('estop', 'manipulation');
     const interactables = new Map([['estop', meshEstop]]);
-    const controller = new RaycastController({ renderer, camera, interactables, store });
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
 
     vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: meshEstop }]);
 
