@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 04 in progress — Plan 04-03 complete (HighlightManager + EdgeOutlineController)
-last_updated: "2026-05-07T12:35:00.000Z"
+status: Phase 04 in progress — Plan 04-04 complete (StatusPanel + StepPanel DOM warstwa)
+last_updated: "2026-05-07T12:42:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 22
-  completed_plans: 19
-  percent: 86
+  completed_plans: 20
+  percent: 91
 ---
 
 # Project State: PM-300 Trener
@@ -28,13 +28,13 @@ progress:
 - `.planning/research/SUMMARY.md` — synthesis of stack/features/architecture/pitfalls research
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 04 in progress — Wave 1 (04-01), Wave 2 (04-02) i Wave 3 (04-03) complete
+**Current focus:** Phase 04 in progress — Wave 1 (04-01), Wave 2 (04-02), Wave 3 (04-03 + 04-04) complete
 
 ## Current Position
 
-Phase: 04 (visual-feedback-layer) — IN PROGRESS; Plan 04-01..04-03 complete (Wave 1+2+3)
+Phase: 04 (visual-feedback-layer) — IN PROGRESS; Plan 04-01..04-04 complete (Wave 1+2+3 częściowo)
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
-Next: Plan 04-04 StatusPanel + StepPanel (UI-01/UI-02 DOM warstwa)
+Next: Plan 04-05 (index.html restructure + style.css migracja + RaycastController port D-Phase4-13)
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
@@ -50,7 +50,7 @@ Next: Plan 04-04 StatusPanel + StepPanel (UI-01/UI-02 DOM warstwa)
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
 Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
 Phase 3: Click-to-State Pipeline             [█████████░] 95%  code complete (5/5 plans, manual checkpoint pending)
-Phase 4: Visual Feedback Layer               [█████     ] 50%  Plan 04-01..04-03 complete (3/6 plans)
+Phase 4: Visual Feedback Layer               [██████▌   ] 67%  Plan 04-01..04-04 complete (4/6 plans)
 Phase 5: Educational Layer                   [          ] 0%   not started
 Phase 6: Scenarios + Replay + Retry + Export [          ] 0%   not started
 Phase 7: (v2) Differentiators                [    v2    ] —    deferred
@@ -159,6 +159,11 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - EDGES_THRESHOLD_DEG=15° jednolite dla wszystkich interactables; per-kind override możliwy w Plan 04-06 jeśli manualny QA pokaże zatłoczone cylindry (Plan 04-03, planner discretion)
 - HC_LINE_COLOR_DEFAULT=0xFFFFFF biały — kontrast bezpieczny dla deuteranopii; kolor linii jednolity w trybie HC, error/done discrimination przez emissive warstwę pod LineSegments (Plan 04-03, D-Phase4-10)
 - Komentarz EdgeOutlineController używa "post-processing pass" zamiast "OutlinePass" — SC1 regex test enforce zero pojawień (Plan 04-03, Rule 1 fix)
+- StatusPanel: jeden innerHTML (statyczny szkielet w _build, T-04-09 mitigation), reszta textContent — XSS-safe by construction; HC toggle persist do localStorage 'pm300:hc-outline:v1' z try/catch (D-Phase4-09); store.setState({hcOutlineMode}) ZAWSZE PRZED _writePersisted — graceful degradacja gdy localStorage rzuca w private mode (Plan 04-04)
+- StepPanel: zero innerHTML — tylko textContent + createElement + appendChild + replaceChildren (XSS-safe per design); _mapStatusToStateKey done > error > isCurrent > pending — done wygrywa nad current (test enforce klasy --poprawny zamiast --aktywny dla current+done) (Plan 04-04)
+- StepPanel: visual-attest button warunkowo renderowany tylko dla aktywnego non-done kroku visual-attest — po sukcesie button znika z DOM przez re-render (UX clean state) (Plan 04-04, D-Phase4-04)
+- jsdom <26 nie implementuje Element.prototype.scrollIntoView — production code feature-detect (typeof === 'function'); test stub'uje na prototypie przed vi.spyOn i czyści w afterEach (Plan 04-04, Rule 3 blocking fix; production Chromium zawsze ma metodę)
+- 3 osobne subscribery per panel zamiast jednego shallow-equal — fine-grained, analog main.js _wireStoreSubscribers; każdy slice (machineState/scoring.score/hcOutlineMode dla StatusPanel; currentStepId/steps/isAnimating dla StepPanel) ma własne unsub w _unsubscribers list (Plan 04-04)
 
 ### Blockers
 
@@ -166,7 +171,18 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 04-03 execution (Wave 3 — HighlightManager + EdgeOutlineController; pełny TDD 4 commitów RED/GREEN). Files written:
+**Last session ended after:** Plan 04-04 execution (Wave 3 część 2 — StatusPanel + StepPanel DOM warstwa; pełny TDD 4 commity RED/GREEN). Files written:
+
+- `.planning/phases/04-visual-feedback-layer/04-04-SUMMARY.md` (created)
+- `src/ui/StatusPanel.js` (created — class StatusPanel: top-bar 4-elementowa belka icon emoji + Polish state + 'Wynik: N/100' + HC toggle button; localStorage 'pm300:hc-outline:v1' persist z try/catch; aria-pressed; 3 subscribery + initial render w ctor; dispose removeEventListener + odpinacze)
+- `src/ui/StepPanel.js` (created — class StepPanel: lewa kolumna ol.step-panel__list z li.step-item.step-item--{stateKey} per krok; _mapStatusToStateKey done > error > isCurrent > pending; visual-attest inline button .phase4-attest-check warunkowo dla aktywnego non-done; auto-scroll smooth z feature-detect; dispose odpina 3 subskrypcje)
+- `tests/StatusPanel.test.js` (created — 8 testów / 4 describe: render initial 4 elementy + subscribery, HC toggle persist + ARIA + private mode graceful, sanity throw, dispose lifecycle)
+- `tests/StepPanel.test.js` (created — 13 testów / 6 describe: render listy 8 kroków + klasy state, visual-attest button render/disabled/click/done-vanish, auto-scroll smooth, graceful empty + sanity, dispose)
+- 256/256 tests green (235 baseline + 21 nowych); commits: b2d233b (RED StatusPanel), fa66080 (GREEN StatusPanel), b1f1f9e (RED StepPanel), fa17569 (GREEN StepPanel z scrollIntoView feature-detect Rule 3 fix)
+
+**Next session should:** Run Plan 04-05 (index.html restructure: usunięcie #phase3-step-readout/#phase3-attest-container, dorzucenie #status-panel top + #step-panel left; style.css migracja .phase3-* → .step-panel/.status-panel/.step-item--{state}/.phase4-attest-check klasy; brownfield-port RaycastController hover do EmissiveController.setLayer/clearLayer 'hover' per D-Phase4-13).
+
+**Earlier:** Plan 04-03 execution (Wave 3 — HighlightManager + EdgeOutlineController; pełny TDD 4 commitów RED/GREEN). Files written:
 
 - `.planning/phases/04-visual-feedback-layer/04-03-SUMMARY.md` (created)
 - `src/highlight/HighlightManager.js` (created — class HighlightManager: subscriber state.steps → EmissiveController.setLayer('state', mesh, {color, pulse|flash}); error D55E00 pulse / done 009E73 flash / inne clear; zero runtime imports, DI-only)
