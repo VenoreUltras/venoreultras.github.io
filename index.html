@@ -14,6 +14,8 @@
 
     <!-- Interfejs Użytkownika -->
     <div id="ui-layer">
+      <div id="status-panel" class="status-panel glass-panel" role="region" aria-label="Status maszyny"></div>
+
       <header class="header">
         <h1>Prasa Mimośrodowa PM-300</h1>
         <p class="subtitle">Wizualizacja kinematyki układu korbowego</p>
@@ -56,11 +58,7 @@
         </div>
       </div>
 
-      <div id="phase3-panel" class="glass-panel">
-        <h2>Procedura szkoleniowa</h2>
-        <div id="phase3-step-readout" class="phase3-readout">Procedura zakończona</div>
-        <div id="phase3-attest-container" class="phase3-attest-container"></div>
-      </div>
+      <aside id="step-panel" class="step-panel glass-panel" role="region" aria-label="Procedura szkoleniowa"></aside>
     </div>
 
     <script type="module" src="/src/main.js"></script>
