@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 03 executed — PASS-WITH-PENDING (manual checkpoint 60 FPS+hover odroczony)
-last_updated: "2026-05-06T11:50:00.000Z"
+status: Phase 04 in progress — Plan 04-01 complete (i18n + hcOutlineMode foundation)
+last_updated: "2026-05-07T12:20:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
-  total_plans: 16
-  completed_plans: 14
-  percent: 88
+  total_plans: 22
+  completed_plans: 17
+  percent: 77
 ---
 
 # Project State: PM-300 Trener
@@ -32,8 +32,9 @@ progress:
 
 ## Current Position
 
-Phase: 03 (click-to-state-pipeline) — CODE COMPLETE; manual checkpoint 60 FPS+hover hint ODROCZONY
-Phase 04 — visual-feedback-layer — NEXT (po sign-off manual checkpoint phase 3)
+Phase: 04 (visual-feedback-layer) — IN PROGRESS; Plan 04-01 (Wave 1) complete
+Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
+Next: Plan 04-02 EmissiveController (Wave 2)
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
@@ -49,7 +50,7 @@ Phase 04 — visual-feedback-layer — NEXT (po sign-off manual checkpoint phase
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
 Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
 Phase 3: Click-to-State Pipeline             [█████████░] 95%  code complete (5/5 plans, manual checkpoint pending)
-Phase 4: Visual Feedback Layer               [          ] 0%   not started
+Phase 4: Visual Feedback Layer               [█▌        ] 17%  Plan 04-01 complete (1/6 plans)
 Phase 5: Educational Layer                   [          ] 0%   not started
 Phase 6: Scenarios + Replay + Retry + Export [          ] 0%   not started
 Phase 7: (v2) Differentiators                [    v2    ] —    deferred
@@ -145,6 +146,9 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - D-13 interpretacja kod-fence'owana w `src/DisclaimerBanner.js` JSDoc + test który czyta src i waliduje obecność D-13/widoczny stale/dismiss tokenów (Plan 01-05)
 - WebGL context-loss listener: `event.preventDefault()` w PIERWSZEJ linii (Pitfall 7 / CRIT-5 prevention); `gsap.ticker.sleep()`/`.wake()` pauzują cały tick loop (Plan 01-05)
 - Pre-existing brownfield Polish literals z `src/UI.js` ('Praca ciągła', 'Zatrzymana') i `src/PhysicsEngine.js` (4 error messages) zmigrowane do `pl.ui` i `pl.physics`. PhysicsEngine importuje `./i18n/pl.js` — pure data module bez side-effectów, nie narusza boundary (Plan 01-05)
+- pl.machineStateIcons keys 1:1 z pl.machineState; pl.stepStateIcons keys 1:1 z pl.stepStates — wymuszone przez `Object.keys(...).sort()` equality test (Plan 04-01, D-Phase4-05)
+- hcOutlineMode jest user-preference, NIE scenario-state — startScenario NIE resetuje flagi; Application bootstrap (Plan 04-06) odczyta localStorage i wywoła setState (Plan 04-01, D-Phase4-09)
+- trainingStore nie zna localStorage — persist warstwa należy do Application bootstrap; store pozostaje pure boundary-clean (Plan 04-01, D-Phase4-09)
 
 ### Blockers
 
@@ -152,7 +156,18 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Phase 3 context gathering (`/gsd-discuss-phase 3`). Files written:
+**Last session ended after:** Plan 04-01 execution (Wave 1 — i18n + store foundation for Phase 4). Files written:
+
+- `.planning/phases/04-visual-feedback-layer/04-01-SUMMARY.md` (created)
+- `src/i18n/pl.js` (modified — +stepStates/stepStateIcons/machineStateIcons + ui.scorePrefix/hcToggleOn/hcToggleOff)
+- `src/state/trainingStore.js` (modified — +hcOutlineMode: false in initial state)
+- `tests/i18n.pl.test.js` (created — 10 asercji)
+- `tests/trainingStore.test.js` (modified — +4 asercji hcOutlineMode)
+- 190/190 tests green; commits: a048ed1 (i18n), 083ad52 (store)
+
+**Next session should:** Run Plan 04-02 (EmissiveController — channel/priority stack + GSAP timeline lifecycle).
+
+**Earlier:** Phase 3 context gathering (`/gsd-discuss-phase 3`). Files written:
 
 - `.planning/phases/03-click-to-state-pipeline/03-CONTEXT.md` (created — 15 decisions D-Phase3-01..15: lifecycle scenariusza, hover hint read-modify-restore, hysteresis tick-counter, UI minima, click-vs-drag pixel threshold, isAnimating lock + idempotent advanceStep)
 - `.planning/phases/03-click-to-state-pipeline/03-DISCUSSION-LOG.md` (created — audit trail 4 obszarów)

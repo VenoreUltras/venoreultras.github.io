@@ -106,7 +106,7 @@ Plans:
   5. The full Phase 3 happy path now produces visible green/red feedback; viewed through a deuteranopia simulator the error/success distinction remains unambiguous (manual QA pass).
 **Plans:** 6 plans
 Plans:
-- [ ] 04-01-PLAN.md — i18n rozszerzenie (pl.stepStates/Icons + machineStateIcons + ui.scorePrefix/hcToggle*) + store hcOutlineMode flag
+- [x] 04-01-PLAN.md — i18n rozszerzenie (pl.stepStates/Icons + machineStateIcons + ui.scorePrefix/hcToggle*) + store hcOutlineMode flag (190 tests green; +14 new asercji)
 - [ ] 04-02-PLAN.md — EmissiveController (channel/priority stack: hover < state) + GSAP timeline lifecycle + tests
 - [ ] 04-03-PLAN.md — HighlightManager (FEEDBACK-01/02) + EdgeOutlineController (FEEDBACK-05 HC outline) + tests
 - [ ] 04-04-PLAN.md — StatusPanel (UI-02 top bar) + StepPanel (UI-01 left column) + jsdom tests
