@@ -108,7 +108,7 @@ Plans:
 Plans:
 - [x] 04-01-PLAN.md — i18n rozszerzenie (pl.stepStates/Icons + machineStateIcons + ui.scorePrefix/hcToggle*) + store hcOutlineMode flag (190 tests green; +14 new asercji)
 - [x] 04-02-PLAN.md — EmissiveController (channel/priority stack: hover < state) + GSAP timeline lifecycle + tests (203 tests green; +13 nowych asercji)
-- [ ] 04-03-PLAN.md — HighlightManager (FEEDBACK-01/02) + EdgeOutlineController (FEEDBACK-05 HC outline) + tests
+- [x] 04-03-PLAN.md — HighlightManager (FEEDBACK-01/03/04) + EdgeOutlineController (FEEDBACK-05 HC outline) + tests (235 tests green; +32 nowych asercji; pełny TDD 4 commity RED/GREEN)
 - [ ] 04-04-PLAN.md — StatusPanel (UI-02 top bar) + StepPanel (UI-01 left column) + jsdom tests
 - [ ] 04-05-PLAN.md — index.html restructure + style.css migracja Wong palette + RaycastController port D-Phase4-13
 - [ ] 04-06-PLAN.md — Application wiring + boundaries.test.js update + integration test + manual deuteranopia checkpoint

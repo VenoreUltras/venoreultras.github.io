@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 04 in progress — Plan 04-02 complete (EmissiveController stack + GSAP timelines)
-last_updated: "2026-05-07T12:25:00.000Z"
+status: Phase 04 in progress — Plan 04-03 complete (HighlightManager + EdgeOutlineController)
+last_updated: "2026-05-07T12:35:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 2
   total_plans: 22
-  completed_plans: 18
-  percent: 81
+  completed_plans: 19
+  percent: 86
 ---
 
 # Project State: PM-300 Trener
@@ -28,13 +28,13 @@ progress:
 - `.planning/research/SUMMARY.md` — synthesis of stack/features/architecture/pitfalls research
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 04 in progress — Wave 1 (Plan 04-01) i Wave 2 (Plan 04-02) complete
+**Current focus:** Phase 04 in progress — Wave 1 (04-01), Wave 2 (04-02) i Wave 3 (04-03) complete
 
 ## Current Position
 
-Phase: 04 (visual-feedback-layer) — IN PROGRESS; Plan 04-01 (Wave 1) + Plan 04-02 (Wave 2) complete
+Phase: 04 (visual-feedback-layer) — IN PROGRESS; Plan 04-01..04-03 complete (Wave 1+2+3)
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
-Next: Plan 04-03 HighlightManager + EdgeOutlineController (Wave 3)
+Next: Plan 04-04 StatusPanel + StepPanel (UI-01/UI-02 DOM warstwa)
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |
@@ -50,7 +50,7 @@ Next: Plan 04-03 HighlightManager + EdgeOutlineController (Wave 3)
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
 Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
 Phase 3: Click-to-State Pipeline             [█████████░] 95%  code complete (5/5 plans, manual checkpoint pending)
-Phase 4: Visual Feedback Layer               [███▎      ] 33%  Plan 04-01 + 04-02 complete (2/6 plans)
+Phase 4: Visual Feedback Layer               [█████     ] 50%  Plan 04-01..04-03 complete (3/6 plans)
 Phase 5: Educational Layer                   [          ] 0%   not started
 Phase 6: Scenarios + Replay + Retry + Export [          ] 0%   not started
 Phase 7: (v2) Differentiators                [    v2    ] —    deferred
@@ -153,6 +153,12 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - EmissiveController._applyTopLayer ZAWSZE killuje aktualny timeline przed recompute warstwy — eliminuje collateral writes ze starej animacji do material po zmianie warstwy (Plan 04-02, Discretion T-04-03)
 - EmissiveController boundary clean: tylko THREE+gsap importy, zero state/training/DOM (Plan 04-02; Plan 04-06 doda formal entry do boundaries.test.js)
 - CRIT-5 invariant testowany przez regex sourcefile (anti-pattern `gsap.to(*.emissive,…)` MUST NOT match; positive `gsap.to(material, {emissiveIntensity:…})` MUST match) — bardziej restrykcyjne niż mock GSAP (Plan 04-02)
+- HighlightManager: zero runtime importów — wszystkie zależności (store, EmissiveController, interactables) przez konstruktor DI; boundary clean trywialnie (Plan 04-03, D-Phase4-15)
+- HighlightManager Wong palette consts (ERROR_HEX=0xD55E00, SUCCESS_HEX=0x009E73) module-level — single tuning point + boundary scanner test pozostaje zielony (Plan 04-03)
+- EdgeOutlineController shared LineBasicMaterial (1 instance dla 15 LineSegments) — 1 GPU material slot zamiast 15; dispose zwalnia raz (Plan 04-03, D-Phase4-10)
+- EDGES_THRESHOLD_DEG=15° jednolite dla wszystkich interactables; per-kind override możliwy w Plan 04-06 jeśli manualny QA pokaże zatłoczone cylindry (Plan 04-03, planner discretion)
+- HC_LINE_COLOR_DEFAULT=0xFFFFFF biały — kontrast bezpieczny dla deuteranopii; kolor linii jednolity w trybie HC, error/done discrimination przez emissive warstwę pod LineSegments (Plan 04-03, D-Phase4-10)
+- Komentarz EdgeOutlineController używa "post-processing pass" zamiast "OutlinePass" — SC1 regex test enforce zero pojawień (Plan 04-03, Rule 1 fix)
 
 ### Blockers
 
@@ -160,14 +166,23 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 04-02 execution (Wave 2 — EmissiveController stack + GSAP timeline lifecycle). Files written:
+**Last session ended after:** Plan 04-03 execution (Wave 3 — HighlightManager + EdgeOutlineController; pełny TDD 4 commitów RED/GREEN). Files written:
+
+- `.planning/phases/04-visual-feedback-layer/04-03-SUMMARY.md` (created)
+- `src/highlight/HighlightManager.js` (created — class HighlightManager: subscriber state.steps → EmissiveController.setLayer('state', mesh, {color, pulse|flash}); error D55E00 pulse / done 009E73 flash / inne clear; zero runtime imports, DI-only)
+- `src/highlight/EdgeOutlineController.js` (created — class EdgeOutlineController: prebuild EdgesGeometry threshold 15° + shared LineBasicMaterial LineSegments per interactable; subscriber state.hcOutlineMode → toggle visible all-at-once; dispose zwalnia geo+mat+remove from parent)
+- `tests/HighlightManager.test.js` (created — 15 testów / 8 describe: error pulse, done flash, pending/active clear, graceful skip, initial render w ctor, dispose lifecycle, boundary + Wong palette presence)
+- `tests/EdgeOutlineController.test.js` (created — 17 testów / 7 describe: prebuild w ctor, initial hcOutlineMode=true bootstrap, toggle dynamiczny on/off/wielokrotny, dispose lifecycle GPU buffers, SC1 zero OutlinePass, pusty interactables graceful)
+- 235/235 tests green (203 baseline + 32 nowych); commits: e1aa65d (RED HM), 1c79d00 (GREEN HM), 70e4d04 (RED EOC), 99ea98d (GREEN EOC)
+
+**Next session should:** Run Plan 04-04 (StatusPanel UI-02 top bar + StepPanel UI-01 left column + jsdom tests; konsumują pl.machineStateIcons/stepStateIcons z 04-01 oraz state.machineState/scoring/hcOutlineMode).
+
+**Earlier:** Plan 04-02 execution (Wave 2 — EmissiveController stack + GSAP timeline lifecycle). Files written:
 
 - `.planning/phases/04-visual-feedback-layer/04-02-SUMMARY.md` (created)
 - `src/highlight/EmissiveController.js` (created — class EmissiveController z setLayer/clearLayer/_applyTopLayer/dispose; per-mesh stack {hover, state}; GSAP pulse yoyo + flash 800ms)
 - `tests/EmissiveController.test.js` (created — 13 testów: 5 stack priority + 5 GSAP lifecycle + 1 dispose + 2 CRIT-5 regex)
 - 203/203 tests green; commits: 790a046 (impl), 26f9885 (testy)
-
-**Next session should:** Run Plan 04-03 (HighlightManager subskrybujący state.steps + EdgeOutlineController prebuild EdgesGeometry/LineSegments).
 
 **Earlier:** Plan 04-01 execution (Wave 1 — i18n + store foundation for Phase 4). Files written:
 
