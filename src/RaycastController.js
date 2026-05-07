@@ -23,13 +23,17 @@ export class RaycastController {
    * @param {THREE.Camera} deps.camera
    * @param {Map<string, THREE.Mesh>} deps.interactables
    * @param {{getState: () => {attemptStep: (intent:object)=>void}}} deps.store
+   * @param {import('./highlight/EmissiveController.js').EmissiveController} deps.emissive
+   *   Controller warstw emissive (Plan 04-02). RaycastController pisze tylko warstwę 'hover'.
+   *   D-Phase4-13: read-modify-restore z Phase 3 zastąpione przez setLayer/clearLayer.
    */
-  constructor({ renderer, camera, interactables, store }) {
+  constructor({ renderer, camera, interactables, store, emissive }) {
     this._renderer = renderer;
     this._camera = camera;
     // Array snapshot raz w ctor — zero alokacji per-tick (CONTEXT code_context: getInteractables stable refs)
     this._meshes = Array.from(interactables.values());
     this._store = store;
+    this._emissive = emissive;
 
     this._raycaster = new THREE.Raycaster();
     this._ndc = new THREE.Vector2(); // reused per-event
@@ -38,7 +42,7 @@ export class RaycastController {
     this._pendingTarget = null;
     this._pendingCount = 0;
     this._committedTarget = null;
-    this._hoverPrevEmissive = 0;
+    // (D-Phase4-13) prev-emissive snapshot z Phase 3 USUNIĘTY — warstwa 'hover' EmissiveController trzyma stan
 
     // Click-vs-drag (D-Phase3-13)
     this._downX = 0;
@@ -103,20 +107,19 @@ export class RaycastController {
   }
 
   /**
-   * Commit hover: zapisz aktualny emissive, ustaw hint hex, cursor pointer.
-   * Read-modify-restore (D-Phase3-05): zapamietujemy AKTUALNA wartosc — Phase 4 moze w przyszlosci
-   * pisac emissive po store change, _commitLeave restoruje "ostatni stable" state.
+   * Commit hover: deleguj do EmissiveController.setLayer('hover', ...).
+   * D-Phase4-13: read-modify-restore z Phase 3 jest TUTAJ zastąpione przez priorytetowy stack
+   * warstw (state > hover > baseline). RaycastController nigdy nie odczytuje material.emissive.
    */
   _commitHover(mesh) {
     this._committedTarget = mesh;
-    this._hoverPrevEmissive = mesh.material.emissive.getHex();
-    mesh.material.emissive.setHex(HOVER_HINT_HEX);
+    this._emissive.setLayer('hover', mesh, { color: HOVER_HINT_HEX });
     this._renderer.domElement.style.cursor = 'pointer'; // D-Phase3-08
   }
 
   _commitLeave() {
     if (this._committedTarget) {
-      this._committedTarget.material.emissive.setHex(this._hoverPrevEmissive);
+      this._emissive.clearLayer('hover', this._committedTarget);
       this._committedTarget = null;
     }
     this._renderer.domElement.style.cursor = 'default';
