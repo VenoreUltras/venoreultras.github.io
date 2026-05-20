@@ -1,178 +1,304 @@
 # Codebase Structure
 
-**Analysis Date:** 2026-05-05
+**Analysis Date:** 2026-05-20
 
 ## Directory Layout
 
 ```
 HydraulicPress/
-├── index.html              # HTML entry point, loads /style.css and <script type="module" src="/src/main.js">
-├── style.css               # Root stylesheet (modern dark UI with glassmorphism)
-├── package.json            # Dependencies (gsap, three), scripts (dev, build, preview)
-├── package-lock.json       # Lockfile (npm)
-├── README.md               # Polish project documentation
-├── CLAUDE.md               # Project context for Claude
-├── src/
-│   ├── main.js             # Application class, GSAP ticker, DOMContentLoaded bootstrap
-│   ├── PressModel.js       # Three.js geometry (shaft, eccentric, rod, slider, frame)
-│   ├── PhysicsEngine.js    # Static kinematic solver (slider-crank formula)
-│   ├── SceneSetup.js       # Three.js scene, camera, renderer, lights
-│   ├── UI.js               # DOM controller (speed slider, toggle button, telemetry display)
-│   ├── style.css           # Imported by main.js (DUPLICATE SOURCE OF TRUTH — see concerns)
-│   └── counter.js          # Vite scaffolding leftover, NOT IMPORTED
-├── public/                 # Static assets for Vite (unused in current project)
-├── dist/                   # Build output (gitignored)
-└── .planning/codebase/     # Codebase analysis documents (this directory)
+├── index.html              # SPA shell — mounts /style.css + /src/main.js
+├── style.css               # Root stylesheet — THE one loaded in production (494 lines)
+├── package.json            # Vite + Vitest + three + gsap + zustand
+├── package-lock.json
+├── vitest.config.js        # Test runner config; coverage gates on training/+state/
+├── README.md
+├── CLAUDE.md               # Project guidance for Claude Code
+│
+├── src/                    # All application source code
+│   ├── main.js             # `Application` class — wires everything, owns ticker + dispose chain
+│   ├── SceneSetup.js       # THREE.Scene / camera / renderer / OrbitControls / WebGL overlay
+│   ├── PressModel.js       # Press geometry; 15 interactables; per-frame update(angle)
+│   ├── PhysicsEngine.js    # Static slider-crank math (stateless, pure)
+│   ├── UI.js               # Legacy RPM slider + telemetry readouts (DOM-only)
+│   ├── MaterialRegistry.js # Per-mesh cloned materials + texture registry + disposeAll
+│   ├── RaycastController.js # Pointer → intent → store.attemptStep
+│   ├── DisclaimerBanner.js # Sticky BHP disclaimer banner (CRIT-1)
+│   │
+│   ├── state/
+│   │   └── trainingStore.js   # Zustand vanilla store — single source of mutable state
+│   │
+│   ├── training/              # Pure SOP domain — zero THREE/DOM/store/gsap imports
+│   │   ├── ProcedureEngine.js     # validateStep(intent, state, scenario)
+│   │   ├── faultRules.js          # Cross-cutting BHP invariants + evaluator
+│   │   ├── ScoringService.js      # calculate(events, opts) — subtractive from 100
+│   │   ├── scoringWeights.js      # DEFAULT_WEIGHTS + SCORE_BASELINE + SCORE_FLOOR
+│   │   └── scenarios/
+│   │       ├── index.js              # Registry: loadScenario(id)
+│   │       ├── uruchomienie.js       # 8-step safe startup scenario
+│   │       └── validateScenario.js   # Ad-hoc shape validator
+│   │
+│   ├── highlight/             # Visual feedback layer (state→emissive projection)
+│   │   ├── EmissiveController.js  # Per-mesh layer stack (state > hover > baseline)
+│   │   ├── HighlightManager.js    # store.steps → setLayer('state', …)
+│   │   └── EdgeOutlineController.js # HC outline mode (EdgesGeometry+LineSegments)
+│   │
+│   ├── ui/                    # DOM panel components (subscribe → render)
+│   │   ├── StatusPanel.js         # Top bar: machine state + score + HC toggle
+│   │   └── StepPanel.js           # Left column: step list + visual-attest button
+│   │
+│   ├── i18n/
+│   │   └── pl.js              # ALL Polish strings (parts, machine states, errors, …)
+│   │
+│   ├── style.css              # Orphan — main.js imports './style.css' but index.html
+│   │                          # loads /style.css (root). See "Special files" below.
+│   │
+│   └── assets/                # Vite scaffold leftovers (hero.png, javascript.svg, vite.svg)
+│
+├── public/                 # Static assets served at / by Vite
+│   ├── favicon.svg
+│   └── icons.svg
+│
+├── tests/                  # Vitest test suite (21 spec files)
+│   ├── application.test.js
+│   ├── boundaries.test.js          # Mechanical module-import boundary enforcement
+│   ├── disclaimerBanner.test.js    # jsdom env (only test that needs DOM)
+│   ├── EdgeOutlineController.test.js
+│   ├── EmissiveController.test.js
+│   ├── faultRules.test.js
+│   ├── HighlightManager.test.js
+│   ├── i18n.pl.test.js
+│   ├── MaterialRegistry.smoke.test.js
+│   ├── phase3.e2e.test.js
+│   ├── physicsEngine.test.js
+│   ├── PressModel.smoke.test.js
+│   ├── procedureEngine.test.js
+│   ├── RaycastController.test.js
+│   ├── scenarioShape.test.js
+│   ├── scoringService.test.js
+│   ├── StatusPanel.test.js
+│   ├── StepPanel.test.js
+│   ├── trainingStore.test.js
+│   ├── uruchomienie.integration.test.js
+│   └── fixtures/
+│       └── scenario.fixture.js
+│
+├── dist/                   # Build output (vite build) — gitignored
+├── coverage/               # Vitest coverage reports — gitignored
+├── node_modules/           # gitignored
+│
+└── .planning/              # GSD planning artifacts
+    ├── PROJECT.md          # Project brief
+    ├── REQUIREMENTS.md
+    ├── ROADMAP.md          # Phase plan
+    ├── STATE.md            # Current state snapshot
+    ├── config.json
+    ├── codebase/           # ← THIS DIRECTORY (codebase maps)
+    │   ├── ARCHITECTURE.md
+    │   ├── STRUCTURE.md
+    │   ├── STACK.md
+    │   ├── INTEGRATIONS.md
+    │   ├── CONVENTIONS.md
+    │   ├── TESTING.md
+    │   └── CONCERNS.md
+    ├── research/           # Pre-phase research dumps
+    │   ├── STACK.md
+    │   ├── ARCHITECTURE.md
+    │   ├── FEATURES.md
+    │   ├── PITFALLS.md
+    │   └── SUMMARY.md
+    └── phases/             # Per-phase plans + summaries + verification
+        ├── 01-foundation/
+        ├── 02-digital-twin-geometry/
+        ├── 03-click-to-state-pipeline/
+        └── 04-visual-feedback-layer/
 ```
 
 ## Directory Purposes
 
-**Root Directory:**
-- Purpose: Configuration, entry point, documentation
-- Contains: HTML, root stylesheet, npm config, README
-- Key files: `index.html` (entry), `package.json` (dependencies)
+**`src/` (root):**
+- Purpose: Core application classes that don't fit a sub-namespace.
+- Contains: `main.js`, `SceneSetup.js`, `PressModel.js`, `PhysicsEngine.js`, `UI.js`, `MaterialRegistry.js`, `RaycastController.js`, `DisclaimerBanner.js`
+- Key files: `src/main.js` (entry + wiring), `src/PressModel.js` (largest file, ~860 lines, owns geometry assembly)
 
-**`src/` — Source Code:**
-- Purpose: All application logic (no subdirectories)
-- Contains: Application coordinator, domain classes (UI, PressModel, SceneSetup, PhysicsEngine)
-- Key files: `main.js` (bootstrap & ticker), `PressModel.js` (3D model)
+**`src/state/`:**
+- Purpose: Single mutable state container.
+- Contains: One file — `trainingStore.js` (Zustand vanilla + `subscribeWithSelector`).
+- Key files: `src/state/trainingStore.js`
 
-**`public/` — Static Assets:**
-- Purpose: Vite static asset serving
-- Contains: Unused in current project (no images, fonts, etc.)
-- Status: Can be removed if no static assets needed
+**`src/training/`:**
+- Purpose: Pure SOP/scoring/scenario domain. Hard boundary — no THREE/DOM/store/gsap imports allowed (enforced by `tests/boundaries.test.js`).
+- Contains: `ProcedureEngine.js`, `faultRules.js`, `ScoringService.js`, `scoringWeights.js`, `scenarios/`
+- Key files: `src/training/ProcedureEngine.js` (`validateStep`), `src/training/scenarios/uruchomienie.js` (only shipped scenario)
 
-**`dist/` — Build Output:**
-- Purpose: Production bundle (vite build output)
-- Contains: Minified JS, bundled assets
-- Status: Gitignored; regenerated on each build
+**`src/training/scenarios/`:**
+- Purpose: Scenario data + registry + shape validator.
+- Contains: `index.js` (registry), `uruchomienie.js` (data), `validateScenario.js` (validator)
+- Key files: `src/training/scenarios/uruchomienie.js`
+
+**`src/highlight/`:**
+- Purpose: Visual feedback layer — projects store state onto emissive intensity and edge outlines.
+- Contains: `EmissiveController.js`, `HighlightManager.js`, `EdgeOutlineController.js`
+- Key files: `src/highlight/EmissiveController.js` (layer stack), `src/highlight/HighlightManager.js` (step→mesh projection)
+
+**`src/ui/`:**
+- Purpose: DOM panel components introduced in Phase 4. Subscribe to store, render Polish strings via textContent (XSS-safe).
+- Contains: `StatusPanel.js`, `StepPanel.js`
+- Key files: same
+
+**`src/i18n/`:**
+- Purpose: Single source of Polish UI strings, error codes, mesh labels, machine-state names.
+- Contains: One file — `pl.js` (162 lines).
+- Key files: `src/i18n/pl.js`
+
+**`src/assets/`:**
+- Purpose: Vite scaffold leftovers — currently not imported anywhere in production code.
+- Contains: `hero.png`, `javascript.svg`, `vite.svg`
+- Note: Safe to delete. Logos used elsewhere are in `public/`.
+
+**`public/`:**
+- Purpose: Static assets served at `/` root by Vite without transformation.
+- Contains: `favicon.svg`, `icons.svg`
+- Note: `index.html` loads `/style.css`, but `style.css` is in the project root, not `public/`. Vite serves project root for `/`-rooted absolute paths.
+
+**`tests/`:**
+- Purpose: Vitest unit + integration + smoke tests.
+- Contains: 21 `*.test.js` files + `fixtures/scenario.fixture.js`
+- Convention: One test file per source file (`SceneSetup.js` is the only major source without a direct test — covered via smoke tests).
+
+**`tests/fixtures/`:**
+- Purpose: Shared mock scenario data for testing.
+- Contains: `scenario.fixture.js`
+
+**`.planning/`:**
+- Purpose: GSD methodology artifacts. NOT shipped in dist. Read by Claude during plan/execute commands.
+- Contains: `PROJECT.md`, `REQUIREMENTS.md`, `ROADMAP.md`, `STATE.md`, `config.json`, plus subfolders `codebase/`, `research/`, `phases/`.
+- Note: `codebase/` is where THIS document and its siblings live.
+
+**`.planning/phases/NN-name/`:**
+- Purpose: Per-phase plans, summaries, verifications.
+- Contains files like `NN-CONTEXT.md`, `NN-RESEARCH.md`, `NN-NN-PLAN.md`, `NN-NN-SUMMARY.md`, `NN-VERIFICATION.md`.
+- Naming: Zero-padded `NN` (`01`, `02`, …) with kebab-case slug after the dash.
+
+**`dist/`:**
+- Purpose: Vite production build output (`npm run build`).
+- Contains: `index.html`, `assets/`, `favicon.svg`, `icons.svg`
+- Generated: Yes. Committed: No (gitignored).
+
+**`coverage/`:**
+- Purpose: V8 coverage reports from `npm run test:coverage`.
+- Generated: Yes. Committed: No.
 
 ## Key File Locations
 
 **Entry Points:**
-- `index.html` — Browser loads this; contains `<div id="three-canvas">` and UI HTML
-- `src/main.js` — ES module executed by `<script type="module">`; creates Application on DOMContentLoaded
+- `index.html`: SPA shell; loads `/style.css` and `/src/main.js`
+- `src/main.js`: JS bootstrap on `DOMContentLoaded`; HMR `dispose` hook
 
 **Configuration:**
-- `package.json` — Dependencies (gsap, three, vite), build scripts
-- `vite.config.js` — Not present; using Vite defaults (ES module serving)
-- `.env` files — Not present; no environment-specific config
+- `package.json`: Dependencies + npm scripts (`dev`, `build`, `preview`, `test`, `test:watch`, `test:coverage`)
+- `vitest.config.js`: Test environment (default `node`, jsdom only for `disclaimerBanner.test.js`); coverage thresholds (95/95/90/95) on `src/training/**` and `src/state/**`
+- No `vite.config.*` — defaults are sufficient
+- No ESLint / Prettier / TypeScript configuration
 
 **Core Logic:**
-- `src/main.js` — Application class, GSAP ticker orchestration
-- `src/PressModel.js` — Three.js geometry building and animation
-- `src/PhysicsEngine.js` — Kinematic formula (pure math)
-- `src/UI.js` — DOM state and user input handling
-- `src/SceneSetup.js` — Three.js scene initialization
-
-**Styling:**
-- Root: `style.css` — Loaded by index.html; contains UI layout (panels, buttons, header)
-- Src: `src/style.css` — Imported by main.js; currently redundant (same variables/structure)
+- `src/main.js`: `Application` orchestrator
+- `src/PressModel.js`: All Three.js geometry assembly + per-frame kinematics
+- `src/PhysicsEngine.js`: Slider-crank math
+- `src/state/trainingStore.js`: Zustand store + `applyEffects` reducer
+- `src/training/ProcedureEngine.js`: `validateStep` (pure)
+- `src/training/scenarios/uruchomienie.js`: The shipped scenario
 
 **Testing:**
-- No test files present (testing infrastructure not set up)
+- `tests/boundaries.test.js`: Module-import boundary enforcement (architectural firewall)
+- `tests/uruchomienie.integration.test.js`: End-to-end happy-path coverage
+- `tests/phase3.e2e.test.js`: Phase-3 click→state pipeline e2e
+- `vitest.config.js`: Test runner configuration
+
+**i18n:**
+- `src/i18n/pl.js`: The single Polish-strings source
 
 ## Naming Conventions
 
 **Files:**
-- **Class files:** PascalCase (e.g., `PressModel.js`, `PhysicsEngine.js`, `SceneSetup.js`, `UI.js`)
-- **Entry point:** camelCase (e.g., `main.js`)
-- **Orphaned files:** lowercase (e.g., `counter.js` — leftover scaffold)
+- Classes: `PascalCase.js` matching the exported class (`PressModel.js` → `class PressModel`, `EmissiveController.js` → `class EmissiveController`).
+- Pure modules / utilities: `camelCase.js` (`faultRules.js`, `trainingStore.js`, `scoringWeights.js`, `validateScenario.js`).
+- Scenarios: lowercase Polish noun (`uruchomienie.js`).
+- i18n: lowercase locale code (`pl.js`).
+- Tests: mirror source filename + `.test.js`. Smoke tests use `.smoke.test.js`; integration tests use `.integration.test.js`; e2e use `.e2e.test.js`.
 
 **Directories:**
-- **Source:** `src/` (conventional)
-- **Assets:** `public/` (Vite default)
-- **Output:** `dist/` (Vite default)
-- **Planning:** `.planning/codebase/` (internal documentation)
+- `src/` subfolders: lowercase singular noun (`state/`, `training/`, `highlight/`, `ui/`, `i18n/`, `assets/`).
+- Phase folders under `.planning/phases/`: zero-padded `NN-kebab-case-slug` (`01-foundation`, `04-visual-feedback-layer`).
 
-**HTML Element IDs (kebab-case):**
-- Canvas: `three-canvas`
-- UI layer: `ui-layer`
-- Controls: `status-dot`, `status-text`, `speed-slider`, `speed-value`, `btn-toggle`
-- Telemetry: `val-angle`, `val-displacement`
+**Identifiers (mesh ids, scenario step ids, machine states, error codes):**
+- All in Polish kebab-case: `kolo-zamachowe`, `oslona-przednia`, `dzwignia-sprzegla`, `oczekiwanie-na-inspekcje`, `gotowa-do-pracy`, `w-cyklu`, `E-NIEPRAWIDLOWY-MESH`, `E-SPRZEGNIETO-PRZED-ROZPEDEM`.
+- Error codes specifically: `E-` prefix + Polish SCREAMING-KEBAB.
 
-**Class Names (PascalCase):**
-- `Application`, `PressModel`, `PhysicsEngine`, `SceneSetup`, `UI`
-
-**Method Names (camelCase):**
-- `tick()`, `update()`, `render()`, `getAngularVelocity()`, `updateTelemetry()`, `updateStatus()`
-
-**Property Names (camelCase):**
-- Application: `currentAngle`, `sceneSetup`, `pressModel`, `ui`
-- UI: `isRunning`, `speed`, `elements`
-- PressModel: `r`, `l`, `shaftY`, `group`, `shaftAxis`, `eccentricPin`, `rod`, `slider`
-- Three.js: Standard conventions (position, rotation, scale, etc.)
+**JS symbols:**
+- Classes: PascalCase.
+- Functions/methods/variables: camelCase.
+- Private members: `_leadingUnderscore` (e.g. `this._unsubscribers`, `this._meshes`, `_handlePointerUp`).
+- Constants (module-level): SCREAMING_SNAKE_CASE (`HC_STORAGE_KEY`, `HOVER_HINT_HEX`, `CLICK_DRAG_THRESHOLD_PX`).
 
 ## Where to Add New Code
 
-**New Feature (e.g., pause/resume, zoom control):**
-- Primary code: `src/main.js` (if global state change) or `src/UI.js` (if input control)
-- Three.js interaction: `src/SceneSetup.js` (camera, mouse controls)
-- Telemetry display: `src/UI.js` (updateTelemetry method)
+**New Three.js geometry / interactable mesh:**
+- Add a `_buildFoo()` method on `PressModel` in `src/PressModel.js` (follow Wave 2–5 layout near lines 151–168).
+- Call `_registerInteractable({mesh, id, kind, baseMaterial, poses?, pivotTarget?})` with a NEW mesh id.
+- Add the Polish label/description in `src/i18n/pl.js` under `pl.parts['new-id']` (the registry throws if missing).
+- Add a smoke check in `tests/PressModel.smoke.test.js`.
 
-**New Component/Module (e.g., gauge display, load calculator):**
-- Create new file in `src/` as PascalCase class (e.g., `src/GaugeDisplay.js`)
-- Import into `src/main.js`
-- Instantiate in Application constructor
-- Call update methods in Application.tick()
-- Keep DOM mutations isolated in the new class (or route through UI.js)
+**New scenario step / scenario:**
+- Add a step object to `src/training/scenarios/uruchomienie.js:steps[]` (or create a new file under `src/training/scenarios/`).
+- For a new scenario file: register in `src/training/scenarios/index.js:REGISTRY`.
+- Add scenario shape coverage in `tests/scenarioShape.test.js` and an integration scenario in a new `*.integration.test.js`.
 
-**Utilities (e.g., angle normalization, physics constants):**
-- Shared math: Add static methods to `src/PhysicsEngine.js` or create new `src/Math.js`
-- DOM helpers: Add to `src/UI.js` or create `src/DOMUtils.js`
-- Geometry helpers: Add to `src/PressModel.js` or create `src/GeometryUtils.js`
+**New effect type:**
+- Add the type to `VALID_EFFECT_TYPES` in `src/training/scenarios/validateScenario.js:6-9`.
+- Add a `case` to the switch in `src/state/trainingStore.js:applyEffects` (line 102).
+- Add coverage in `tests/trainingStore.test.js`.
 
-**New Styling:**
-- UI layout/controls: Add to root `style.css`
-- Three.js related (if needed): No styles affect WebGL
-- **DO NOT** add to `src/style.css` — consolidate into root stylesheet (see concerns)
+**New cross-cutting safety rule:**
+- Add a `{id, when, then, severity}` object to `faultRules` array in `src/training/faultRules.js:21-33`.
+- Add coverage in `tests/faultRules.test.js`.
 
-**Tests:**
-- Create `src/__tests__/` or `tests/` directory when test infrastructure added
-- Unit tests: `[Component].test.js` co-located with source
-- Integration tests: `[Scenario].test.js` in tests/ folder
+**New DOM panel:**
+- Create `src/ui/FooPanel.js` following `StatusPanel.js`/`StepPanel.js` patterns (constructor with DI, `_build`, `_wireSubscribers`, `_render`, `dispose`).
+- Add a container `<div id="foo-panel" …>` in `index.html`.
+- Instantiate in `Application` constructor (`src/main.js`); add `if (this.fooPanel) this.fooPanel.dispose();` to `Application.dispose`.
+- Add a boundary entry to `tests/boundaries.test.js` listing allowed/forbidden imports.
+- Add tests under `tests/FooPanel.test.js` (note: jsdom env may be required — register in `vitest.config.js:environmentMatchGlobs`).
 
-## Special Directories
+**New per-frame work (controller that ticks):**
+- Create `src/<area>/FooController.js` exposing `update(dt)` or similar.
+- Instantiate in `Application` and push to tickables: `this.tickables.push((dt) => this.fooController.update(dt))` (`src/main.js:67`).
+- Implement `dispose()` and wire into `Application.dispose` BEFORE any controller whose layer it writes to.
 
-**`.planning/codebase/` (Analysis Documents):**
-- Purpose: Generated by GSD codebase mapper; consumed by phase planner and executor
-- Contains: ARCHITECTURE.md, STRUCTURE.md, CONVENTIONS.md (potential), TESTING.md (potential), CONCERNS.md (potential), STACK.md (potential), INTEGRATIONS.md (potential)
-- Generated: Yes (by agent on demand)
-- Committed: Yes (documentation, not code)
+**Utilities:**
+- Pure helpers belong in `src/training/` if domain-related; otherwise inline near the only caller. There is no `src/utils/` directory and adding one should be justified.
 
-**`public/` (Static Assets):**
-- Purpose: Served as-is by Vite dev server; copied to dist/ on build
-- Contains: Currently empty (no images, fonts, manifests)
-- Generated: No
-- Committed: Yes (if populated with assets)
+**i18n string:**
+- Add to the appropriate group inside `src/i18n/pl.js` (e.g. `pl.ui.fooLabel`, `pl.machineState['nowy-stan']`, `pl.parts['new-mesh-id']`).
+- NEVER inline Polish literals in code outside `src/i18n/` and `src/training/scenarios/` (boundary scanner enforces — see `tests/i18n.pl.test.js`).
 
-**`dist/` (Build Output):**
-- Purpose: Production bundle created by `npm run build`
-- Generated: Yes (by Vite)
-- Committed: No (gitignored)
+## Special files / gotchas
 
-**`node_modules/` (Dependencies):**
-- Purpose: Installed packages (gsap, three, vite)
-- Generated: Yes (by npm install)
-- Committed: No (gitignored)
+**TWO `style.css` files (CLAUDE.md callout):**
+- `style.css` (project root, 494 lines) — THIS is the one loaded by `index.html:9` via `<link rel="stylesheet" href="/style.css">`. Vite serves project root for `/`-absolute paths.
+- `src/style.css` — orphan; nothing in production imports it. (CLAUDE.md mentions `main.js` importing `./style.css`, but `src/main.js` currently has no such import — only a comment about root being the single source of truth.) Safe to delete with a sanity rebuild.
+- Edit the ROOT `style.css` for any styling change.
 
----
+**Vite scaffold leftovers:**
+- `src/assets/` (`hero.png`, `javascript.svg`, `vite.svg`) — never imported. Safe to delete.
+- `src/counter.js` mentioned in CLAUDE.md is no longer present.
 
-## File Structure Summary
+**`public/` vs root:**
+- Static assets in `public/` are served unchanged at `/` (`/favicon.svg`, `/icons.svg`).
+- Root files (`/style.css`, `/index.html`) are also served at `/` by Vite dev server.
 
-| Path | Type | Purpose | Mutable | Frequency |
-|------|------|---------|---------|-----------|
-| `index.html` | HTML | Loads scripts, defines UI layout | Rarely | Per feature |
-| `style.css` | CSS | Root styling | Rarely | Per feature |
-| `src/main.js` | JS | Bootstrap, ticker loop, orchestration | Often | Per sprint |
-| `src/PressModel.js` | JS | 3D model geometry & animation | Often | Per mechanic change |
-| `src/PhysicsEngine.js` | JS | Kinematic solver | Rarely | If formula changes |
-| `src/SceneSetup.js` | JS | Scene initialization | Rarely | Per visual change |
-| `src/UI.js` | JS | DOM state & input | Often | Per feature |
-| `src/style.css` | CSS | (Redundant) | Never | (Consolidate) |
-| `src/counter.js` | JS | (Orphaned) | Never | (Remove) |
-| `package.json` | JSON | Dependencies, scripts | Rarely | Per new dependency |
+**Build output:**
+- `dist/` is regenerated by `npm run build`. Do not edit by hand; never commit.
 
 ---
 
-*Structure analysis: 2026-05-05*
+*Structure analysis: 2026-05-20*
