@@ -32,6 +32,11 @@ export class HighlightManager {
     this._interactables = interactables;
     /** @type {Array<() => void>} */
     this._unsubscribers = [];
+    // FEEDBACK-04: flash bezpośredni na kliknięty zły mesh (event.clickedMeshId).
+    // Liczność events na ctor — kolejne triggery odpalają flash tylko dla NOWYCH eventów.
+    this._lastEventsLen = this._store.getState().events?.length ?? 0;
+    /** @type {Map<object, number>} clickedMesh → timeoutId (one-shot 800ms clear) */
+    this._flashTimers = new Map();
     this._wireSubscribers();
   }
 
@@ -48,6 +53,42 @@ export class HighlightManager {
     this._unsubscribers.push(unsub);
     // Initial render — bez tego ctor nie pokrywałby preexistującego state.error
     this._projectStepsToMeshes(this._store.getState().steps);
+
+    // FEEDBACK-04: subscribe na events, flash NOWE step.violation z clickedMeshId.
+    const unsubEvents = this._store.subscribe(
+      (s) => s.events,
+      (events) => this._flashNewViolations(events),
+    );
+    this._unsubscribers.push(unsubEvents);
+  }
+
+  /**
+   * Iteruje po nowych eventach (od _lastEventsLen), znajduje step.violation z clickedMeshId,
+   * flashuje ten mesh czerwonym ~800ms. Krok zachowuje status='error' (pulse na targetMesh
+   * jeśli ma target). Działa też dla visual-attest violation gdzie krok nie ma targetMesh —
+   * wtedy flash na kliknięty mesh jest jedynym 3D-side feedbackiem.
+   */
+  _flashNewViolations(events) {
+    if (!events || events.length <= this._lastEventsLen) {
+      this._lastEventsLen = events?.length ?? 0;
+      return;
+    }
+    for (let i = this._lastEventsLen; i < events.length; i++) {
+      const ev = events[i];
+      if (ev?.type !== 'step.violation' || !ev.clickedMeshId) continue;
+      const mesh = this._interactables.get(ev.clickedMeshId);
+      if (!mesh) continue;
+      this._emissive.setLayer('state', mesh, { color: ERROR_HEX, flash: true });
+      // Wyczyść istniejący timer dla tego mesha (rapid retry) i ustaw nowy.
+      const prev = this._flashTimers.get(mesh);
+      if (prev) clearTimeout(prev);
+      const t = setTimeout(() => {
+        this._emissive.clearLayer('state', mesh);
+        this._flashTimers.delete(mesh);
+      }, 850); // 800ms flash + 50ms bufor
+      this._flashTimers.set(mesh, t);
+    }
+    this._lastEventsLen = events.length;
   }
 
   /**
@@ -85,5 +126,7 @@ export class HighlightManager {
   dispose() {
     for (const u of this._unsubscribers) u();
     this._unsubscribers = [];
+    for (const t of this._flashTimers.values()) clearTimeout(t);
+    this._flashTimers.clear();
   }
 }
