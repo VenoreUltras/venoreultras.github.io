@@ -85,6 +85,9 @@ export class HighlightManager {
       const t = setTimeout(() => {
         this._emissive.clearLayer('state', mesh);
         this._flashTimers.delete(mesh);
+        // Re-projekcja steps: jeśli ten mesh jest targetem 'error' kroku (np. forbidden-state),
+        // pulse powinien wrócić. Dla pending/done — clearLayer zostaje (no-op restoration).
+        this._projectStepsToMeshes(this._store.getState().steps);
       }, 850); // 800ms flash + 50ms bufor
       this._flashTimers.set(mesh, t);
     }

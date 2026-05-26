@@ -28,6 +28,11 @@ export function validateStep(intent, state, scenario) {
       ok: false,
       reason: 'forbidden-state',
       effects: [
+        // setStepStatus PIERWSZY: HighlightManager steps subscriber fires synchronicznie,
+        // czyści state layer na meshach pending steps. Flash z events subscriber MUSI być
+        // ostatni żeby nie został zerowany przez tę projekcję.
+        { type: 'setStepStatus', stepId: expectedStep.id, status: 'error' },
+        ...(expectedStep.effectsOnError ?? []),
         { type: 'appendEvent', event: {
             type: 'step.violation',
             stepId: expectedStep.id,
@@ -36,8 +41,6 @@ export function validateStep(intent, state, scenario) {
             timestamp: now,
             ...(intent.kind === 'click' && intent.meshId ? { clickedMeshId: intent.meshId } : {}),
         }},
-        ...(expectedStep.effectsOnError ?? []),
-        { type: 'setStepStatus', stepId: expectedStep.id, status: 'error' },
       ],
     };
   }
@@ -53,6 +56,8 @@ export function validateStep(intent, state, scenario) {
       ok: false,
       reason: 'wrong-target',
       effects: [
+        // setStepStatus PIERWSZY: patrz komentarz w branch forbidden-state.
+        { type: 'setStepStatus', stepId: expectedStep.id, status: 'error' },
         { type: 'appendEvent', event: {
             type: 'step.violation',
             stepId: expectedStep.id,
@@ -61,7 +66,6 @@ export function validateStep(intent, state, scenario) {
             timestamp: now,
             ...(intent.kind === 'click' && intent.meshId ? { clickedMeshId: intent.meshId } : {}),
         }},
-        { type: 'setStepStatus', stepId: expectedStep.id, status: 'error' },
       ],
     };
   }
