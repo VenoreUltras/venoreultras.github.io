@@ -616,7 +616,7 @@ export class PressModel {
    */
   _buildMainSwitch() {
     const switchGroup = new THREE.Group();
-    switchGroup.position.set(2.5, 4, -0.5);
+    switchGroup.position.set(3.1, 4, -0.5);
     this.group.add(switchGroup);
 
     // 1. Korpus wyłącznika (LatheGeometry, decorative) — krótki cylindryczny "kubek" do montażu pokrętła.
