@@ -168,7 +168,7 @@ CSS klasy:
 Wyglad `.label-3d`:
 - `position: absolute` (zarządzane przez CSS2DRenderer)
 - Font: 13px / weight 600 / line-height 1.2
-- Padding: 3px 8px (`xs/3` x `sm`)
+- Padding: 4px 8px (`xs` x `sm`)
 - Border-radius: 4px
 - Tlo: `rgba(11, 15, 25, 0.78)` + `backdrop-filter: blur(4px)`
 - Border: `1px solid rgba(255,255,255,0.2)`
@@ -324,7 +324,7 @@ Przyciski akcji `.modal-card__actions`:
 
 `.difficulty-badge`:
 - `display: inline-flex; align-items: center; gap: 4px` (xs)
-- Padding: 3px 8px (xs/3 x sm)
+- Padding: 4px 8px (xs x sm)
 - Border-radius: 12px (pill shape)
 - Font: 13px / weight 600
 - Border: `1px solid` (kolor zalezny od trybu)
