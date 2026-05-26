@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 04 CODE COMPLETE — Plan 04-06 done (Application wiring + UI.updateStatus removal + boundaries +5 + integration FEEDBACK-04); manual deuteranopia checkpoint PENDING
-last_updated: "2026-05-07T13:01:00.000Z"
+status: Phase 04 COMPLETE — UAT 5/5 pass (2026-05-26); +5 in-session fixes; ready for /gsd-discuss-phase 5
+last_updated: "2026-05-26T11:04:25Z"
 progress:
   total_phases: 6
-  completed_phases: 2
+  completed_phases: 4
   total_plans: 22
   completed_plans: 22
   percent: 100
@@ -28,13 +28,14 @@ progress:
 - `.planning/research/SUMMARY.md` — synthesis of stack/features/architecture/pitfalls research
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 04 CODE COMPLETE — Wave 1 (04-01), Wave 2 (04-02), Wave 3 (04-03 + 04-04), Wave 4 (04-05), Wave 5 (04-06) complete; manual deuteranopia QA checkpoint PENDING przed `/gsd-verify-work 4`
+**Current focus:** Phase 04 COMPLETE (UAT 5/5 pass 2026-05-26) — ready to start Phase 5 (Educational Layer).
 
 ## Current Position
 
-Phase: 04 (visual-feedback-layer) — CODE COMPLETE; Plan 04-01..04-06 complete (6/6 plans, 267 tests green)
+Phase: 05 (educational-layer) — NOT STARTED; gotowy do `/gsd-discuss-phase 5`
+Phase 04 — COMPLETE (267 tests green; UAT 5/5 pass; +5 in-session fixes: main-switch repositioning, wrong-click flash + ordering race, spinup animation, completion overlay)
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
-Next: Manual deuteranopia QA checkpoint (Task 5 z Plan 04-06; SC5 Phase 4) → po approval `/gsd-verify-work 4`, potem `/gsd-discuss-phase 5`
+Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
 | Field | Value |
 |-------|-------|
 | Milestone | v1 — SOP Training Layer |

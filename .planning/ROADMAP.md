@@ -26,7 +26,7 @@ Brownfield extension layered over existing PM-300 simulator (Three.js r0.184 + G
 - [x] **Phase 1: Foundation** — Test infra + pure SOP engine + store skeleton + disclaimer/redundant-encoding policy + Phase Z hygiene (5/5 plans complete; 21/21 requirements; 133 tests; coverage 98.05/93.42/96/100)
 - [x] **Phase 2: Digital Twin Geometry** — All SOP-relevant components exist as named, tagged, individually-materialed meshes (6/6 plans complete; 13/13 requirements TWIN-01..13; 149 tests)
 - [~] **Phase 3: Click-to-State Pipeline** — RaycastController wires 3D clicks to validated store transitions (5/5 plans complete; 176 tests; PASS-WITH-PENDING — manual checkpoint 60 FPS+hover odroczony)
-- [~] **Phase 4: Visual Feedback Layer** — HighlightManager + DOM panels project store state with redundant (color + icon + text) encoding (6/6 plans CODE COMPLETE; 267 tests green; manual deuteranopia QA checkpoint pending — SC5)
+- [x] **Phase 4: Visual Feedback Layer** — HighlightManager + DOM panels project store state with redundant (color + icon + text) encoding (6/6 plans complete; 267 tests green; UAT 5/5 pass 2026-05-26; +5 in-session fixes: main switch positioning, wrong-click flash, ordering race, spinup animation, completion overlay)
 - [ ] **Phase 5: Educational Layer** — Tooltips, free-roam, difficulty modes, audio, 3D labels, rationale, keyboard shortcuts
 - [ ] **Phase 6: Scenarios + Replay + Retry + Export** — All four SOP scenarios playable, session replayable, exportable as JSON + Polish PDF
 - [ ] **Phase 7 (v2 frontier): Differentiators** — Exploded view, randomized faults, supervisor recommendations, scalable font (no v1 requirements)
