@@ -36,6 +36,7 @@ export function validateStep(intent, state, scenario) {
             timestamp: now,
         }},
         ...(expectedStep.effectsOnError ?? []),
+        { type: 'setStepStatus', stepId: expectedStep.id, status: 'error' },
       ],
     };
   }
@@ -58,6 +59,7 @@ export function validateStep(intent, state, scenario) {
             severity: 'medium',
             timestamp: now,
         }},
+        { type: 'setStepStatus', stepId: expectedStep.id, status: 'error' },
       ],
     };
   }

@@ -113,6 +113,9 @@ function applyEffects(set, get, effects, scheduleTimer) {
           set(s => ({ scoring: applyScoringEvent(s.scoring, effect.event.severity) }));
         }
         break;
+      case 'setStepStatus':
+        set(s => ({ steps: { ...s.steps, [effect.stepId]: { status: effect.status } } }));
+        break;
       case 'advanceStep': {
         const state = get();
         if (!state.currentStepId) break;
