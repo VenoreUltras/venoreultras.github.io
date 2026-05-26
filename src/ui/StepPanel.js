@@ -62,6 +62,13 @@ export class StepPanel {
       return;
     }
 
+    // Completion view: wszystkie kroki done → zastąp listę overlay'em z wynikiem + przycisk Tryb swobodny.
+    const allDone = scenario.steps.every((s) => state.steps[s.id]?.status === 'done');
+    if (allDone) {
+      this._renderCompletion(state);
+      return;
+    }
+
     const list = document.createElement('ol');
     list.className = 'step-panel__list';
     let activeEl = null;
@@ -106,6 +113,33 @@ export class StepPanel {
     if (activeEl && typeof activeEl.scrollIntoView === 'function') {
       activeEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
     }
+  }
+
+  _renderCompletion(state) {
+    const wrap = document.createElement('div');
+    wrap.className = 'step-panel__completion';
+
+    const title = document.createElement('h3');
+    title.className = 'step-panel__completion-title';
+    title.textContent = `✅ ${pl.ui.scenarioComplete}`;
+    wrap.appendChild(title);
+
+    const score = document.createElement('p');
+    score.className = 'step-panel__completion-score';
+    score.textContent = `${pl.ui.finalScorePrefix}${state.scoring.score}/100`;
+    wrap.appendChild(score);
+
+    const btn = document.createElement('button');
+    btn.className = 'step-panel__free-mode-btn';
+    btn.type = 'button';
+    btn.textContent = pl.ui.freeModeButton;
+    btn.setAttribute('aria-label', pl.ui.freeModeAria);
+    btn.addEventListener('click', () => {
+      document.body.classList.add('training-complete');
+    });
+    wrap.appendChild(btn);
+
+    this._root.replaceChildren(wrap);
   }
 
   _mapStatusToStateKey(status, isCurrent) {

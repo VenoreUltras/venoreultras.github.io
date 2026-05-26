@@ -482,6 +482,50 @@ input[type=range]::-webkit-slider-thumb:hover {
   font-family: var(--font-sans);
 }
 
+/* === Completion overlay (StepPanel po ukończeniu scenariusza) === */
+.step-panel__completion {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 0.5rem;
+  text-align: center;
+}
+
+.step-panel__completion-title {
+  margin: 0;
+  font-size: 1.15rem;
+  color: var(--text-main);
+}
+
+.step-panel__completion-score {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  color: #009E73; /* Wong success */
+}
+
+.step-panel__free-mode-btn {
+  padding: 0.6rem 1.2rem;
+  background: var(--accent-primary);
+  color: var(--text-main);
+  border: none;
+  cursor: pointer;
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  font-weight: 600;
+}
+
+.step-panel__free-mode-btn:hover {
+  filter: brightness(1.1);
+}
+
+/* Po kliknięciu "Tryb swobodny" body dostaje klasę — ukrywa panel treningowy */
+body.training-complete #step-panel,
+body.training-complete #status-panel {
+  display: none;
+}
+
 .phase4-attest-check:disabled {
   background: var(--text-muted);
   cursor: not-allowed;

@@ -31,6 +31,11 @@ export const pl = {
     scorePrefix: 'Wynik: ',
     hcToggleOn: 'Wysoki kontrast: WŁ',
     hcToggleOff: 'Wysoki kontrast: WYŁ',
+    // Po ukończeniu scenariusza — completion overlay w StepPanel
+    scenarioComplete: 'Scenariusz zakończony',
+    finalScorePrefix: 'Wynik końcowy: ',
+    freeModeButton: 'Tryb swobodny',
+    freeModeAria: 'Zakończ trening i przejdź do trybu swobodnej eksploracji prasy',
   },
 
   // Komunikaty bledow PhysicsEngine (UI-06 enforcement — wczesniej inline w throw)
