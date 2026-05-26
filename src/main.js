@@ -24,6 +24,7 @@ export class Application {
     this.disclaimerBanner = new DisclaimerBanner();  // UI-05 (Plan 05)
     this.store = createTrainingStore();
     this.currentAngle = 0; // Kąt w radianach
+    this._omega = 0; // Bieżąca prędkość kątowa wału [rad/s] — lerp w simulationTick
 
     // Tickable list (RESEARCH §"Pattern 3" — Phase 3 dorzuca raycastHover bez merge-conflict).
     this.tickables = [(dt) => this.simulationTick(dt)];
@@ -89,10 +90,25 @@ export class Application {
   simulationTick(deltaTime) {
     // GSAP 3.x ticker: deltaTime w milisekundach (kontrakt zablokowany ~3.15.0 pin w package.json — INFRA-03).
     const dtSeconds = deltaTime / 1000;
-    const angularVelocity = this.ui.getAngularVelocity();
 
-    if (angularVelocity > 0) {
-      this.currentAngle = (this.currentAngle + angularVelocity * dtSeconds) % (Math.PI * 2);
+    // Prędkość kątowa wyprowadzona z machineState (SOP-aware spin-up). Slider RPM ustawia target.
+    // Manual override: gdy operator naciśnie Start/Stop, slider tor sumuje się gdy machineState idle.
+    const machineState = this.store.getState().machineState;
+    const targetRpm = this.ui.speed;
+    const targetOmega = (targetRpm / 60) * Math.PI * 2;
+    const spinActive = machineState === 'rozpedzanie'
+      || machineState === 'gotowa-do-pracy'
+      || machineState === 'w-cyklu';
+    // Manual fallback: gdy SOP nie aktywuje napędu, slider+Start nadal działa (legacy demo tor).
+    const desiredOmega = spinActive ? targetOmega : this.ui.getAngularVelocity();
+    // Ramp: pełne nabranie obrotów w 3s (matchuje store startSpinUpTimer 3000ms).
+    const rampRate = targetOmega / 3.0;
+    const maxStep = rampRate * dtSeconds;
+    const delta = desiredOmega - this._omega;
+    this._omega += Math.sign(delta) * Math.min(Math.abs(delta), maxStep);
+
+    if (this._omega > 0) {
+      this.currentAngle = (this.currentAngle + this._omega * dtSeconds) % (Math.PI * 2);
     }
 
     // Aktualizujemy pozycję elementów modelu prasy
