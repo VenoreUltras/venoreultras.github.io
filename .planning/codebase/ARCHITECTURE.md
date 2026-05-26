@@ -1,7 +1,7 @@
-<!-- refreshed: 2026-05-20 -->
+<!-- refreshed: 2026-05-26 -->
 # Architecture
 
-**Analysis Date:** 2026-05-20
+**Analysis Date:** 2026-05-26
 
 ## System Overview
 
@@ -15,7 +15,7 @@
 ┌──────────────────────────────────────────────────────────────────────────────┐
 │                       Application (`src/main.js`)                             │
 │  Owns lifecycle, tickables list, _unsubscribers, HMR dispose chain.           │
-│  Single class that holds refs to BOTH the 3D engine AND DOM-bound components. │
+│  Single class trzymający refy do 3D engine I DOM-bound components.            │
 └─────┬───────────────────┬────────────────────┬────────────────────────┬──────┘
       │                   │                    │                        │
       ▼                   ▼                    ▼                        ▼
@@ -56,101 +56,95 @@
 
 | Component | Responsibility | File |
 |-----------|----------------|------|
-| `Application` | Wires everything; owns ticker, tickables list, dispose chain | `src/main.js` |
+| `Application` | Wire everything; owns ticker, `tickables` array, dispose chain, HC bootstrap | `src/main.js` |
 | `SceneSetup` | Owns `THREE.Scene`, camera, renderer, OrbitControls, lights, resize, WebGL context-loss overlay | `src/SceneSetup.js` |
-| `PressModel` | Builds press geometry (frame, shaft, eccentric, rod, slider, 15 interactables); owns kinematic params `r`, `l`, `shaftY`; per-frame `update(angle)` | `src/PressModel.js` |
-| `PhysicsEngine` | Stateless static class — slider-crank displacement formula + input validation | `src/PhysicsEngine.js` |
-| `UI` | Reads/writes RPM slider + Start/Stop button + telemetry readouts; exposes `getAngularVelocity()` | `src/UI.js` |
-| `MaterialRegistry` | Per-mesh cloned `MeshStandardMaterial` cache; texture tracker; central `disposeAll()` | `src/MaterialRegistry.js` |
-| `RaycastController` | Pointer events → NDC → 1 raycast/tick → hover hysteresis → `store.attemptStep({kind:'click', meshId})` | `src/RaycastController.js` |
+| `PressModel` | Buduje geometrię (frame, shaft, eccentric, rod, slider, 15 interactables); owns `r`, `l`, `shaftY`; per-frame `update(angle)` | `src/PressModel.js` |
+| `PhysicsEngine` | Stateless static — formuła slider-crank + walidacja inputu | `src/PhysicsEngine.js` |
+| `UI` | RPM slider + Start/Stop + telemetry readouts; `getAngularVelocity()` | `src/UI.js` |
+| `MaterialRegistry` | Per-mesh cloned `MeshStandardMaterial` cache; texture tracker; centralny `disposeAll()` | `src/MaterialRegistry.js` |
+| `RaycastController` | Pointer → NDC → 1 raycast/tick → hover hysteresis → `store.attemptStep({kind:'click', meshId})` | `src/RaycastController.js` |
 | `EmissiveController` | Per-mesh emissive layer stack (`state` > `hover` > baseline); GSAP pulse/flash timelines | `src/highlight/EmissiveController.js` |
-| `HighlightManager` | Subscribes `state.steps`; projects step status → `EmissiveController.setLayer('state', …)` (error pulse / done flash) | `src/highlight/HighlightManager.js` |
-| `EdgeOutlineController` | Prebuilds `EdgesGeometry`+`LineSegments` per interactable; toggles visibility on `state.hcOutlineMode` (high-contrast a11y mode) | `src/highlight/EdgeOutlineController.js` |
-| `StatusPanel` | Top-bar DOM: machine-state icon + label + score + HC toggle button; subscribes 3 store slices | `src/ui/StatusPanel.js` |
-| `StepPanel` | Left-column DOM: ordered list of scenario steps + inline `visual-attest` button; auto-scroll to active | `src/ui/StepPanel.js` |
-| `DisclaimerBanner` | Sticky top banner with BHP disclaimer; collapsed/expanded state persisted in `localStorage` | `src/DisclaimerBanner.js` |
-| `trainingStore` | Zustand vanilla store; only mutable shared state; `attemptStep` reducer with `isAnimating` lock | `src/state/trainingStore.js` |
-| `ProcedureEngine` | Pure `validateStep(intent, state, scenario)` returning `{ok, reason, effects}`; re-exports `evaluateFaultRules` | `src/training/ProcedureEngine.js` |
-| `faultRules` | Cross-cutting BHP invariants (e.g. open guard during cycle → `awaria`); pure evaluator | `src/training/faultRules.js` |
+| `HighlightManager` | Subskrybuje `state.steps`; projekcja step status → `EmissiveController.setLayer('state', …)` (error pulse / done flash) | `src/highlight/HighlightManager.js` |
+| `EdgeOutlineController` | Prebuilduje `EdgesGeometry`+`LineSegments` per interactable; toggle visibility na `state.hcOutlineMode` | `src/highlight/EdgeOutlineController.js` |
+| `StatusPanel` | Top bar: machine-state ikona + label + score + HC toggle button; 3 store subscriptions | `src/ui/StatusPanel.js` |
+| `StepPanel` | Lewa kolumna: lista kroków scenariusza + inline `visual-attest` button; auto-scroll do active | `src/ui/StepPanel.js` |
+| `DisclaimerBanner` | Sticky top banner BHP; collapsed/expanded state w localStorage | `src/DisclaimerBanner.js` |
+| `trainingStore` | Zustand vanilla; jedyny mutable shared state; `attemptStep` reducer + `isAnimating` lock | `src/state/trainingStore.js` |
+| `ProcedureEngine` | Pure `validateStep(intent, state, scenario) → {ok, reason, effects}`; re-eksport `evaluateFaultRules` | `src/training/ProcedureEngine.js` |
+| `faultRules` | Cross-cutting BHP invariants (np. otwarta osłona w cyklu → `awaria`); pure evaluator | `src/training/faultRules.js` |
 | `ScoringService` | Pure `calculate(events, opts)` — subtractive scoring from 100, floor 0 | `src/training/ScoringService.js` |
-| `validateScenario` | Ad-hoc scenario shape validator (zero deps) | `src/training/scenarios/validateScenario.js` |
+| `validateScenario` | Ad-hoc walidator scenariuszy (zero deps) | `src/training/scenarios/validateScenario.js` |
 
 ## Pattern Overview
 
-**Overall:** Layered single-page app with one-way data flow (Pointer → Store → Subscribers → DOM/3D). Vanilla classes, no framework, manual DI through `Application` constructor.
+**Overall:** Layered SPA z one-way data flow (Pointer → Store → Subscribers → DOM/3D). Vanilla classes, no framework, manual DI przez `Application` constructor.
 
 **Key Characteristics:**
-- **Single timing source:** `gsap.ticker` drives ALL per-frame work (no `requestAnimationFrame`). Enables `ticker.sleep()`/`wake()` from WebGL context-loss handling.
-- **Pure-functional core:** `PhysicsEngine`, `ProcedureEngine`, `ScoringService`, `faultRules.evaluateFaultRulesData` are stateless — no THREE/DOM/store/gsap imports. Trivially testable.
-- **Tickables registry:** `Application.tickables` is an array of `(dt) => void` callbacks; controllers attach themselves (`RaycastController._runHysteresis`) without modifying `main.js` simulation logic. Open/closed for new per-frame work.
-- **Layer stack for visual feedback:** `EmissiveController` owns priority resolution (`state` > `hover` > baseline). `RaycastController` writes only `hover`; `HighlightManager` writes only `state`. No mutual knowledge.
-- **Identity-only `userData` (CRIT-7):** Interactable meshes carry `{id, kind, restPosition, labelPL, descriptionPL, poses?, pivotTarget?}` — NEVER mutable status. Active pose lives in `state.meshStates[id]` in the store.
-- **Declarative effects:** `ProcedureEngine.validateStep` returns `{effects: [...]}`; `applyEffects()` in store is a closed-type reducer (`setMachineState`, `setMeshState`, `appendEvent`, `advanceStep`, `startSpinUpTimer`, `playAudio`). Engine stays pure; side effects centralized.
-- **Dispose chain (STATE-03):** Vite HMR triggers `Application.dispose()`; explicit order in `src/main.js:120-133` releases subscribers, GPU buffers, GSAP timelines, then renderer.
+- **Single timing source:** `gsap.ticker` — ALL per-frame work. Brak `requestAnimationFrame` w kodzie aplikacji. Umożliwia `ticker.sleep()`/`wake()` z WebGL context-loss handling.
+- **Pure-functional core:** `PhysicsEngine`, `ProcedureEngine`, `ScoringService`, `faultRules.evaluateFaultRulesData` są stateless — zero importów THREE/DOM/store/gsap. Trywialnie testowalne.
+- **Tickables registry:** `Application.tickables` to tablica `(dt) => void`; kontrolery dopisują się (`RaycastController._runHysteresis`) bez modyfikacji logiki symulacji w `main.js`. Open/closed na nową per-frame work.
+- **Layer stack na visual feedback:** `EmissiveController` owns priority resolution (`state` > `hover` > baseline). `RaycastController` pisze tylko `hover`; `HighlightManager` pisze tylko `state`. Brak wzajemnej wiedzy.
+- **Identity-only `userData` (CRIT-7):** Interactable meshes mają `{id, kind, restPosition, labelPL, descriptionPL, poses?, pivotTarget?}` — NIGDY mutable status. Aktywna pose żyje w `state.meshStates[id]`.
+- **Declarative effects:** `ProcedureEngine.validateStep` zwraca `{effects: [...]}`; `applyEffects()` w store to closed-type reducer (`setMachineState`, `setMeshState`, `appendEvent`, `advanceStep`, `startSpinUpTimer`, `playAudio`). Engine pure, side effects centralized.
+- **Dispose chain (STATE-03):** Vite HMR triggers `Application.dispose()`; explicit order w `src/main.js:120-133` — subscribers, GPU buffers, GSAP timelines, renderer.
+- **HC bootstrap PRZED subscriberami (D-Phase4-09):** `hcOutlineMode` ustawiany z localStorage w `src/main.js:44-48` PRZED konstrukcją `EdgeOutlineController`/`StatusPanel`, aby ich initial projection widział poprawną wartość.
 
 ## Layers
 
-**DOM / Bootstrap layer:**
+**DOM / Bootstrap:**
 - Purpose: Static HTML scaffolding + script entry
 - Location: `index.html`, `style.css` (root), `src/main.js`
-- Contains: Container divs, control panel widgets, font/CSS link, module script tag
-- Depends on: Nothing
-- Used by: `Application` constructor reads elements by id
+- Depends on: nothing
+- Used by: `Application` constructor
 
-**Application / orchestration layer:**
-- Purpose: Wire 3D engine ↔ interaction ↔ store ↔ DOM panels; manage lifecycle
+**Application / orchestration:**
+- Purpose: Wire 3D engine ↔ interaction ↔ store ↔ DOM panels; lifecycle
 - Location: `src/main.js`
-- Contains: `class Application`, bootstrap listener, HMR `dispose()` hook
-- Depends on: All other layers
-- Used by: Module bootstrap (`DOMContentLoaded`)
+- Contains: `class Application`, `DOMContentLoaded` bootstrap, HMR `dispose()` hook
+- Depends on: wszystkie pozostałe layery
+- Used by: module bootstrap (`src/main.js:138-140`)
 
-**3D engine layer:**
-- Purpose: Build and update Three.js scene; expose stable interactable references
+**3D engine:**
+- Purpose: Build/update sceny Three.js; ekspozycja stabilnych referencji interactable
 - Location: `src/SceneSetup.js`, `src/PressModel.js`, `src/PhysicsEngine.js`, `src/MaterialRegistry.js`
-- Contains: Geometry assembly, kinematics math, material cloning
-- Depends on: `three`, `gsap` (only `SceneSetup` for `ticker.sleep/wake`), `src/i18n/pl.js`
+- Depends on: `three`, `gsap` (tylko `SceneSetup` dla `ticker.sleep/wake`), `src/i18n/pl.js`
 - Used by: `Application`, `RaycastController`, `EmissiveController`, `HighlightManager`, `EdgeOutlineController`
 
-**Interaction layer:**
-- Purpose: Translate pointer events into engine-compatible intents and dispatch to store
+**Interaction:**
+- Purpose: Tłumaczy pointer events na engine intents i dispatch do store
 - Location: `src/RaycastController.js`
-- Contains: Pointer listeners, `THREE.Raycaster`, hover hysteresis state machine, click-vs-drag discriminator
-- Depends on: `three`, store (DI), `EmissiveController` (DI)
+- Depends on: `three`, store (DI), `EmissiveController` (DI od D-Phase4-13)
 - Used by: `Application`
 
-**Visual feedback layer:**
-- Purpose: Project store state → emissive intensity + edge outlines on interactable meshes
+**Visual feedback:**
+- Purpose: Projekcja store state → emissive intensity + edge outlines na interactable meshes
 - Location: `src/highlight/`
-- Contains: `EmissiveController` (layer stack), `HighlightManager` (store→emissive projection), `EdgeOutlineController` (HC mode)
-- Depends on: `three`, `gsap` (EmissiveController only), store (DI)
+- Contains: `EmissiveController` (layer stack), `HighlightManager` (store→emissive), `EdgeOutlineController` (HC mode)
+- Depends on: `three`, `gsap` (tylko EmissiveController), store (DI)
 - Used by: `Application`
 
-**DOM panels layer:**
-- Purpose: Read store, render Polish UI strings, dispatch user actions back to store
+**DOM panels:**
+- Purpose: Read store, render polskie stringi, dispatch user actions do store
 - Location: `src/ui/`, `src/UI.js`, `src/DisclaimerBanner.js`
-- Contains: `StatusPanel`, `StepPanel`, legacy `UI` (RPM slider + telemetry), `DisclaimerBanner`
 - Depends on: DOM, store (DI), `src/i18n/pl.js`
 - Used by: `Application`
 
-**State layer:**
+**State:**
 - Purpose: Single mutable source of truth for training session
 - Location: `src/state/trainingStore.js`
-- Contains: Zustand vanilla store with `subscribeWithSelector` middleware, `attemptStep` reducer, `applyEffects` dispatcher
 - Depends on: `zustand`, `src/training/ProcedureEngine.js`, `src/training/faultRules.js`
-- Used by: All controllers and panels (via DI)
+- Used by: wszystkie kontrolery i panele (via DI)
 
-**Training domain layer:**
+**Training domain:**
 - Purpose: Pure SOP validation + scoring + scenario data
 - Location: `src/training/`
-- Contains: `ProcedureEngine`, `faultRules`, `ScoringService`, `scoringWeights`, `scenarios/`
-- Depends on: Nothing (zero THREE/DOM/store/gsap)
-- Used by: Store (validation + fault evaluation), tests, future Phase 6 PDF export
+- Depends on: nothing (zero THREE/DOM/store/gsap)
+- Used by: store, testy, Phase 6 PDF export (future)
 
-**i18n layer:**
-- Purpose: Single source of Polish UI strings, error messages, mesh labels
+**i18n:**
+- Purpose: Single source of polskich UI strings, error messages, mesh labels
 - Location: `src/i18n/pl.js`
-- Contains: `pl.parts`, `pl.machineState`, `pl.stepStates`, `pl.physics`, `pl.webgl`, `pl.disclaimer`, `pl.ui`
-- Depends on: Nothing
+- Depends on: nothing
 - Used by: `PressModel`, `PhysicsEngine`, `SceneSetup`, `StatusPanel`, `StepPanel`, `DisclaimerBanner`
 
 ## Data Flow
@@ -158,77 +152,77 @@
 ### Per-frame simulation tick (GSAP ticker)
 
 1. `gsap.ticker.add(this._tickerCallback)` (`src/main.js:36`)
-2. Callback iterates `this.tickables` array (`src/main.js:30-33`)
+2. Callback iteruje `this.tickables` (`src/main.js:30-33`)
 3. `simulationTick(dt)` (`src/main.js:89-108`):
-   - `ui.getAngularVelocity()` reads `isRunning`+`speed` from `UI` (`src/UI.js:43-47`)
-   - `currentAngle += ω · (dt/1000)` (GSAP ticker delivers ms; divide by 1000)
-   - `pressModel.update(angle)` rotates `shaftAxis`, recomputes slider Y, rod tilt (`src/PressModel.js:828-858`)
-   - `PhysicsEngine.calculateSliderPosition(angle, r, l)` for telemetry display (`src/PhysicsEngine.js:14-32`)
-   - `ui.updateTelemetry(angle, displacement)` writes to DOM
-4. `raycastController._runHysteresis(dt)` (registered as 2nd tickable, `src/main.js:67`)
+   - `ui.getAngularVelocity()` czyta `isRunning`+`speed` z `UI` (`src/UI.js:43-47`)
+   - `currentAngle += ω · (dt/1000)` (GSAP ticker w ms; divide by 1000)
+   - `pressModel.update(angle)` rotuje `shaftAxis`, oblicza slider Y, rod tilt (`src/PressModel.js:828-858`)
+   - `PhysicsEngine.calculateSliderPosition(angle, r, l)` dla telemetrii (`src/PhysicsEngine.js:14-32`)
+   - `ui.updateTelemetry(angle, displacement)` pisze do DOM
+4. `raycastController._runHysteresis(dt)` (2-gi tickable, `src/main.js:67`)
 5. `sceneSetup.render()` (`src/main.js:32`, `src/SceneSetup.js:82-85`)
 
 ### Pointer click → step validation → visual feedback
 
-1. User clicks canvas → `pointerdown`/`pointerup` listeners on `renderer.domElement` (`src/RaycastController.js:60-62`)
+1. User klika canvas → `pointerdown`/`pointerup` na `renderer.domElement` (`src/RaycastController.js:60-62`)
 2. `_handlePointerUp`: distance < 5px → raycast against `_meshes` snapshot (`src/RaycastController.js:146-163`)
-3. On hit: `store.attemptStep({kind:'click', meshId: mesh.userData.id})`
-4. Store sets `isAnimating: true`; calls `validateStep(intent, state, activeScenario)` (`src/state/trainingStore.js:67-86`)
+3. Hit: `store.attemptStep({kind:'click', meshId: mesh.userData.id})`
+4. Store ustawia `isAnimating: true`; woła `validateStep(intent, state, activeScenario)` (`src/state/trainingStore.js:67-86`)
 5. `validateStep` returns `{ok, reason, effects}` (`src/training/ProcedureEngine.js:15-79`)
-6. `applyEffects()` reduces effects into state (`src/state/trainingStore.js:101-150`):
-   - `appendEvent` → mutates `events` + recomputes `scoring`
-   - `setMeshState` → mutates `meshStates`
-   - `setMachineState` → mutates `machineState`
-   - `advanceStep` → updates `currentStepId` + marks step `done`
-   - `startSpinUpTimer` → schedules `_onSpinUpComplete` (injectable for tests)
-7. `evaluateFaultRules(get())` runs cross-cutting BHP rules (`src/training/faultRules.js:21-33`); their effects re-enter `applyEffects`
+6. `applyEffects()` reduce effects do state (`src/state/trainingStore.js:101-150`):
+   - `appendEvent` → `events` + recompute `scoring`
+   - `setMeshState` → `meshStates`
+   - `setMachineState` → `machineState`
+   - `advanceStep` → `currentStepId` + mark step `done`
+   - `startSpinUpTimer` → schedule `_onSpinUpComplete` (injectable for tests)
+7. `evaluateFaultRules(get())` cross-cutting BHP rules (`src/training/faultRules.js:21-33`); ich effects re-enter `applyEffects`
 8. Subscribers fire:
    - `HighlightManager` (`state.steps`) → `EmissiveController.setLayer('state', mesh, {color, pulse|flash})`
    - `StepPanel` (`currentStepId`, `steps`, `isAnimating`) → DOM re-render + auto-scroll
    - `StatusPanel` (`machineState`, `scoring.score`, `hcOutlineMode`) → DOM re-render
-9. `EmissiveController._applyTopLayer` kills any old GSAP timeline, sets `material.emissive` + animates `material.emissiveIntensity` (`src/highlight/EmissiveController.js:80-126`)
+9. `EmissiveController._applyTopLayer` kill old GSAP timeline, set `material.emissive`, animate `material.emissiveIntensity` (`src/highlight/EmissiveController.js:80-126`)
 
 ### Pointer hover → emissive lift
 
-1. `pointermove` updates NDC + sets `_pointerDirty=true` (`src/RaycastController.js:69-74`) — no raycast yet
-2. Next GSAP tick: `_runHysteresis(dt)` performs the single raycast (`src/RaycastController.js:81-107`)
-3. Same target seen ≥2 ticks → `_commitHover(mesh)` → `emissive.setLayer('hover', mesh, {color: 0x222222})` + cursor `pointer`
-4. Different target / no hit → `_commitLeave()` → `emissive.clearLayer('hover', …)`
+1. `pointermove` updates NDC + sets `_pointerDirty=true` (`src/RaycastController.js:69-74`) — bez raycast
+2. Następny GSAP tick: `_runHysteresis(dt)` robi single raycast (`src/RaycastController.js:81-107`)
+3. Ten sam target ≥2 ticki → `_commitHover(mesh)` → `emissive.setLayer('hover', mesh, {color: 0x222222})` + cursor `pointer`
+4. Inny target / no hit → `_commitLeave()` → `emissive.clearLayer('hover', …)`
 
 **State Management:**
-- Zustand vanilla store with `subscribeWithSelector` — selector-based subscriptions fire only on CHANGE; subscribers manually project initial state in constructors (e.g. `HighlightManager._wireSubscribers`).
-- Single store instance per `Application`. No global singletons. Tests construct fresh stores via `createTrainingStore({now, scheduleTimer})`.
-- `isAnimating` lock prevents reentrant `attemptStep` during validation (CRIT-8).
-- Effects pattern: engine returns declarative effect objects; store is the only place where state mutates.
+- Zustand vanilla z `subscribeWithSelector` — selektorowe subscriptions fire tylko na CHANGE; subskryberzy ręcznie projektują initial state w konstruktorach (np. `HighlightManager._wireSubscribers`).
+- Single store instance per `Application`. Brak globalnych singletonów. Testy budują fresh stores przez `createTrainingStore({now, scheduleTimer})`.
+- `isAnimating` lock blokuje reentrant `attemptStep` podczas walidacji (CRIT-8).
+- Effects pattern: engine zwraca deklaratywne effect objects; store jest jedynym miejscem mutacji state.
 
 ## Key Abstractions
 
 **Interactable mesh:**
-- Purpose: A clickable/hoverable Three.js mesh registered in `PressModel._interactables` (a `Map<string, THREE.Mesh>`).
-- Examples: `kolo-zamachowe`, `estop`, `oslona-przednia`, `dzwignia-sprzegla` (15 total, listed in `src/PressModel.js:762-766`)
-- Pattern: `_registerInteractable({mesh, id, kind, baseMaterial, poses?, pivotTarget?})` (`src/PressModel.js:767-813`). Invariants: per-mesh cloned material (CRIT-6), identity-only `userData` (CRIT-7).
-- `kind`: `'manipulation'` (clickable control) | `'visual-target'` (look-at) | `'visual-attest'` (DOM button only, no mesh).
-- `pivotTarget`: `'self'` (rotate the mesh) | `'parent'` (rotate `mesh.parent` group).
+- Purpose: Clickable/hoverable mesh zarejestrowany w `PressModel._interactables` (`Map<string, THREE.Mesh>`).
+- Examples: `kolo-zamachowe`, `estop`, `oslona-przednia`, `dzwignia-sprzegla` (15 total, lista w `src/PressModel.js:762-766`)
+- Pattern: `_registerInteractable({mesh, id, kind, baseMaterial, poses?, pivotTarget?})` (`src/PressModel.js:767-813`). Invarianty: per-mesh cloned material (CRIT-6), identity-only `userData` (CRIT-7).
+- `kind`: `'manipulation'` | `'visual-target'` | `'visual-attest'` (DOM button only, no mesh).
+- `pivotTarget`: `'self'` (rotate mesh) | `'parent'` (rotate `mesh.parent` group).
 
 **Intent:**
-- Purpose: Engine-compatible representation of a user action.
+- Purpose: Engine-compatible reprezentacja akcji użytkownika.
 - Shape: `{kind: 'click'|'check', meshId?: string, stepId?: string}`
-- Pattern: `RaycastController` always emits `{kind:'click', meshId}` (`src/RaycastController.js:161`); `StepPanel` attest button emits `{kind:'check', stepId}` (`src/ui/StepPanel.js:92`). `ProcedureEngine` Branch 3 matches intent.kind against step.kind.
+- Pattern: `RaycastController` zawsze `{kind:'click', meshId}` (`src/RaycastController.js:161`); `StepPanel` attest button `{kind:'check', stepId}` (`src/ui/StepPanel.js:92`). `ProcedureEngine` Branch 3 matchuje intent.kind do step.kind.
 
 **Effect:**
-- Purpose: Declarative state mutation request returned by pure engine.
+- Purpose: Deklaratywny state mutation request zwracany przez pure engine.
 - Examples: `{type:'setMachineState', value:'rozpedzanie'}`, `{type:'startSpinUpTimer', ms:3000}`, `{type:'advanceStep'}`
-- Pattern: Closed type set (D-02) enforced by `validateScenario`. Reducer in `src/state/trainingStore.js:101-150` is the only effect interpreter.
+- Pattern: Closed type set (D-02) enforced przez `validateScenario`. Reducer w `src/state/trainingStore.js:101-150` to jedyny effect interpreter.
 
 **Scenario:**
-- Purpose: Ordered list of training steps with success/error effects.
+- Purpose: Uporządkowana lista training steps z success/error effects.
 - Examples: `src/training/scenarios/uruchomienie.js` (8-step safe startup procedure)
-- Pattern: Plain object `{id, titlePL, descriptionPL, initialMachineState, steps:[{id, kind, targetMeshId?, labelPL, descriptionPL, rationalePL, effectsOnSuccess, effectsOnError, validateBefore?}]}`. Validated by `validateScenario`. Registered in `src/training/scenarios/index.js`.
+- Pattern: Plain obj `{id, titlePL, descriptionPL, initialMachineState, steps:[{id, kind, targetMeshId?, labelPL, descriptionPL, rationalePL, effectsOnSuccess, effectsOnError, validateBefore?}]}`. Walidowany przez `validateScenario`. Rejestrowany w `src/training/scenarios/index.js`.
 
 **Pose:**
-- Purpose: Named rotation tuple for animatable interactable.
+- Purpose: Nazwany rotation tuple dla animatable interactable.
 - Examples: `oslona-przednia.poses = {closed:{rot:{x:0,…}}, open:{rot:{x:-π/2,…}}}` (`src/PressModel.js:592-595`)
-- Pattern: Defined in `userData.poses` (identity); active pose name lives in `state.meshStates[id]`. Future animator (not yet wired) tweens `poses[targetPose].rot` on `pivotTarget` group.
+- Pattern: Definiowana w `userData.poses` (identity); aktywna pose name w `state.meshStates[id]`. Animator (Phase 5) będzie tweenował `poses[targetPose].rot` na `pivotTarget` group.
 
 ## Entry Points
 
@@ -240,104 +234,105 @@
 **JS bootstrap:**
 - Location: `src/main.js:138-140`
 - Triggers: `DOMContentLoaded`
-- Responsibilities: Instantiate `Application` once; store reference for HMR dispose
+- Responsibilities: Instantiate `Application` raz; cache ref dla HMR dispose
 
 **Vite HMR hook:**
 - Location: `src/main.js:143-147`
 - Triggers: `import.meta.hot.dispose`
-- Responsibilities: Call `app.dispose()` before module replaces — guarantees no leaked GSAP ticker callbacks, subscribers, GPU buffers, or DOM listeners.
+- Responsibilities: `app.dispose()` przed module replacement — zero leaków GSAP ticker callbacks, subscribers, GPU buffers, DOM listeners.
 
 **Test entry:**
 - Location: `tests/*.test.js` (via `npm test` → `vitest run`)
 - Triggers: CLI
-- Responsibilities: Unit + integration coverage; coverage gate enforced on `src/training/` and `src/state/` (≥95%/95%/90%/95%, `vitest.config.js:19-25`).
+- Responsibilities: Unit + integration; coverage gate na `src/training/` i `src/state/` (≥95/95/90/95, `vitest.config.js:19-25`).
 
 ## Architectural Constraints
 
-- **Threading:** Single-threaded browser event loop. No Web Workers. GSAP ticker is the only per-frame scheduler.
-- **Global state:** None in-process. `localStorage` is read in two places (`src/DisclaimerBanner.js`, `src/ui/StatusPanel.js` + bootstrap in `src/main.js:44-48` for `pm300:hc-outline:v1`). All other state lives in the per-`Application` Zustand store.
-- **Circular imports:** None observed. Training domain has zero outward deps; store imports `ProcedureEngine`/`faultRules`; everything else is wired via `Application` DI.
-- **Boundary enforcement:** `tests/boundaries.test.js` mechanically asserts which modules may import what (e.g. `RaycastController` MUST NOT import `src/training/**`; `HighlightManager` MUST NOT import DOM; `trainingStore` MUST NOT import `three`/`gsap`/DOM).
-- **Material invariant (CRIT-6):** Every interactable mesh must use a cloned material from `MaterialRegistry`. Sharing a base material would cause one hover/highlight to light every mesh. Enforced in `src/PressModel.js:767-813` (`_registerInteractable`).
-- **`userData` invariant (CRIT-7):** Only identity/definition fields allowed on `mesh.userData`. Forbidden: `state`, `isOpen`, `value`, `status`, `currentPose`, `isHighlighted` — all live in store.
-- **Effects are closed-set (D-02):** Adding a new effect type requires touching `src/state/trainingStore.js:applyEffects` AND `src/training/scenarios/validateScenario.js:VALID_EFFECT_TYPES`.
-- **No `requestAnimationFrame` in app code:** GSAP ticker only. Bypassing this breaks WebGL context-loss pause (`gsap.ticker.sleep()` in `src/SceneSetup.js:46`).
-- **Vite HMR is mandatory:** Every controller exposes `dispose()`; `Application.dispose()` invokes them in a specific order — `RaycastController.dispose()` BEFORE `EmissiveController.dispose()` because the former calls `clearLayer('hover', …)` on the latter (`src/main.js:115-119`).
+- **Threading:** Single-threaded browser event loop. Brak Web Workers. GSAP ticker = jedyny per-frame scheduler.
+- **Global state:** Brak in-process. `localStorage` czytany w 3 miejscach: `src/DisclaimerBanner.js`, `src/ui/StatusPanel.js`, i bootstrap w `src/main.js:44-48` (`pm300:hc-outline:v1`). Reszta w per-`Application` Zustand store.
+- **Circular imports:** Brak. Training domain ma zero outward deps; store importuje `ProcedureEngine`/`faultRules`; reszta wired via `Application` DI.
+- **Boundary enforcement:** `tests/boundaries.test.js` mechanicznie asertuje import boundaries (np. `RaycastController` NIE MOŻE importować `src/training/**`; `HighlightManager` NIE MOŻE importować DOM; `trainingStore` NIE MOŻE importować `three`/`gsap`/DOM).
+- **Material invariant (CRIT-6):** Każdy interactable mesh używa cloned material z `MaterialRegistry`. Współdzielony base material spowodowałby zapalenie wszystkich meshy jednocześnie. Enforced w `src/PressModel.js:767-813`.
+- **`userData` invariant (CRIT-7):** Tylko identity/definition fields. Forbidden: `state`, `isOpen`, `value`, `status`, `currentPose`, `isHighlighted` — wszystkie w store.
+- **Effects closed-set (D-02):** Nowy effect type wymaga zmiany `src/state/trainingStore.js:applyEffects` AND `src/training/scenarios/validateScenario.js:VALID_EFFECT_TYPES`.
+- **No `requestAnimationFrame` w kodzie app:** GSAP ticker only. Omijanie psuje WebGL context-loss pause (`gsap.ticker.sleep()` w `src/SceneSetup.js:46`).
+- **Vite HMR mandatory:** Każdy kontroler ekspozuje `dispose()`; `Application.dispose()` woła w specyficznej kolejności — `RaycastController.dispose()` PRZED `EmissiveController.dispose()` bo pierwszy woła `clearLayer('hover', …)` na drugim (`src/main.js:115-130`).
+- **HC bootstrap ordering (D-Phase4-09):** `hcOutlineMode` ustawiany z localStorage PRZED konstrukcją `EdgeOutlineController`/`StatusPanel`, żeby ich initial projection nie pokazała złego stanu (`src/main.js:44-48`).
 
 ## Anti-Patterns
 
 ### Reading or writing `userData.status` (CRIT-7)
 
-**What happens:** Storing a mesh's pose name or "isOpen" flag on `mesh.userData`.
-**Why it's wrong:** Splits the source of truth between Three.js scene graph and Zustand store. Subscribers can't react. HMR replay leaks stale flags.
-**Do this instead:** Use `state.meshStates[id]` in the store. See effects pattern at `src/training/scenarios/uruchomienie.js:71-72` (`{type:'setMeshState', meshId:'oslona-przednia', value:'closed'}`).
+**What happens:** Przechowywanie pose name lub `isOpen` flagi na `mesh.userData`.
+**Why it's wrong:** Dzieli source of truth między Three.js scene graph a Zustand store. Subskryberzy nie reagują. HMR replay zostawia stale flags.
+**Do this instead:** Użyj `state.meshStates[id]` w store. Patrz effects pattern w `src/training/scenarios/uruchomienie.js:71-72` (`{type:'setMeshState', meshId:'oslona-przednia', value:'closed'}`).
 
 ### Sharing a base material across interactables (CRIT-6)
 
-**What happens:** Assigning `this.matEStopRed` directly to a mesh instead of routing through `MaterialRegistry.getCloned(baseMaterial, meshId)`.
-**Why it's wrong:** `EmissiveController` mutates `material.emissive` and `material.emissiveIntensity` per-mesh. A shared material means every E-stop-colored mesh lights up at once.
-**Do this instead:** Always call `this._registerInteractable({…, baseMaterial: this.matX})` — it clones via registry (`src/PressModel.js:767-813`). Exception: `tabliczka-znamionowa` uses `MeshBasicMaterial` with `baseMaterial: null` (CanvasTexture path).
+**What happens:** Przypisanie `this.matEStopRed` bezpośrednio do mesha zamiast routing przez `MaterialRegistry.getCloned(baseMaterial, meshId)`.
+**Why it's wrong:** `EmissiveController` mutuje `material.emissive` i `material.emissiveIntensity` per-mesh. Współdzielony materiał → wszystkie meshy o tym samym kolorze zapalają się naraz.
+**Do this instead:** Zawsze `this._registerInteractable({…, baseMaterial: this.matX})` — klonuje przez registry. Wyjątek: `tabliczka-znamionowa` używa `MeshBasicMaterial` z `baseMaterial: null` (CanvasTexture path).
 
 ### Calling `requestAnimationFrame` directly
 
-**What happens:** A new controller installs its own RAF loop.
-**Why it's wrong:** Diverges from `gsap.ticker` timing; bypasses `ticker.sleep()` during WebGL context loss; competes for the same monitor refresh slot; never paused by `Application.dispose()`.
-**Do this instead:** `application.tickables.push((dt) => this.update(dt))` and dispose with the controller. See `src/main.js:67` for the RaycastController example.
+**What happens:** Nowy kontroler instaluje swoją własną RAF loop.
+**Why it's wrong:** Rozjeżdża się z `gsap.ticker` timing; omija `ticker.sleep()` podczas WebGL context-loss; konkuruje o ten sam monitor refresh slot; nie pauzowany przez `Application.dispose()`.
+**Do this instead:** `application.tickables.push((dt) => this.update(dt))` + dispose z kontrolerem. Patrz `src/main.js:67` (RaycastController).
 
 ### Mutating store from a pure engine
 
-**What happens:** `validateStep` calls `set(…)` or invokes a `store.setXxx` callback.
-**Why it's wrong:** Engine becomes untestable without a store; tests in `tests/procedureEngine.test.js` rely on it being a pure function.
-**Do this instead:** Return `{effects: [...]}`. The store interprets via `applyEffects` (`src/state/trainingStore.js:101-150`).
+**What happens:** `validateStep` woła `set(…)` lub `store.setXxx` callback.
+**Why it's wrong:** Engine staje się nieprzetestowalny bez store; `tests/procedureEngine.test.js` polega na purity.
+**Do this instead:** Zwróć `{effects: [...]}`. Store interpretuje przez `applyEffects` (`src/state/trainingStore.js:101-150`).
 
 ### Subscriber that forgets initial projection
 
-**What happens:** `store.subscribe(selector, callback)` is registered but the constructor never calls `callback(getState().…)` for the initial render.
-**Why it's wrong:** `subscribeWithSelector` only fires on CHANGE — initial DOM/scene state stays stale until first user action.
-**Do this instead:** After `_wireSubscribers`, explicitly invoke the render path once. See `src/highlight/HighlightManager.js:50`, `src/highlight/EdgeOutlineController.js:58`, `src/ui/StatusPanel.js:41`, `src/ui/StepPanel.js:45`.
+**What happens:** `store.subscribe(selector, callback)` zarejestrowany ale konstruktor nigdy nie woła `callback(getState().…)` na initial render.
+**Why it's wrong:** `subscribeWithSelector` fire tylko na CHANGE — initial DOM/scene state stays stale do pierwszej akcji.
+**Do this instead:** Po `_wireSubscribers` ręcznie odpal render path raz. Patrz `src/highlight/HighlightManager.js:50`, `src/highlight/EdgeOutlineController.js:58`, `src/ui/StatusPanel.js:41`, `src/ui/StepPanel.js:45`.
 
 ### Forgetting `getBoundingClientRect` for NDC
 
 **What happens:** `ndc.x = event.clientX / window.innerWidth * 2 - 1`.
-**Why it's wrong:** Canvas is offset by header/banner/UI panels — NDC ends up wrong; raycaster hits the wrong mesh or misses.
+**Why it's wrong:** Canvas jest offsetowany przez header/banner/UI panele — NDC źle, raycaster trafia w zły mesh lub miss.
 **Do this instead:** `const rect = renderer.domElement.getBoundingClientRect(); ndc.x = ((event.clientX - rect.left)/rect.width)*2 - 1` (`src/RaycastController.js:70-73`).
 
 ## Error Handling
 
-**Strategy:** Throw early with Polish messages from `src/i18n/pl.js`; defensive `try/catch` only around `localStorage` (private mode / quota) and `faultRules.when` predicates (don't let one bad rule crash scoring).
+**Strategy:** Throw early z polskimi messages z `src/i18n/pl.js`; defensive `try/catch` tylko wokół `localStorage` (private mode / quota) i `faultRules.when` predykatów (jedna zła reguła nie ma wywalić scoringu).
 
 **Patterns:**
-- `PhysicsEngine.calculateSliderPosition` validates `r`, `l`, `angle` on every call and throws with `pl.physics.*` keys (`src/PhysicsEngine.js:14-32`).
-- `PressModel._registerInteractable` throws if `pl.parts[id]` missing or `pivotTarget` not in `{'self','parent'}` (`src/PressModel.js:777, 798`).
-- `StatusPanel`/`StepPanel` throw on missing root element id in constructor (`src/ui/StatusPanel.js:35`).
-- `WebGL context-loss`: `SceneSetup` calls `event.preventDefault()` then `gsap.ticker.sleep()` + shows overlay (`src/SceneSetup.js:44-54`).
-- `localStorage` access: always wrapped in `try { … } catch { return false }` (`src/DisclaimerBanner.js:91-104`, `src/ui/StatusPanel.js:44-52`, `src/main.js:44-48`).
-- `attemptStep` reentrancy: `try { … } finally { set({isAnimating:false}) }` always releases the lock (`src/state/trainingStore.js:74-85`).
+- `PhysicsEngine.calculateSliderPosition` waliduje `r`, `l`, `angle` na każde wywołanie i rzuca z kluczami `pl.physics.*` (`src/PhysicsEngine.js:14-32`).
+- `PressModel._registerInteractable` rzuca jeśli `pl.parts[id]` missing lub `pivotTarget` nie w `{'self','parent'}` (`src/PressModel.js:777, 798`).
+- `StatusPanel`/`StepPanel` rzucają na missing root id w konstruktorze (`src/ui/StatusPanel.js:35`).
+- `WebGL context-loss`: `SceneSetup` woła `event.preventDefault()` → `gsap.ticker.sleep()` + overlay (`src/SceneSetup.js:44-54`).
+- `localStorage`: zawsze `try { … } catch { return false }` (`src/DisclaimerBanner.js:91-104`, `src/ui/StatusPanel.js:44-52`, `src/main.js:44-48`).
+- `attemptStep` reentrancy: `try { … } finally { set({isAnimating:false}) }` — lock zawsze zwalniany (`src/state/trainingStore.js:74-85`).
 
 ## Cross-Cutting Concerns
 
-**Logging:** None in production code. Tests use Vitest assertions directly.
+**Logging:** Brak w production code. Testy używają Vitest assertions.
 
 **Validation:**
 - Runtime: `PhysicsEngine` per-call guards; `validateScenario` ad-hoc shape check; `_registerInteractable` enum check.
 - Static: Module-boundary linting via `tests/boundaries.test.js`.
 
-**Authentication:** Not applicable — offline training tool.
+**Authentication:** N/A — offline training tool.
 
-**Internationalization:** All user-facing strings centralized in `src/i18n/pl.js`. Code comments and docstrings are in Polish. Boundary scanner (`tests/i18n.pl.test.js`, "UI-06") asserts no Polish diacritics leak into production literals outside `i18n/` and `scenarios/`. ASCII-clean fallback used for `CanvasTexture` content (e.g. nameplate in `src/PressModel.js:344-419`).
+**Internationalization:** Wszystkie user-facing stringi w `src/i18n/pl.js`. Komentarze i docstringi po polsku. Boundary scanner (`tests/i18n.pl.test.js`, "UI-06") asertuje że polskie diakrytyki nie wyciekają poza `i18n/` i `scenarios/`. ASCII-clean fallback dla `CanvasTexture` (np. tabliczka znamionowa w `src/PressModel.js:344-419`).
 
 **Accessibility:**
-- ARIA labels on `DisclaimerBanner` (`role="region"`, `aria-expanded`, `aria-controls`).
-- `StatusPanel` HC toggle exposes `aria-pressed`.
-- `EdgeOutlineController` provides a deuteranopia-safe white-edge overlay mode (`hcOutlineMode`).
-- Wong color palette (`#D55E00` error, `#009E73` done) is deuteranopia-safe by design.
+- ARIA na `DisclaimerBanner` (`role="region"`, `aria-expanded`, `aria-controls`).
+- `StatusPanel` HC toggle ma `aria-pressed`.
+- `EdgeOutlineController` daje deuteranopia-safe white-edge overlay mode (`hcOutlineMode`).
+- Paleta Wong (`#D55E00` error, `#009E73` done) deuteranopia-safe by design.
 
 **Performance:**
-- `PressModel._pinPosition` pre-allocated `Vector3` reused per-frame to eliminate ~60 GC allocations/sec (`src/PressModel.js:25`).
-- `RaycastController._meshes` snapshot taken once in constructor; 1 raycast/tick max via dirty flag.
-- `EmissiveController._meshes` likewise snapshotted.
-- `EdgeOutlineController` shares one `LineBasicMaterial`; prebuilds `EdgesGeometry` once per interactable.
+- `PressModel._pinPosition` pre-allocated `Vector3` reused per-frame — eliminuje ~60 GC allocations/sec (`src/PressModel.js:25`).
+- `RaycastController._meshes` snapshot raz w konstruktorze; max 1 raycast/tick via dirty flag.
+- `EmissiveController._meshes` analogicznie snapshotted.
+- `EdgeOutlineController` współdzieli jeden `LineBasicMaterial`; prebuilduje `EdgesGeometry` raz per interactable.
 
 ---
 
-*Architecture analysis: 2026-05-20*
+*Architecture analysis: 2026-05-26*
