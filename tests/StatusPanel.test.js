@@ -122,6 +122,98 @@ describe('StatusPanel — sanity', () => {
   });
 });
 
+describe('Phase 5 — difficulty + free-roam (EDU-02, D-Phase5-01)', () => {
+  let store, panel;
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="status-panel"></div>';
+    localStorage.clear();
+    store = createTrainingStore();
+  });
+  afterEach(() => {
+    if (panel) panel.dispose();
+    panel = null;
+    document.body.innerHTML = '';
+    localStorage.clear();
+  });
+
+  it('S1 badge initial Nauka: difficulty=nauka (default) → .difficulty-badge.difficulty-badge--nauka z textContent === pl.ui.difficultyNauka', () => {
+    panel = new StatusPanel({ store });
+    const badge = document.querySelector('.difficulty-badge');
+    expect(badge).not.toBeNull();
+    expect(badge.classList.contains('difficulty-badge--nauka')).toBe(true);
+    expect(badge.textContent).toBe(pl.ui.difficultyNauka);
+  });
+
+  it('S2 badge Egzamin variant: setState({difficulty:egzamin}) → --nauka usunięta, --egzamin dodana', () => {
+    panel = new StatusPanel({ store });
+    store.setState({ difficulty: 'egzamin' });
+    const badge = document.querySelector('.difficulty-badge');
+    expect(badge.classList.contains('difficulty-badge--egzamin')).toBe(true);
+    expect(badge.classList.contains('difficulty-badge--nauka')).toBe(false);
+    expect(badge.textContent).toBe(pl.ui.difficultyEgzamin);
+  });
+
+  it('S3 toggle button initial: .status-panel__difficulty-toggle istnieje, textContent === pl.ui.setDifficultyEgzamin gdy difficulty=nauka', () => {
+    panel = new StatusPanel({ store });
+    const btn = document.querySelector('.status-panel__difficulty-toggle');
+    expect(btn).not.toBeNull();
+    expect(btn.textContent).toBe(pl.ui.setDifficultyEgzamin);
+    expect(btn.getAttribute('aria-label')).toBe(pl.ui.setDifficultyEgzamin);
+  });
+
+  it('S4 toggle click action: klik nauka→egzamin, drugi klik→nauka', () => {
+    panel = new StatusPanel({ store });
+    const btn = document.querySelector('.status-panel__difficulty-toggle');
+    expect(store.getState().difficulty).toBe('nauka');
+    btn.click();
+    expect(store.getState().difficulty).toBe('egzamin');
+    btn.click();
+    expect(store.getState().difficulty).toBe('nauka');
+  });
+
+  it('S5 toggle label flip: po egzamin → button textContent === pl.ui.setDifficultyNauka', () => {
+    panel = new StatusPanel({ store });
+    store.setState({ difficulty: 'egzamin' });
+    const btn = document.querySelector('.status-panel__difficulty-toggle');
+    expect(btn.textContent).toBe(pl.ui.setDifficultyNauka);
+  });
+
+  it('S6 free-roam indicator hidden default: freeRoam=false → .free-roam-indicator w DOM z visibility=hidden', () => {
+    panel = new StatusPanel({ store });
+    const indicator = document.querySelector('.free-roam-indicator');
+    expect(indicator).not.toBeNull();
+    expect(indicator.style.visibility).toBe('hidden');
+  });
+
+  it('S7 free-roam indicator visible: setState({freeRoam:true}) → visibility=visible, textContent=freeRoamActive', () => {
+    panel = new StatusPanel({ store });
+    store.setState({ freeRoam: true });
+    const indicator = document.querySelector('.free-roam-indicator');
+    expect(indicator.style.visibility).toBe('visible');
+    expect(indicator.textContent).toBe(pl.ui.freeRoamActive);
+  });
+
+  it('S8 existing tests intact: wszystkie 4 baseline elementy (icon/state/score/HC) nadal renderują', () => {
+    store.setState({ machineState: 'gotowa-do-pracy' });
+    panel = new StatusPanel({ store });
+    expect(document.querySelector('.status-panel__icon')).not.toBeNull();
+    expect(document.querySelector('.status-panel__state')).not.toBeNull();
+    expect(document.querySelector('.status-panel__score')).not.toBeNull();
+    expect(document.querySelector('.status-panel__hc-toggle')).not.toBeNull();
+  });
+
+  it('S9 dispose listener cleanup: dispose() usuwa click listener z difficulty-toggle', () => {
+    panel = new StatusPanel({ store });
+    panel.dispose();
+    // Po dispose: klik nie zmienia difficulty
+    const btn = document.querySelector('.status-panel__difficulty-toggle');
+    const before = store.getState().difficulty;
+    btn.click();
+    expect(store.getState().difficulty).toBe(before);
+    panel = null; // już zadisposed, nie dispose ponownie
+  });
+});
+
 describe('StatusPanel — dispose (STATE-03)', () => {
   it('dispose() odpina subscribery + listener — kolejne setState NIE re-renderuje', () => {
     document.body.innerHTML = '<div id="status-panel"></div>';

@@ -55,6 +55,7 @@ export class StatusPanel {
    * Statyczny szkielet DOM — JEDYNY innerHTML w klasie (XSS-safe: brak user contentu,
    * tylko literały HTML znane w czasie kompilacji). Render aktualnych wartości
    * idzie wyłącznie przez textContent w _render().
+   * D-Phase5-01: rozszerzony o difficulty-badge, difficulty-toggle i free-roam-indicator.
    */
   _build() {
     this._root.innerHTML = `
@@ -62,13 +63,19 @@ export class StatusPanel {
         <span class="status-panel__icon" aria-hidden="true"></span>
         <span class="status-panel__state"></span>
         <span class="status-panel__score"></span>
+        <span class="difficulty-badge"></span>
+        <button class="status-panel__difficulty-toggle" type="button" aria-pressed="false"></button>
+        <span class="free-roam-indicator"></span>
         <button class="status-panel__hc-toggle" type="button" aria-pressed="false"></button>
       </div>
     `;
-    this._iconEl  = this._root.querySelector('.status-panel__icon');
-    this._stateEl = this._root.querySelector('.status-panel__state');
-    this._scoreEl = this._root.querySelector('.status-panel__score');
-    this._hcBtn   = this._root.querySelector('.status-panel__hc-toggle');
+    this._iconEl             = this._root.querySelector('.status-panel__icon');
+    this._stateEl            = this._root.querySelector('.status-panel__state');
+    this._scoreEl            = this._root.querySelector('.status-panel__score');
+    this._difficultyBadge    = this._root.querySelector('.difficulty-badge');
+    this._difficultyToggleBtn = this._root.querySelector('.status-panel__difficulty-toggle');
+    this._freeRoamIndicator  = this._root.querySelector('.free-roam-indicator');
+    this._hcBtn              = this._root.querySelector('.status-panel__hc-toggle');
 
     this._onHcClick = () => {
       const next = !(this._store.getState().hcOutlineMode);
@@ -76,13 +83,24 @@ export class StatusPanel {
       this._writePersisted(next);
     };
     this._hcBtn.addEventListener('click', this._onHcClick);
+
+    // D-Phase5-01: difficulty toggle — cyklotwarczo nauka↔egzamin.
+    // Używa store.getState().setDifficulty (Plan 05-01 akcja).
+    this._onDifficultyClick = () => {
+      const cur = this._store.getState().difficulty;
+      this._store.getState().setDifficulty(cur === 'nauka' ? 'egzamin' : 'nauka');
+    };
+    this._difficultyToggleBtn.addEventListener('click', this._onDifficultyClick);
   }
 
   _wireSubscribers() {
+    // D-Phase5-01: dorzucone 2 nowe subscribery (difficulty, freeRoam) → 5 łącznie.
     this._unsubscribers.push(
       this._store.subscribe((s) => s.machineState,    () => this._render()),
       this._store.subscribe((s) => s.scoring.score,   () => this._render()),
       this._store.subscribe((s) => s.hcOutlineMode,   () => this._render()),
+      this._store.subscribe((s) => s.difficulty,      () => this._render()),
+      this._store.subscribe((s) => s.freeRoam,        () => this._render()),
     );
   }
 
@@ -95,12 +113,29 @@ export class StatusPanel {
     this._scoreEl.textContent = `${pl.ui.scorePrefix}${s.scoring.score}/100`;
     this._hcBtn.setAttribute('aria-pressed', String(!!s.hcOutlineMode));
     this._hcBtn.textContent   = s.hcOutlineMode ? pl.ui.hcToggleOn : pl.ui.hcToggleOff;
+
+    // D-Phase5-01 difficulty badge: variant klasa + textContent (XSS-safe statyczne stringi z pl.ui)
+    const isNauka = s.difficulty === 'nauka';
+    this._difficultyBadge.className = `difficulty-badge difficulty-badge--${isNauka ? 'nauka' : 'egzamin'}`;
+    this._difficultyBadge.textContent = isNauka ? pl.ui.difficultyNauka : pl.ui.difficultyEgzamin;
+
+    // Toggle button — label opisuje "co stanie się po kliknięciu" (przeciwny stan)
+    this._difficultyToggleBtn.textContent = isNauka ? pl.ui.setDifficultyEgzamin : pl.ui.setDifficultyNauka;
+    this._difficultyToggleBtn.setAttribute('aria-label', this._difficultyToggleBtn.textContent);
+
+    // Free-roam indicator (visibility-toggle by uniknąć reflowu — UI-SPEC §336-341)
+    this._freeRoamIndicator.textContent = pl.ui.freeRoamActive;
+    this._freeRoamIndicator.style.visibility = s.freeRoam ? 'visible' : 'hidden';
   }
 
-  /** Zwalnia subskrypcje + click listener (STATE-03). Idempotent. */
+  /** Zwalnia subskrypcje + click listenery (STATE-03). Idempotent. */
   dispose() {
     if (this._hcBtn && this._onHcClick) {
       this._hcBtn.removeEventListener('click', this._onHcClick);
+    }
+    // D-Phase5-01: odpięcie listenera difficulty toggle (T-05-06-LEAK mitigation, Test S9).
+    if (this._difficultyToggleBtn && this._onDifficultyClick) {
+      this._difficultyToggleBtn.removeEventListener('click', this._onDifficultyClick);
     }
     for (const u of this._unsubscribers) u();
     this._unsubscribers = [];

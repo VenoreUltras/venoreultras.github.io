@@ -392,3 +392,96 @@ describe('RaycastController — Phase 5: onHoverChange DI (D-Phase5-08 + Pitfall
     rc.dispose();
   });
 });
+
+describe('Phase 5 — free-roam branch (EDU-01, D-Phase5-05)', () => {
+  it('F1 default click działa: freeRoam=false → attemptStep wywołane z {kind:click, meshId}', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    // freeRoam domyślnie false (Phase 5 store)
+    const mesh = makeMesh('tabliczka-znamionowa', 'visual-target');
+    const interactables = new Map([['tabliczka-znamionowa', mesh]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
+
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: mesh }]);
+    const spy = vi.spyOn(store.getState(), 'attemptStep');
+
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 401, clientY: 300 }); // dist ~1px = click
+    expect(spy).toHaveBeenCalledTimes(1);
+    expect(spy).toHaveBeenCalledWith({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    controller.dispose();
+  });
+
+  it('F2 free-roam blokuje click: freeRoam=true → attemptStep NIE wywołane', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    store.setState({ freeRoam: true });
+    const mesh = makeMesh('tabliczka-znamionowa', 'visual-target');
+    const interactables = new Map([['tabliczka-znamionowa', mesh]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
+
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: mesh }]);
+    const spy = vi.spyOn(store.getState(), 'attemptStep');
+
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 401, clientY: 300 });
+    expect(spy).not.toHaveBeenCalled();
+    controller.dispose();
+  });
+
+  it('F3 hover NIE jest blokowany w free-roam: freeRoam=true → _commitHover i onHoverChange działają', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    store.setState({ freeRoam: true });
+    const mesh = makeMesh('estop', 'manipulation');
+    const interactables = new Map([['estop', mesh]]);
+    const { emissive, setLayerSpy } = makeEmissiveWithSpies(interactables);
+    const hoverCb = vi.fn();
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive, onHoverChange: hoverCb });
+
+    // Symuluj hover hysteresis (2 ticki)
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: mesh }]);
+    controller._pointerDirty = true;
+    controller._runHysteresis(16); // tick 1 — pending
+    controller._pointerDirty = true;
+    controller._runHysteresis(16); // tick 2 — commit
+
+    expect(setLayerSpy).toHaveBeenCalledWith('hover', mesh, { color: 0x222222 }); // hover działa
+    expect(hoverCb).toHaveBeenCalledWith(mesh.userData.id, mesh); // tooltip callback działa
+    controller.dispose();
+  });
+
+  it('F4 po wyłączeniu free-roam, click znów działa: freeRoam true→false → attemptStep wywołane', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    const mesh = makeMesh('tabliczka-znamionowa', 'visual-target');
+    const interactables = new Map([['tabliczka-znamionowa', mesh]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
+
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: mesh }]);
+    const spy = vi.spyOn(store.getState(), 'attemptStep');
+
+    // freeRoam=true → click blokowany
+    store.setState({ freeRoam: true });
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 401, clientY: 300 });
+    expect(spy).not.toHaveBeenCalled();
+
+    // freeRoam=false → click przechodzi
+    store.setState({ freeRoam: false });
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 401, clientY: 300 });
+    expect(spy).toHaveBeenCalledTimes(1);
+    controller.dispose();
+  });
+});
