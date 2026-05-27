@@ -36,6 +36,12 @@ export const pl = {
     finalScorePrefix: 'Wynik końcowy: ',
     freeModeButton: 'Tryb swobodny',
     freeModeAria: 'Zakończ trening i przejdź do trybu swobodnej eksploracji prasy',
+    // Phase 5 (D-Phase5-01..06, UI-SPEC §Copywriting Contract linie 378-382)
+    difficultyNauka:     '📚 Nauka',
+    difficultyEgzamin:   '📝 Egzamin',
+    freeRoamActive:      '🆓 Tryb wolny',
+    setDifficultyNauka:  'Przełącz na Naukę',
+    setDifficultyEgzamin: 'Przełącz na Egzamin',
   },
 
   // Komunikaty bledow PhysicsEngine (UI-06 enforcement — wczesniej inline w throw)
@@ -96,6 +102,54 @@ export const pl = {
     'E-ZASILANIE-NIE-WLACZONE': 'Zasilanie nie zostało włączone. Przekręć wyłącznik główny.',
     'E-SPRZEGLO-OTWARTE': 'Próba uruchomienia z otwartą osłoną zabezpieczającą.',
     'E-NIEZNANY': 'Nieznany błąd procedury.',
+  },
+
+  // D-Phase5-24: Globalny keymap dla KeyboardController + Help overlay rendering.
+  // Jedyne źródło polskich opisów klawiszy — KeyboardController czyta tylko `key`.
+  // 11 wpisów: R/T/1/2/3/4/Space/Esc/H/L/M (D-Phase5-19, UI-SPEC §"Keymap — 11 wpisow").
+  keymap: [
+    { key: 'R',     descriptionPL: 'Zresetuj bieżący scenariusz',                    group: 'sterowanie' },
+    { key: 'T',     descriptionPL: 'Przełącz tryb swobodny / procedura',             group: 'tryby'      },
+    { key: '1',     descriptionPL: 'Załaduj scenariusz: Uruchomienie',               group: 'sterowanie' },
+    { key: '2',     descriptionPL: 'Załaduj scenariusz: Cykl pracy (Phase 6)',       group: 'sterowanie' },
+    { key: '3',     descriptionPL: 'Załaduj scenariusz: Zatrzymanie (Phase 6)',      group: 'sterowanie' },
+    { key: '4',     descriptionPL: 'Załaduj scenariusz: Awaria (Phase 6)',           group: 'sterowanie' },
+    { key: 'Space', descriptionPL: 'Start / Pauza symulacji',                        group: 'sterowanie' },
+    { key: 'Esc',   descriptionPL: 'Zamknij modal / Wyłącznik awaryjny E-stop',     group: 'sterowanie' },
+    { key: 'H',     descriptionPL: 'Otwórz / zamknij ten panel pomocy',             group: 'pomoc'      },
+    { key: 'L',     descriptionPL: 'Przełącz etykiety 3D części (tylko tryb Nauka)', group: 'tryby'      },
+    { key: 'M',     descriptionPL: 'Wycisz / przywróć dźwięk (globalny)',            group: 'tryby'      },
+  ],
+
+  // D-Phase5-23: Teksty dla modali Help + ConfirmScenarioSwitch.
+  // Jedyne źródło — HelpModal i ConfirmModal (Plan 05-03) renderują przez textContent.
+  modals: {
+    // Aria-label przycisku zamknięcia dla wszystkich modali.
+    closeAria: 'Zamknij',
+    help: {
+      title:             'Pomoc — skróty i legenda',
+      sectionKeymap:     'Skróty klawiszowe',
+      sectionColors:     'Legenda kolorów',
+      sectionIcons:      'Legenda ikon stanu',
+      sectionDisclaimer: 'Zastrzeżenie',
+      // Nagłówki tabeli keymap (D-Phase5-24, Plan 05-03 Task 2).
+      keyHeader:    'Klawisz',
+      actionHeader: 'Akcja',
+      groupHeader:  'Grupa',
+      // Opisy kolorów z palety Wong (D-Phase5-03, CRIT-4).
+      colorError:   'Błąd / awaria procedury',
+      colorSuccess: 'Krok poprawny / sukces',
+      colorHint:    'Następny zalecany krok (tryb Nauka)',
+      colorHC:      'Tryb wysokiego kontrastu (HC outline)',
+    },
+    confirmScenarioSwitch: {
+      title:   'Zmiana scenariusza',
+      // Funkcja szablonu — argumenty to polskie nazwy scenariuszy (statyczne dane, nie user input).
+      // Konsumowany przez textContent w ConfirmModal (Plan 05-03) — XSS-safe by construction.
+      body:    (current, next) => `Przerwiesz postęp w "${current}". Załadować "${next}"?`,
+      confirm: 'Załaduj scenariusz',
+      cancel:  'Anuluj',
+    },
   },
 
   // D-Phase2-08: Nazwy i opisy komponentów prasy (UI-SPEC §Copywriting Contract).
