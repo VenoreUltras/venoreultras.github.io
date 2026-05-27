@@ -1,10 +1,11 @@
 // src/highlight/EmissiveController.js
 // Phase 4 — FEEDBACK-01..03: stack warstw emissive (hover < state) per interactable.
+// Phase 5 — D-Phase5-03: rozszerzono stack o warstwę hint (baseline < hover < hint < state).
 // D-Phase4-13/14: pojedyncza instancja w Application. RaycastController pisze 'hover',
-// HighlightManager pisze 'state'. Read-modify-restore z Phase 3 D-Phase3-05 jest TUTAJ.
+// HighlightManager pisze 'state' i 'hint'. Read-modify-restore z Phase 3 D-Phase3-05 jest TUTAJ.
 // Boundary (boundaries.test.js): może importować THREE+gsap; NIE store/training/DOM.
 //
-// Priority order (D-Phase4-13): state > hover > baseline (0x000000).
+// Priority order (D-Phase5-03): state > hint > hover > baseline (0x000000).
 // GSAP target = NUMBER na material.emissiveIntensity (CRIT-5/FEEDBACK-02) — NIGDY Color obj.
 // Phase 2 invariant (TWIN-11): mesh.material to clone per-mesh; pisanie tutaj jest bezpieczne.
 
@@ -15,6 +16,8 @@ const BASELINE_HEX = 0x000000;
 const BASELINE_INTENSITY = 0;
 const HOVER_INTENSITY = 1;
 const SOLID_STATE_INTENSITY = 1;
+// D-Phase5-03: domyślna intensywność warstwy hint (subtelna, bez animacji)
+const HINT_INTENSITY_DEFAULT = 0.3;
 
 // D-Phase4-11 pulse (yoyo, repeat -1, ease sine.inOut)
 const PULSE_PEAK = 0.8;
@@ -33,20 +36,21 @@ export class EmissiveController {
     // Snapshot raz w ctor — zero alokacji per-tick (analog RaycastController._meshes).
     /** @type {THREE.Mesh[]} */
     this._meshes = Array.from(interactables.values());
-    /** @type {Map<THREE.Mesh, {hover: ?object, state: ?object}>} */
+    /** @type {Map<THREE.Mesh, {hover: ?object, hint: ?object, state: ?object}>} */
     this._layers = new Map();
     /** @type {Map<THREE.Mesh, gsap.core.Timeline>} aktywne pulse/flash timelines per mesh */
     this._timelines = new Map();
     for (const mesh of this._meshes) {
-      this._layers.set(mesh, { hover: null, state: null });
+      // D-Phase5-03: stack 3-warstwowy (baseline < hover < hint < state)
+      this._layers.set(mesh, { hover: null, hint: null, state: null });
     }
   }
 
   /**
    * Ustawia warstwę dla mesha. Idempotent: drugi setLayer tej samej warstwy nadpisuje.
-   * @param {'hover'|'state'} layerName
+   * @param {'hover'|'hint'|'state'} layerName
    * @param {THREE.Mesh} mesh
-   * @param {{color: number, pulse?: boolean, flash?: boolean}} params
+   * @param {{color: number, pulse?: boolean, flash?: boolean, intensity?: number}} params
    */
   setLayer(layerName, mesh, params) {
     const slot = this._layers.get(mesh);
@@ -56,7 +60,7 @@ export class EmissiveController {
   }
 
   /**
-   * @param {'hover'|'state'} layerName
+   * @param {'hover'|'hint'|'state'} layerName
    * @param {THREE.Mesh} mesh
    */
   clearLayer(layerName, mesh) {
@@ -114,8 +118,13 @@ export class EmissiveController {
         // state bez animacji — solid (defensywnie; rzadko używane).
         mesh.material.emissiveIntensity = SOLID_STATE_INTENSITY;
       }
+    } else if (slot.hint) {
+      // D-Phase5-03: subtelny żółty hint (Wong #F0E442), statyczny (bez pulse — by nie
+      // konkurować z error pulse). Aktywowany przez HighlightManager w trybie Nauka.
+      mesh.material.emissive.setHex(slot.hint.color);
+      mesh.material.emissiveIntensity = slot.hint.intensity ?? HINT_INTENSITY_DEFAULT;
     } else if (slot.hover) {
-      // hover — drugi priorytet, bez animacji
+      // hover — trzeci priorytet (po state i hint), bez animacji
       mesh.material.emissive.setHex(slot.hover.color);
       mesh.material.emissiveIntensity = HOVER_INTENSITY;
     } else {

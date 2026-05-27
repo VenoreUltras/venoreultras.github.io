@@ -176,6 +176,76 @@ describe('EmissiveController — dispose (STATE-03)', () => {
   });
 });
 
+describe('EmissiveController — Phase 5: warstwa hint (D-Phase5-03)', () => {
+  it('Test A: slot per mesh po ctor zawiera klucz hint (stack 3-warstwowy)', () => {
+    const m = makeMesh('m1');
+    const ctrl = new EmissiveController({ interactables: new Map([['m1', m]]) });
+    const slot = ctrl._layers.get(m);
+    expect(Object.prototype.hasOwnProperty.call(slot, 'hint')).toBe(true);
+    expect(slot.hint).toBeNull();
+    ctrl.dispose();
+  });
+
+  it('Test B: setLayer hint solid — emissive żółty, intensity 0.3, bez timeline GSAP', () => {
+    const m = makeMesh('m1');
+    const ctrl = new EmissiveController({ interactables: new Map([['m1', m]]) });
+    ctrl.setLayer('hint', m, { color: 0xF0E442, intensity: 0.3 });
+    expect(m.material.emissive.getHex()).toBe(0xF0E442);
+    expect(m.material.emissiveIntensity).toBeCloseTo(0.3);
+    expect(ctrl._timelines.has(m)).toBe(false);
+    ctrl.dispose();
+  });
+
+  it('Test C: state > hint priority — state nadpisuje hint; clearLayer state → przywraca hint', () => {
+    const m = makeMesh('m1');
+    const ctrl = new EmissiveController({ interactables: new Map([['m1', m]]) });
+    ctrl.setLayer('hint', m, { color: 0xF0E442, intensity: 0.3 });
+    ctrl.setLayer('state', m, { color: 0xD55E00, pulse: true });
+    // state wygrywa
+    expect(m.material.emissive.getHex()).toBe(0xD55E00);
+    expect(ctrl._timelines.has(m)).toBe(true); // pulse timeline aktywny
+    // clearLayer state → wraca do hint
+    ctrl.clearLayer('state', m);
+    expect(m.material.emissive.getHex()).toBe(0xF0E442);
+    expect(m.material.emissiveIntensity).toBeCloseTo(0.3);
+    expect(ctrl._timelines.has(m)).toBe(false); // brak timeline (hint jest statyczny)
+    ctrl.dispose();
+  });
+
+  it('Test D: hint > hover priority — hint wygrywa; clearLayer hint → wraca do hover', () => {
+    const m = makeMesh('m1');
+    const ctrl = new EmissiveController({ interactables: new Map([['m1', m]]) });
+    ctrl.setLayer('hover', m, { color: 0x222222 });
+    ctrl.setLayer('hint', m, { color: 0xF0E442 });
+    // hint wygrywa nad hover
+    expect(m.material.emissive.getHex()).toBe(0xF0E442);
+    // clearLayer hint → wraca do hover
+    ctrl.clearLayer('hint', m);
+    expect(m.material.emissive.getHex()).toBe(0x222222);
+    expect(m.material.emissiveIntensity).toBe(1); // HOVER_INTENSITY
+    ctrl.dispose();
+  });
+
+  it('Test E: clearLayer hint → baseline gdy brak innych warstw', () => {
+    const m = makeMesh('m1');
+    const ctrl = new EmissiveController({ interactables: new Map([['m1', m]]) });
+    ctrl.setLayer('hint', m, { color: 0xF0E442, intensity: 0.3 });
+    ctrl.clearLayer('hint', m);
+    expect(m.material.emissive.getHex()).toBe(0x000000);
+    expect(m.material.emissiveIntensity).toBe(0);
+    ctrl.dispose();
+  });
+
+  it('Test F: setLayer hint na MeshBasicMaterial (bez emissive) — NIE rzuca (graceful skip)', () => {
+    const basicMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(), basicMat);
+    mesh.userData = { id: 'basic', kind: 'visual' };
+    const ctrl = new EmissiveController({ interactables: new Map([['basic', mesh]]) });
+    expect(() => ctrl.setLayer('hint', mesh, { color: 0xF0E442, intensity: 0.3 })).not.toThrow();
+    ctrl.dispose();
+  });
+});
+
 describe('EmissiveController — CRIT-5 GSAP target = number nie Color (FEEDBACK-02)', () => {
   it('plik EmissiveController.js NIE wywołuje gsap.to z targetem mesh.material.emissive (Color obj)', () => {
     const src = readFileSync(
