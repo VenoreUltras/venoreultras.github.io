@@ -1,23 +1,30 @@
 // src/highlight/HighlightManager.js
 // Phase 4 — FEEDBACK-01/02/03/04: subskrypcja state.steps, mapowanie krok→mesh
 // przez activeScenario.steps[].targetMeshId, wywołanie EmissiveController.setLayer('state', ...).
+// Phase 5 — D-Phase5-03: dodano warstwę 'hint' projektowaną przez _projectHint().
 // D-Phase4-15. SC1 wyklucza OutlinePass — nie używamy żadnego post-processingu tutaj.
 //
 // Boundary (boundaries.test.js, Plan 04-06): może importować store przez DI; THREE/gsap
 // pośrednio przez EmissiveController; NIE training/, NIE ui/, NIE DOM. Plik nie ma żadnego
 // runtime importu — wszystkie zależności wstrzykiwane przez konstruktor.
 //
-// Channel layer (D-Phase4-13): pisze WYŁĄCZNIE do warstwy 'state' EmissiveController'a.
+// Channel layer (D-Phase4-13/D-Phase5-03): pisze do warstw 'state' i 'hint' EmissiveController'a.
 // Warstwa 'hover' jest własnością RaycastController'a (Plan 04-05). Priority resolver
-// w EmissiveController gwarantuje że state > hover > baseline.
+// w EmissiveController gwarantuje że state > hint > hover > baseline.
 //
 // Wong palette locked w Phase 1 UI-06 + Phase 4 SC1/SC4:
 //   error  → 0xD55E00 (czerwony, deuteranopia-safe) + pulse (D-Phase4-11, yoyo repeat:-1)
 //   done   → 0x009E73 (zielony, deuteranopia-safe) + flash (D-Phase4-12, ~800ms peak→0)
 //   pending|active|undefined → clearLayer('state', mesh) — odsłania niżej leżące warstwy
+// D-Phase5-03 hint (warstwa wskazania następnego kroku w trybie Nauka):
+//   difficulty=nauka + !freeRoam + currentStepId + step.targetMeshId → 0xF0E442 (Wong yellow)
+//   każdy inny warunek → clearLayer('hint', all meshes) — off w Egzamin/freeRoam/brak kroku
 
 const ERROR_HEX = 0xD55E00;
 const SUCCESS_HEX = 0x009E73;
+// D-Phase5-03: Wong yellow — colorblind-safe (nie koliduje z błędem/sukcesem/hover)
+const HINT_HEX = 0xF0E442;
+const HINT_INTENSITY = 0.3;
 
 export class HighlightManager {
   /**
@@ -60,6 +67,17 @@ export class HighlightManager {
       (events) => this._flashNewViolations(events),
     );
     this._unsubscribers.push(unsubEvents);
+
+    // D-Phase5-03: subscribe na [currentStepId, difficulty, freeRoam] → _projectHint.
+    // Hint aktywny tylko w trybie Nauka przy aktywnym scenariuszu z targetMeshId.
+    const unsubHint = this._store.subscribe(
+      (s) => [s.currentStepId, s.difficulty, s.freeRoam],
+      () => this._projectHint(),
+      { equalityFn: (a, b) => a[0] === b[0] && a[1] === b[1] && a[2] === b[2] },
+    );
+    this._unsubscribers.push(unsubHint);
+    // Initial render — analog _projectStepsToMeshes powyżej
+    this._projectHint();
   }
 
   /**
@@ -119,6 +137,34 @@ export class HighlightManager {
         this._emissive.clearLayer('state', mesh);
       }
     }
+  }
+
+  /**
+   * Projektuje warstwę hint (D-Phase5-03) na docelowy mesh aktualnego kroku.
+   *
+   * Warunki aktywacji:
+   *   - difficulty === 'nauka'   (nie Egzamin — D-Phase5-22)
+   *   - !freeRoam                (tryb proceduralny; D-Phase5-03/12)
+   *   - currentStepId != null    (jest aktywny krok)
+   *   - activeScenario != null   (scenariusz załadowany)
+   *   - step.targetMeshId        (krok ma target — visual-attest nie ma)
+   *
+   * Każde wywołanie NAJPIERW czyści hint na wszystkich meshach (idempotent),
+   * potem ewentualnie ustawia na jednym docelowym.
+   */
+  _projectHint() {
+    const { currentStepId, difficulty, freeRoam, activeScenario } = this._store.getState();
+    // Bez scenariusza hint nie mógł być ustawiony — skip (graceful no-op)
+    if (!activeScenario) return;
+    // Idempotent clear na wszystkich interactables przed re-projekcją
+    for (const mesh of this._interactables.values()) {
+      this._emissive.clearLayer('hint', mesh);
+    }
+    if (difficulty !== 'nauka' || freeRoam || !currentStepId) return;
+    const step = activeScenario.steps.find((s) => s.id === currentStepId);
+    if (!step?.targetMeshId) return;
+    const mesh = this._interactables.get(step.targetMeshId);
+    if (mesh) this._emissive.setLayer('hint', mesh, { color: HINT_HEX, intensity: HINT_INTENSITY });
   }
 
   /**

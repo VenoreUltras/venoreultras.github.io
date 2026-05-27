@@ -351,3 +351,171 @@ describe('HighlightManager — boundary (FEEDBACK-03 + 04-CONTEXT linia 83)', ()
     expect(src).toMatch(/0x009E73/);
   });
 });
+
+describe('HighlightManager — Phase 5: warstwa hint (D-Phase5-03)', () => {
+  // Test H1: initial render w trybie Nauka — hint na pierwszym kroku z targetMeshId
+  it('H1: difficulty=nauka + activeScenario + currentStepId → setLayer hint na targetMesh', () => {
+    const store = createTrainingStore();
+    store.getState().startScenario(uruchomienie);
+    // startScenario ustawia difficulty domyślnie 'nauka', freeRoam=false
+    const interactables = makeInteractablesForScenario(uruchomienie);
+    // tabliczka-znamionowa to targetMeshId pierwszego kroku ('sprawdz-tabliczke')
+    const tabliczkaMesh = interactables.get('tabliczka-znamionowa');
+    const emissive = new EmissiveController({ interactables });
+    const setLayerSpy = vi.spyOn(emissive, 'setLayer');
+
+    const hm = new HighlightManager({ store, emissive, interactables });
+
+    expect(setLayerSpy).toHaveBeenCalledWith('hint', tabliczkaMesh, { color: 0xF0E442, intensity: 0.3 });
+    hm.dispose();
+    emissive.dispose();
+  });
+
+  // Test H2: Egzamin — hint NIE jest emitowany
+  it('H2: difficulty=egzamin → clearLayer hint dla wszystkich, NIE setLayer hint', () => {
+    const store = createTrainingStore();
+    store.getState().startScenario(uruchomienie);
+    store.setState({ difficulty: 'egzamin' });
+    const interactables = makeInteractablesForScenario(uruchomienie);
+    const emissive = new EmissiveController({ interactables });
+    const setLayerSpy = vi.spyOn(emissive, 'setLayer');
+
+    const hm = new HighlightManager({ store, emissive, interactables });
+
+    // W trybie egzamin setLayer('hint', ...) NIE powinien być wywołany
+    const hintCalls = setLayerSpy.mock.calls.filter(c => c[0] === 'hint');
+    expect(hintCalls.length).toBe(0);
+    hm.dispose();
+    emissive.dispose();
+  });
+
+  // Test H3: freeRoam=true — hint wyłączony
+  it('H3: freeRoam=true → clearLayer hint, NIE setLayer hint', () => {
+    const store = createTrainingStore();
+    store.getState().startScenario(uruchomienie);
+    store.setState({ freeRoam: true });
+    const interactables = makeInteractablesForScenario(uruchomienie);
+    const emissive = new EmissiveController({ interactables });
+    const setLayerSpy = vi.spyOn(emissive, 'setLayer');
+
+    const hm = new HighlightManager({ store, emissive, interactables });
+
+    const hintCalls = setLayerSpy.mock.calls.filter(c => c[0] === 'hint');
+    expect(hintCalls.length).toBe(0);
+    hm.dispose();
+    emissive.dispose();
+  });
+
+  // Test H4: currentStepId=null — hint wyłączony
+  it('H4: currentStepId=null → clearLayer hint, NIE setLayer hint', () => {
+    const store = createTrainingStore();
+    store.getState().startScenario(uruchomienie);
+    store.setState({ currentStepId: null });
+    const interactables = makeInteractablesForScenario(uruchomienie);
+    const emissive = new EmissiveController({ interactables });
+    const setLayerSpy = vi.spyOn(emissive, 'setLayer');
+
+    const hm = new HighlightManager({ store, emissive, interactables });
+
+    const hintCalls = setLayerSpy.mock.calls.filter(c => c[0] === 'hint');
+    expect(hintCalls.length).toBe(0);
+    hm.dispose();
+    emissive.dispose();
+  });
+
+  // Test H5: krok bez targetMeshId → clearLayer hint (graceful no-op nie rzuca)
+  it('H5: currentStepId na krok bez targetMeshId → graceful, NIE rzuca', () => {
+    const store = createTrainingStore();
+    store.getState().startScenario(uruchomienie);
+    // 'kontrola-narzedzia' to visual-attest bez targetMeshId
+    store.setState({ currentStepId: 'kontrola-narzedzia' });
+    const interactables = makeInteractablesForScenario(uruchomienie);
+    const emissive = new EmissiveController({ interactables });
+
+    expect(() => {
+      const hm = new HighlightManager({ store, emissive, interactables });
+      hm.dispose();
+    }).not.toThrow();
+    emissive.dispose();
+  });
+
+  // Test H6: zmiana currentStepId na krok bez targetMeshId → clear hint tabliczki
+  it('H6: advance step → currentStepId=kontrola-narzedzia (brak targetMeshId) → clearLayer hint', () => {
+    const store = createTrainingStore();
+    store.getState().startScenario(uruchomienie);
+    const interactables = makeInteractablesForScenario(uruchomienie);
+    const emissive = new EmissiveController({ interactables });
+    const clearLayerSpy = vi.spyOn(emissive, 'clearLayer');
+    const setLayerSpy = vi.spyOn(emissive, 'setLayer');
+
+    const hm = new HighlightManager({ store, emissive, interactables });
+    clearLayerSpy.mockClear();
+    setLayerSpy.mockClear();
+
+    // advance do kroku bez targetMeshId
+    store.setState({ currentStepId: 'kontrola-narzedzia' });
+
+    // Żaden setLayer('hint', ...) nie powinien być wywołany
+    const hintSetCalls = setLayerSpy.mock.calls.filter(c => c[0] === 'hint');
+    expect(hintSetCalls.length).toBe(0);
+    // clearLayer('hint', ...) powinien być wywołany (idempotent clear na wszystkich meshach)
+    const hintClearCalls = clearLayerSpy.mock.calls.filter(c => c[0] === 'hint');
+    expect(hintClearCalls.length).toBeGreaterThan(0);
+
+    hm.dispose();
+    emissive.dispose();
+  });
+
+  // Test H7: advance do kroku z targetMeshId → hint przeniesiony na nowy mesh
+  it('H7: currentStepId=sprawdz-olej (targetMeshId=wziernik-smarowania) → setLayer hint na wziernik', () => {
+    const store = createTrainingStore();
+    store.getState().startScenario(uruchomienie);
+    const interactables = makeInteractablesForScenario(uruchomienie);
+    const wziernikMesh = interactables.get('wziernik-smarowania');
+    const emissive = new EmissiveController({ interactables });
+    const setLayerSpy = vi.spyOn(emissive, 'setLayer');
+
+    const hm = new HighlightManager({ store, emissive, interactables });
+    setLayerSpy.mockClear();
+
+    store.setState({ currentStepId: 'sprawdz-olej' });
+
+    expect(setLayerSpy).toHaveBeenCalledWith('hint', wziernikMesh, { color: 0xF0E442, intensity: 0.3 });
+    hm.dispose();
+    emissive.dispose();
+  });
+
+  // Test H8: konstruktor wywołuje _projectHint initial — analogia initial render Plan 04-03
+  it('H8: ctor po startScenario z difficulty=nauka → hint emitowany bez czekania na setState', () => {
+    const store = createTrainingStore();
+    store.getState().startScenario(uruchomienie);
+    const interactables = makeInteractablesForScenario(uruchomienie);
+    const emissive = new EmissiveController({ interactables });
+    const setLayerSpy = vi.spyOn(emissive, 'setLayer');
+
+    // Tworzenie HighlightManager MUSI od razu wyemitować hint bez żadnego dodatkowego setState
+    const hm = new HighlightManager({ store, emissive, interactables });
+
+    const hintCalls = setLayerSpy.mock.calls.filter(c => c[0] === 'hint');
+    expect(hintCalls.length).toBeGreaterThanOrEqual(1);
+    hm.dispose();
+    emissive.dispose();
+  });
+
+  // Test H9: plik nie ma nowych runtime importów (boundary NIE zmieniony)
+  it('H9: boundary — plik nie importuje z training/ ani ui/ ani DOM (po Phase 5 extension)', async () => {
+    const { readFileSync } = await import('node:fs');
+    const { fileURLToPath } = await import('node:url');
+    const { dirname, resolve } = await import('node:path');
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const src = readFileSync(
+      resolve(__dirname, '../src/highlight/HighlightManager.js'),
+      'utf8',
+    );
+    expect(src).not.toMatch(/from\s+['"][^'"]*\.\.\/training\//);
+    expect(src).not.toMatch(/from\s+['"][^'"]*\.\.\/ui\//);
+    expect(src).not.toMatch(/document\.|window\./);
+    // HINT_HEX const musi być w pliku
+    expect(src).toMatch(/0xF0E442/);
+  });
+});
