@@ -190,6 +190,11 @@ describe('TooltipManager — autoUpdate lifecycle (Test 9-12)', () => {
   let store, tm;
 
   beforeEach(() => {
+    // Przywróć domyślną implementację mocków po vi.clearAllMocks() z poprzedniego bloku
+    computePosition.mockResolvedValue({ x: 0, y: 0 });
+    autoUpdate.mockImplementation(() => vi.fn());
+    flip.mockReturnValue('flipMW');
+    shift.mockReturnValue('shiftMW');
     vi.useFakeTimers();
     store = createTrainingStore();
     tm = new TooltipManager({ store, raycastController: null });

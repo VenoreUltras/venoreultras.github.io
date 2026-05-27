@@ -44,6 +44,20 @@ export function createTrainingStore(opts = {}) {
       // Default false (większość użytkowników bez wymagania HC). Flag NIE jest resetowany
       // przez startScenario — to user preference, nie scenario state.
       hcOutlineMode: false,
+      // D-Phase5-01: trzy ortogonalne flagi dydaktyczne (single source of truth).
+      // Persist warstwa: Application bootstrap (Plan 05-07), analogicznie jak hcOutlineMode.
+      // 'nauka' domyślnie (D-Phase5-04); freeRoam NIE jest persistowany (eksploracja).
+      difficulty: 'nauka',
+      freeRoam: false,
+      // D-Phase5-01: stan aktywnego modalu — null lub 'help' lub 'confirm-scenario-switch'.
+      // Pauza animacji gdy activeModal !== null (Plan 05-07 — gsap ticker predicate).
+      activeModal: null,
+      // D-Phase5-18: globalny mute audio — persist w 'pm300:audio-mute:v1' przez Application.
+      audioMuted: false,
+      // D-Phase5-10: toggle etykiet 3D przez klawisz L (KeyboardController Plan 05-03).
+      labelsVisible: false,
+      // Wewnętrzny payload dla ConfirmModal (Plan 05-03) — nie eksponowany w UI bezpośrednio.
+      _confirmPayload: null,
       _now: now,
       _spinUpTimerHandle: null,
 

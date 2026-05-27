@@ -27,13 +27,16 @@ export class RaycastController {
    *   Controller warstw emissive (Plan 04-02). RaycastController pisze tylko warstwę 'hover'.
    *   D-Phase4-13: read-modify-restore z Phase 3 zastąpione przez setLayer/clearLayer.
    */
-  constructor({ renderer, camera, interactables, store, emissive }) {
+  constructor({ renderer, camera, interactables, store, emissive, onHoverChange = null }) {
     this._renderer = renderer;
     this._camera = camera;
     // Array snapshot raz w ctor — zero alokacji per-tick (CONTEXT code_context: getInteractables stable refs)
     this._meshes = Array.from(interactables.values());
     this._store = store;
     this._emissive = emissive;
+    // Phase 5 D-Phase5-08 + Pitfall 7: callback (meshId|null, mesh|null) wołany w _commitHover/_commitLeave.
+    // TooltipManager wstrzykuje się przez ten kanał — DI opcjonalne, domyślnie null.
+    this._onHoverChange = onHoverChange;
 
     this._raycaster = new THREE.Raycaster();
     this._ndc = new THREE.Vector2(); // reused per-event
@@ -115,12 +118,14 @@ export class RaycastController {
     this._committedTarget = mesh;
     this._emissive.setLayer('hover', mesh, { color: HOVER_HINT_HEX });
     this._renderer.domElement.style.cursor = 'pointer'; // D-Phase3-08
+    this._onHoverChange?.(mesh.userData.id, mesh); // Phase 5 D-Phase5-08
   }
 
   _commitLeave() {
     if (this._committedTarget) {
       this._emissive.clearLayer('hover', this._committedTarget);
       this._committedTarget = null;
+      this._onHoverChange?.(null, null); // Phase 5 — callback po wyczyszczeniu target
     }
     this._renderer.domElement.style.cursor = 'default';
     this._pendingCount = 0;
