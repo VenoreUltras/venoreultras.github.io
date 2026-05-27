@@ -316,3 +316,128 @@ describe('Phase 3: attemptStep(intent) — single-arg signature + isAnimating lo
     void eventsBefore;
   });
 });
+
+// Phase 5 (D-Phase5-01..18): 5 ortogonalnych flag dydaktycznych + 8 akcji
+describe('Phase 5 — flagi dydaktyczne (D-Phase5-01..18)', () => {
+  it('Test 1: initial state ma difficulty=nauka, freeRoam=false, activeModal=null, audioMuted=false, labelsVisible=false', () => {
+    const store = createTrainingStore();
+    const s = store.getState();
+    expect(s.difficulty).toBe('nauka');
+    expect(s.freeRoam).toBe(false);
+    expect(s.activeModal).toBeNull();
+    expect(s.audioMuted).toBe(false);
+    expect(s.labelsVisible).toBe(false);
+  });
+
+  it('Test 2: setDifficulty(egzamin) ustawia difficulty=egzamin; setDifficulty(nauka) → nauka', () => {
+    const store = createTrainingStore();
+    store.getState().setDifficulty('egzamin');
+    expect(store.getState().difficulty).toBe('egzamin');
+    store.getState().setDifficulty('nauka');
+    expect(store.getState().difficulty).toBe('nauka');
+  });
+
+  it('Test 3: toggleFreeRoam flipuje freeRoam (false→true→false)', () => {
+    const store = createTrainingStore();
+    store.getState().toggleFreeRoam();
+    expect(store.getState().freeRoam).toBe(true);
+    store.getState().toggleFreeRoam();
+    expect(store.getState().freeRoam).toBe(false);
+  });
+
+  it('Test 4: toggleHelp z null → help; ponownie z help → null (toggle)', () => {
+    const store = createTrainingStore();
+    store.getState().toggleHelp();
+    expect(store.getState().activeModal).toBe('help');
+    store.getState().toggleHelp();
+    expect(store.getState().activeModal).toBeNull();
+  });
+
+  it('Test 5: closeModal z help → null; z confirm-scenario-switch → null; z null → null (no-op)', () => {
+    const store = createTrainingStore();
+    store.setState({ activeModal: 'help' });
+    store.getState().closeModal();
+    expect(store.getState().activeModal).toBeNull();
+
+    store.setState({ activeModal: 'confirm-scenario-switch' });
+    store.getState().closeModal();
+    expect(store.getState().activeModal).toBeNull();
+
+    store.getState().closeModal(); // null → null no-op
+    expect(store.getState().activeModal).toBeNull();
+  });
+
+  it('Test 6: openConfirmModal({current,next}) → activeModal=confirm-scenario-switch; _confirmPayload zachowany', () => {
+    const store = createTrainingStore();
+    const payload = { current: 'uruchomienie', next: 'awaria' };
+    store.getState().openConfirmModal(payload);
+    expect(store.getState().activeModal).toBe('confirm-scenario-switch');
+    expect(store.getState()._confirmPayload).toEqual(payload);
+  });
+
+  it('Test 7: toggleMute flipuje audioMuted (D-Phase5-18); akcja NIE pisze do localStorage', () => {
+    const store = createTrainingStore();
+    store.getState().toggleMute();
+    expect(store.getState().audioMuted).toBe(true);
+    store.getState().toggleMute();
+    expect(store.getState().audioMuted).toBe(false);
+    // Store nie zna localStorage — persist jest w Application bootstrap (analog hcOutlineMode)
+    // Weryfikujemy przez brak importu localStorage w module (boundaries.test.js enforce)
+  });
+
+  it('Test 8: toggleLabels flipuje labelsVisible', () => {
+    const store = createTrainingStore();
+    store.getState().toggleLabels();
+    expect(store.getState().labelsVisible).toBe(true);
+    store.getState().toggleLabels();
+    expect(store.getState().labelsVisible).toBe(false);
+  });
+
+  it('Test 9: resetScenario — gdy activeScenario null → no-op; gdy ustawione → stan zresetowany (score=100)', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    // Bez scenariusza — no-op
+    expect(() => store.getState().resetScenario()).not.toThrow();
+
+    // Z aktywnym scenariuszem — resetuje stan
+    store.getState().startScenario(uruchomienie);
+    // Wykonaj kilka kroków żeby zmienić stan
+    store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    expect(store.getState().scoring.score).toBe(100); // happy path
+    // Wymuszamy violation żeby obniżyć score
+    store.getState().attemptStep({ kind: 'click', meshId: 'wrong-mesh' });
+    expect(store.getState().scoring.score).toBeLessThan(100);
+
+    store.getState().resetScenario();
+    const s = store.getState();
+    expect(s.scoring.score).toBe(100); // zresetowany
+    expect(s.currentStepId).toBe(uruchomienie.steps[0].id);
+    expect(Object.values(s.steps).every(st => st.status === 'pending')).toBe(true);
+  });
+
+  it('Test 10: subscribeWithSelector na każdym z 5 nowych slices wywołuje callback przy zmianie', () => {
+    const store = createTrainingStore();
+    const diffListener = vi.fn();
+    const freeRoamListener = vi.fn();
+    const modalListener = vi.fn();
+    const muteListener = vi.fn();
+    const labelsListener = vi.fn();
+
+    store.subscribe(s => s.difficulty, diffListener);
+    store.subscribe(s => s.freeRoam, freeRoamListener);
+    store.subscribe(s => s.activeModal, modalListener);
+    store.subscribe(s => s.audioMuted, muteListener);
+    store.subscribe(s => s.labelsVisible, labelsListener);
+
+    store.getState().setDifficulty('egzamin');
+    store.getState().toggleFreeRoam();
+    store.getState().toggleHelp();
+    store.getState().toggleMute();
+    store.getState().toggleLabels();
+
+    expect(diffListener).toHaveBeenCalledTimes(1);
+    expect(freeRoamListener).toHaveBeenCalledTimes(1);
+    expect(modalListener).toHaveBeenCalledTimes(1);
+    expect(muteListener).toHaveBeenCalledTimes(1);
+    expect(labelsListener).toHaveBeenCalledTimes(1);
+  });
+});
