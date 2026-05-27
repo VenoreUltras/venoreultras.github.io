@@ -46,11 +46,13 @@ export class StepPanel {
   }
 
   _wireSubscribers() {
-    // 3 osobne subscribery — fine-grained (analog main.js linie 60-73).
+    // 4 osobne subscribery — fine-grained (analog main.js linie 60-73).
+    // D-Phase5-11: dorzucony subscriber difficulty (zmiana trybu → re-render rationale).
     this._unsubscribers.push(
       this._store.subscribe((s) => s.currentStepId, () => this._render()),
       this._store.subscribe((s) => s.steps,         () => this._render()),
       this._store.subscribe((s) => s.isAnimating,   () => this._render()),
+      this._store.subscribe((s) => s.difficulty,    () => this._render()),
     );
   }
 
@@ -81,6 +83,21 @@ export class StepPanel {
       const icon = pl.stepStateIcons[stateKey] ?? '';
       // textContent — XSS-safe (analog DisclaimerBanner.js linia 65, T-04-09 mitigation)
       li.textContent = `${icon} ${idx + 1}. ${step.labelPL}`;
+
+      // D-Phase5-11: rationale inline TYLKO w Nauka pod aktywnym krokiem non-done.
+      // Egzamin: nie renderujemy w ogóle (twardy tryb wiedzy OFF).
+      // rationalePL pochodzi ze scenario JSON (statyczne dane) — textContent XSS-safe.
+      if (
+        state.difficulty === 'nauka' &&
+        step.id === state.currentStepId &&
+        status !== 'done' &&
+        step.rationalePL
+      ) {
+        const rationale = document.createElement('p');
+        rationale.className = 'step-item__rationale';
+        rationale.textContent = step.rationalePL;
+        li.appendChild(rationale);
+      }
 
       // D-Phase4-04: inline visual-attest button TYLKO dla aktywnego kroku visual-attest
       // którego status !== 'done' (po sukcesie button znika).

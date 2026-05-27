@@ -195,3 +195,108 @@ describe('StepPanel — dispose (STATE-03)', () => {
     document.body.innerHTML = '';
   });
 });
+
+describe('Phase 5 — rationale inline (UI-04, D-Phase5-11)', () => {
+  let store, panel;
+  beforeEach(() => {
+    document.body.innerHTML = '<aside id="step-panel"></aside>';
+    store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    // difficulty domyślnie 'nauka' po store init Phase 5
+  });
+  afterEach(() => {
+    if (panel) panel.dispose();
+    panel = null;
+    document.body.innerHTML = '';
+  });
+
+  it('R1 Nauka render: aktywny krok pod difficulty=nauka zawiera <p.step-item__rationale> z rationalePL', () => {
+    // difficulty jest 'nauka' z store default (Phase 5 trainingStore)
+    panel = new StepPanel({ store });
+    const rationale = document.querySelector('#step-panel .step-item__rationale');
+    expect(rationale).not.toBeNull();
+    expect(rationale.textContent).toBe(uruchomienie.steps[0].rationalePL);
+  });
+
+  it('R2 Egzamin ukrywa: setState({difficulty:egzamin}) → brak .step-item__rationale', () => {
+    panel = new StepPanel({ store });
+    store.setState({ difficulty: 'egzamin' });
+    const rationaleEls = document.querySelectorAll('#step-panel .step-item__rationale');
+    expect(rationaleEls).toHaveLength(0);
+  });
+
+  it('R3 tylko aktywny krok: difficulty=nauka → dokładnie 1 .step-item__rationale', () => {
+    panel = new StepPanel({ store });
+    const rationaleEls = document.querySelectorAll('#step-panel .step-item__rationale');
+    expect(rationaleEls).toHaveLength(1);
+  });
+
+  it('R4 status=done ukrywa: po advance kroku 0, krok 0 nie ma rationale, krok 1 (aktywny) ma', () => {
+    // Zaawansuj krok 0 manualnie: ustaw status done + przesuń currentStepId
+    const step0 = uruchomienie.steps[0];
+    const step1 = uruchomienie.steps[1];
+    store.setState(s => ({
+      steps: { ...s.steps, [step0.id]: { status: 'done' } },
+      currentStepId: step1.id,
+    }));
+    panel = new StepPanel({ store });
+    // Krok 0 done → brak rationale
+    const items = document.querySelectorAll('#step-panel .step-item');
+    expect(items[0].querySelector('.step-item__rationale')).toBeNull();
+    // Krok 1 aktywny, status pending → ma rationale
+    expect(items[1].querySelector('.step-item__rationale')).not.toBeNull();
+    expect(items[1].querySelector('.step-item__rationale').textContent).toBe(step1.rationalePL);
+  });
+
+  it('R5 brak rationalePL graceful: krok bez rationalePL → brak .step-item__rationale, bez throw', () => {
+    // Stwórzmy scenariusz fixture z krokiem bez rationalePL
+    const scenarioBezRationale = {
+      id: 'test-no-rationale',
+      initialMachineState: 'oczekiwanie-na-inspekcje',
+      steps: [
+        {
+          id: 'krok-bez-rationale',
+          kind: 'visual-target',
+          targetMeshId: 'tabliczka-znamionowa',
+          labelPL: 'Krok testowy',
+          effectsOnSuccess: [],
+          effectsOnError: [],
+          // rationalePL celowo pominięte
+        },
+      ],
+    };
+    store.getState().startScenario(scenarioBezRationale);
+    expect(() => { panel = new StepPanel({ store }); }).not.toThrow();
+    expect(document.querySelectorAll('#step-panel .step-item__rationale')).toHaveLength(0);
+  });
+
+  it('R6 subscriber difficulty re-render: zmiana nauka→egzamin → rationale znika', () => {
+    panel = new StepPanel({ store });
+    expect(document.querySelectorAll('#step-panel .step-item__rationale')).toHaveLength(1);
+    store.setState({ difficulty: 'egzamin' });
+    expect(document.querySelectorAll('#step-panel .step-item__rationale')).toHaveLength(0);
+  });
+
+  it('R7 visual-attest bez kolizji: aktywny krok visual-attest w Nauka → rationale + attest button oba obecne', () => {
+    const visAttestStep = uruchomienie.steps[1]; // kontrola-narzedzia, kind=visual-attest
+    store.setState({ currentStepId: visAttestStep.id });
+    panel = new StepPanel({ store });
+    const li = Array.from(document.querySelectorAll('#step-panel .step-item'))
+      .find(el => el.classList.contains('step-item--aktywny'));
+    expect(li).not.toBeUndefined();
+    expect(li.querySelector('.step-item__rationale')).not.toBeNull();
+    expect(li.querySelector('.phase4-attest-check')).not.toBeNull();
+  });
+
+  it('R8 boundary unchanged: StepPanel nie importuje modułów poza ../i18n/pl.js', async () => {
+    // Weryfikacja: tylko import '../i18n/pl.js' (bez THREE/gsap/training)
+    const { readFileSync } = await import('fs');
+    const { resolve, dirname } = await import('path');
+    const { fileURLToPath } = await import('url');
+    const __dirname = dirname(fileURLToPath(import.meta.url));
+    const src = readFileSync(resolve(__dirname, '../src/ui/StepPanel.js'), 'utf8');
+    const importLines = src.split('\n').filter(l => l.trim().startsWith('import '));
+    expect(importLines).toHaveLength(1);
+    expect(importLines[0]).toContain('../i18n/pl.js');
+  });
+});
