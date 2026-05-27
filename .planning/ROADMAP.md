@@ -154,7 +154,16 @@ Plans:
   3. Session metrics (errors, completion time, missed-step list, sequence-violation pairs, retry count) are computed by `ScoringService` from the event log and persisted to `localStorage` under the versioned key `pm300:session:v1`; corrupt or stale entries are gracefully migrated or replaced without crashing the app.
   4. JSON export produces a complete event-log dump; PDF export uses `jsPDF` (code-split via dynamic `import('jspdf')`) with an embedded Roboto/Noto Sans TTF that renders the Polish pangram "Zażółć gęślą jaźń" correctly. The PDF is titled "Raport sesji szkoleniowej", carries the disclaimer in its footer, and contains zero certificate-styled elements (no seal, no signature line).
   5. All counts in UI and PDF use `Intl.PluralRules('pl-PL')` — "1 błąd" / "2 błędy" / "5 błędów" all render correctly. Vitest integration tests cover all four scenarios with happy path + ≥2 failure paths each (TEST-05).
-**Plans**: TBD
+**Plans:** 8 plans
+Plans:
+- [ ] 06-01-PLAN.md — Foundation: validateScenario (+2 kindy) + ProcedureEngine (+2 branche) + faultRules (+2 reguły) + pl.js (+pluralPL +50 kluczy)
+- [ ] 06-02-PLAN.md — Store schema: session.attempts[] + retry() + attemptBimanualStep + machineStateAttest auto-trigger + angle injection
+- [ ] 06-03-PLAN.md — 3 scenariusze (cykl-pracy/zatrzymanie/awaria) + 3 integration tests (TEST-05)
+- [ ] 06-04-PLAN.md — ReplayEngine (deterministic re-execution) + ReplayDrawer + DOM/CSS
+- [ ] 06-05-PLAN.md — StepPanel retry button + RaycastController bimanual flow + bimanual hint
+- [ ] 06-06-PLAN.md — ScoringService.computeMetrics + sessionPersistence + JsonExporter
+- [ ] 06-07-PLAN.md — PdfExporter (jsPDF + Noto Sans TTF) + SessionOverlay + StatusPanel ScenarioSelector
+- [ ] 06-08-PLAN.md — Application wiring + KeyboardController 1-4 + manual QA checkpoint
 **UI hint**: yes
 
 ### Phase 7 (v2 frontier): Differentiators
