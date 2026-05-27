@@ -12,6 +12,9 @@
     <!-- Kontener na scenę Three.js -->
     <div id="three-canvas"></div>
 
+    <!-- Phase 5: kontener etykiet 3D (CSS2DRenderer, z-index:8, pointer-events:none) -->
+    <div id="label-overlay-container" style="position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:8;"></div>
+
     <!-- Interfejs Użytkownika -->
     <div id="ui-layer">
       <div id="status-panel" class="status-panel glass-panel" role="region" aria-label="Status maszyny"></div>
@@ -60,6 +63,9 @@
 
       <aside id="step-panel" class="step-panel glass-panel" role="region" aria-label="Procedura szkoleniowa"></aside>
     </div>
+
+    <!-- Phase 5: kontener modali (HelpModal + ConfirmModal, z-index:300, pointer-events:none) -->
+    <div id="modal-container" style="position:fixed;inset:0;z-index:300;pointer-events:none;"></div>
 
     <script type="module" src="/src/main.js"></script>
   </body>

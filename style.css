@@ -536,3 +536,308 @@ body.training-complete #status-panel {
   outline: 2px solid var(--accent-hover);
   outline-offset: 2px;
 }
+
+/* ──────────────────────────────────────────────────────────
+   Phase 5 — educational-layer (UI-03, FEEDBACK-06, INTERACT-06, EDU-01..03)
+   ────────────────────────────────────────────────────────── */
+
+/* ── Tooltip (UI-03, @floating-ui/dom, 600ms delay) ─────── */
+.tooltip {
+  position: absolute;
+  max-width: 240px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #f3f4f6;
+  background: rgba(16, 24, 39, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  pointer-events: none;
+  white-space: pre-wrap;
+  z-index: 50;
+  transition: opacity 120ms ease-out;
+}
+
+.tooltip--visible {
+  opacity: 1;
+}
+
+.tooltip--hidden {
+  opacity: 0;
+}
+
+/* ── Etykiety 3D (FEEDBACK-06, CSS2DRenderer) ────────────── */
+.label-3d {
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.2;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: #f3f4f6;
+  background: rgba(11, 15, 25, 0.78);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  white-space: nowrap;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ── Modal overlay (INTERACT-06) ─────────────────────────── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(11, 15, 25, 0.85);
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: auto;
+}
+
+.modal-overlay--visible {
+  display: flex;
+}
+
+/* ── Modal card (wspólna baza dla HelpModal + ConfirmModal) ─ */
+.modal-card {
+  position: relative;
+  width: min(640px, 92vw);
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  pointer-events: auto;
+  color: var(--text-main);
+}
+
+/* Wariant dla ConfirmModal — węższy */
+.modal-card--confirm {
+  width: min(440px, 92vw);
+}
+
+/* ── Modal card — wewnętrzne sekcje ─────────────────────── */
+.modal-card__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.modal-card__title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-main);
+}
+
+.modal-card__close {
+  /* WCAG 44x44px min touch target */
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  border-radius: 8px;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.modal-card__close:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+.modal-card__close:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.modal-card__body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-main);
+}
+
+.modal-card__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* ── Help overlay — sekcje ───────────────────────────────── */
+.help-section {
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 16px;
+  margin-bottom: 16px;
+}
+
+.help-section:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+.help-section__heading {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+/* ── Tabela keymap ───────────────────────────────────────── */
+.keymap-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.keymap-table th {
+  text-align: left;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+  padding: 4px 8px 8px 0;
+}
+
+.keymap-table td {
+  padding: 4px 8px 4px 0;
+  vertical-align: top;
+}
+
+.keymap-table kbd {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  padding: 2px 6px;
+  border: 1px solid var(--glass-border);
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+}
+
+/* ── Legenda kolorów ─────────────────────────────────────── */
+.color-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 14px;
+}
+
+.color-legend__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.color-swatch {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  flex-shrink: 0;
+}
+
+/* ── Legenda ikon ────────────────────────────────────────── */
+.icon-legend {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+}
+
+.icon-legend__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Disclaimer w modalu (powtórzenie z Phase 1 UI-05) ───── */
+.disclaimer-repeat {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--text-muted);
+  background: rgba(230, 159, 0, 0.08);
+  border-left: 3px solid #E69F00;
+  padding: 12px 16px;
+  line-height: 1.5;
+}
+
+/* ── Difficulty badge (StatusPanel Phase 5) ──────────────── */
+.difficulty-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* Nauka — niebieski wariant */
+.difficulty-badge--nauka {
+  color: #60b0f4;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.35);
+}
+
+/* Egzamin — pomarańczowy wariant (Wong #E69F00) */
+.difficulty-badge--egzamin {
+  color: #E69F00;
+  background: rgba(230, 159, 0, 0.12);
+  border: 1px solid rgba(230, 159, 0, 0.35);
+}
+
+/* ── Free-roam indicator ─────────────────────────────────── */
+/* Ukrycie przez visibility+width by uniknąć reflowu (UI-SPEC §336-341) */
+.free-roam-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #F0E442;
+  background: rgba(240, 228, 66, 0.10);
+  border: 1px solid rgba(240, 228, 66, 0.30);
+  white-space: nowrap;
+  overflow: hidden;
+  transition: visibility 0s, width 120ms ease;
+}
+
+.free-roam-indicator--hidden {
+  visibility: hidden;
+  width: 0;
+  overflow: hidden;
+  padding: 0;
+  border: none;
+}
+
+/* ── Rationale w StepPanel (tryb Nauka, D-Phase5-11) ─────── */
+.step-item__rationale {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 1.5;
+  color: var(--text-muted);
+  margin-top: 4px;
+  padding-left: 8px;
+  border-left: 2px solid rgba(240, 228, 66, 0.4);
+  font-style: italic;
+}
