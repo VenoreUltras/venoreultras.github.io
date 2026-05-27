@@ -29,6 +29,7 @@ function makeMesh(id) {
     quaternion: new THREE.Quaternion(),
     add: vi.fn(),
     remove: vi.fn(),
+    getWorldPosition: vi.fn((target) => { target.set(0, 0, 0); return target; }),
     children: [],
   };
   return mesh;

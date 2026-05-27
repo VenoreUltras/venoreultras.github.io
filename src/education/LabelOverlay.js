@@ -80,7 +80,10 @@ export class LabelOverlay {
       return;
     }
 
-    // D-Phase5-10: camera-facing filter — pokazuj tylko labelki widocznych powierzchni
+    // D-Phase5-10: pokaż etykiety meshy znajdujących się PRZED kamerą.
+    // RESEARCH A2 (naive forward=+Z rotated by mesh.quaternion) nie pasuje do
+    // geometrii prasy (BoxGeometry/CylinderGeometry obracane różnie). Zamiast
+    // tego: mesh przed kamerą jeśli (meshWorldPos - cameraPos)·cameraDir > 0.
     this._applyCameraFacing();
     this._css2dRenderer.render(this._scene, this._camera);
     // D-Phase5-10: declutter — offset labelek które nachodzą na siebie (post-render)
@@ -88,21 +91,20 @@ export class LabelOverlay {
   }
 
   /**
-   * Filtr camera-facing: dot(worldNormal, cameraDir) < 0 → mesh zwrócony w stronę kamery.
-   * Uproszczona normalna: forward (0,0,1) rotowany przez mesh.quaternion.
-   * RESEARCH Assumption A2: przyjmujemy że BoxGeometry forward to +Z — manual QA Plan 05-07
-   * weryfikuje correctness dla geometrii prasy.
+   * Filtr "mesh przed kamerą": vector (meshWorldPos - cameraPos) · cameraDir > 0.
+   * Ukrywa tylko labele za kamerą (rzadkie przy OrbitControls). Wcześniejsze
+   * podejście (worldNormal=+Z) nie pasowało do geometrii prasy — RESEARCH A2.
    */
   _applyCameraFacing() {
     const cameraDir = new THREE.Vector3();
     this._camera.getWorldDirection(cameraDir);
+    const cameraPos = this._camera.position;
+    const meshPos = new THREE.Vector3();
 
     for (const [mesh, label] of this._labels) {
-      // Uproszczona normalna forward mesha w przestrzeni świata
-      const worldNormal = new THREE.Vector3(0, 0, 1).applyQuaternion(mesh.quaternion);
-      const dot = worldNormal.dot(cameraDir);
-      // dot < 0 → normalna skierowana w stronę kamery (camera "patrzy w" mesh)
-      label.visible = dot < 0;
+      mesh.getWorldPosition(meshPos);
+      const dot = meshPos.sub(cameraPos).dot(cameraDir);
+      label.visible = dot > 0;
     }
   }
 
