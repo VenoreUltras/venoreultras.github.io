@@ -63,6 +63,23 @@ const FORBIDDEN_PAIRS = [
     mustNotImport: ['three', 'gsap', '../training/', './training/'] },
   { file: 'src/ui/StatusPanel.js',
     mustNotImport: ['three', 'gsap', '../training/', './training/'] },
+
+  // Phase 5 (Plan 05-07): educational layer boundaries (D-Phase5-26).
+  // TooltipManager — store + DOM + @floating-ui/dom + pl.js; NIE THREE/gsap/training/highlight.
+  { file: 'src/education/TooltipManager.js',
+    mustNotImport: ['three', 'gsap', '../training/', './training/', '../highlight/', './highlight/'] },
+  // AudioController — TYLKO store przez DI; NIE THREE/gsap/DOM/floating-ui/training.
+  { file: 'src/education/AudioController.js',
+    mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/'] },
+  // KeyboardController — store + window; NIE THREE/gsap/training/highlight/floating-ui.
+  { file: 'src/education/KeyboardController.js',
+    mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/'] },
+  // LabelOverlay — THREE (CSS2DRenderer) + store; NIE gsap/training/floating-ui.
+  { file: 'src/education/LabelOverlay.js',
+    mustNotImport: ['gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/'] },
+  // HelpModal — store + DOM + pl; NIE THREE/gsap/training/highlight/floating-ui.
+  { file: 'src/ui/HelpModal.js',
+    mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/'] },
 ];
 
 /** Regex: static + dynamic imports. Capturuje string specifier. */

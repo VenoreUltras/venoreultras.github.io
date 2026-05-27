@@ -7,6 +7,15 @@
 // Phase 3 (Plan 03-04) dodaje describe block "Phase 3 wiring" z mockowanym SceneSetup
 // dla pełnej dynamicznej weryfikacji konstruktor + subscribers + dispose.
 // Phase 4 (Plan 04-06): describe block "Phase 4 wiring" — 5 nowych controllerów + dispose chain.
+// Phase 5 (Plan 05-07): describe block "Phase 5 wiring" — 5 nowych kontrolerów + bootstrap + dispose.
+
+// Mock @floating-ui/dom przed importem src/main.js
+vi.mock('@floating-ui/dom', () => ({
+  computePosition: vi.fn(() => Promise.resolve({ x: 0, y: 0 })),
+  autoUpdate: vi.fn(() => vi.fn()),
+  flip: vi.fn(() => 'flipMW'),
+  shift: vi.fn(() => 'shiftMW'),
+}));
 
 // Canvas mock dla CanvasTexture (PressModel._buildNameplate woła getContext('2d')) — musi być
 // PRZED importem src/main.js (hoisting). Pattern z tests/PressModel.smoke.test.js.
@@ -29,6 +38,12 @@ if (typeof Element.prototype.scrollIntoView !== 'function') {
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { readFileSync } from 'node:fs';
 import * as THREE from 'three';
+import { TooltipManager } from '../src/education/TooltipManager.js';
+import { AudioController } from '../src/education/AudioController.js';
+import { KeyboardController } from '../src/education/KeyboardController.js';
+import { LabelOverlay } from '../src/education/LabelOverlay.js';
+import { HelpModal } from '../src/ui/HelpModal.js';
+import { ConfirmModal } from '../src/ui/ConfirmModal.js';
 
 // Mock SceneSetup PRZED importem src/main.js — jsdom nie obsługuje WebGLRenderer (MOD-6).
 // Zwraca minimalny shape jakiego oczekuje Application (scene, camera, renderer.domElement,
@@ -127,6 +142,45 @@ describe('Application.dispose() (STATE-03 smoke)', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Shared helper — Mock AudioContext (Phase 5 AudioController wymaga, Phase 4 setup też go używa)
+// ---------------------------------------------------------------------------
+function buildMockAudioCtx() {
+  const gain = {
+    gain: {
+      setValueAtTime: vi.fn(),
+      linearRampToValueAtTime: vi.fn(),
+      setTargetAtTime: vi.fn(),
+      value: 1,
+    },
+    connect: vi.fn(),
+  };
+  const osc = {
+    type: 'sine',
+    frequency: {
+      setValueAtTime: vi.fn(),
+      linearRampToValueAtTime: vi.fn(),
+    },
+    connect: vi.fn(),
+    start: vi.fn(),
+    stop: vi.fn(),
+  };
+  return {
+    currentTime: 0,
+    state: 'running',
+    resume: vi.fn(() => Promise.resolve()),
+    close: vi.fn(() => Promise.resolve()),
+    createGain: vi.fn(() => ({ gain: { ...gain.gain, setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn(), setTargetAtTime: vi.fn(), value: 1 }, connect: vi.fn() })),
+    createOscillator: vi.fn(() => ({ type: 'sine', frequency: { setValueAtTime: vi.fn(), linearRampToValueAtTime: vi.fn() }, connect: vi.fn(), start: vi.fn(), stop: vi.fn() })),
+    destination: {},
+  };
+}
+
+// AudioContext musi być klasą (konstruktor z new), vi.fn nie jest constructable
+class MockAudioContext {
+  constructor() { return buildMockAudioCtx(); }
+}
+
+// ---------------------------------------------------------------------------
 // Phase 4 wiring (Plan 04-06) — 5 nowych controllerów + dispose chain
 // ---------------------------------------------------------------------------
 describe('Application — Phase 4 wiring (Plan 04-06)', () => {
@@ -138,6 +192,8 @@ describe('Application — Phase 4 wiring (Plan 04-06)', () => {
       <div id="three-canvas"></div>
       <div id="status-panel"></div>
       <aside id="step-panel"></aside>
+      <div id="modal-container"></div>
+      <div id="label-overlay-container"></div>
       <span id="status-dot" class="dot"></span>
       <span id="status-text"></span>
       <input type="range" id="speed-slider" min="10" max="120" value="30">
@@ -147,7 +203,13 @@ describe('Application — Phase 4 wiring (Plan 04-06)', () => {
       <span id="val-displacement">0</span>
     `;
     // localStorage clean (HC bootstrap fallback do false)
-    try { localStorage.removeItem('pm300:hc-outline:v1'); } catch { /* noop */ }
+    try {
+      localStorage.removeItem('pm300:hc-outline:v1');
+      localStorage.removeItem('pm300:difficulty:v1');
+      localStorage.removeItem('pm300:audio-mute:v1');
+    } catch { /* noop */ }
+    // Stub AudioContext dla Phase 5 AudioController (jsdom nie ma Web Audio API)
+    vi.stubGlobal('AudioContext', MockAudioContext);
     vi.resetModules();
     const mod = await import('../src/main.js');
     Application = mod.Application;
@@ -163,6 +225,8 @@ describe('Application — Phase 4 wiring (Plan 04-06)', () => {
     }
     app = null;
     document.body.innerHTML = '';
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   it('konstruktor wpina raycastController (instance of RaycastController z DI emissive)', () => {
@@ -244,5 +308,205 @@ describe('Application — Phase 4 wiring (Plan 04-06)', () => {
     expect(raycastOrder).toBeLessThan(emissiveOrder);
 
     app = null;
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 5 wiring (Plan 05-07) — 5 nowych kontrolerów + bootstrap + dispose chain
+// ---------------------------------------------------------------------------
+describe('Application — Phase 5 wiring (Plan 05-07)', () => {
+  let app;
+  let Application;
+
+  beforeEach(async () => {
+    // Pełne DOM wymagane przez wszystkie kontrolery Phase 4 + Phase 5
+    document.body.innerHTML = `
+      <div id="three-canvas"></div>
+      <div id="status-panel"></div>
+      <aside id="step-panel"></aside>
+      <div id="modal-container"></div>
+      <div id="label-overlay-container"></div>
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text"></span>
+      <input type="range" id="speed-slider" min="10" max="120" value="30">
+      <span id="speed-value">30</span>
+      <button id="btn-toggle">Start/Stop</button>
+      <span id="val-angle">0</span>
+      <span id="val-displacement">0</span>
+    `;
+
+    // Czyść localStorage przed każdym testem
+    try {
+      localStorage.removeItem('pm300:hc-outline:v1');
+      localStorage.removeItem('pm300:difficulty:v1');
+      localStorage.removeItem('pm300:audio-mute:v1');
+    } catch { /* noop */ }
+
+    // Stub AudioContext globalnie (jsdom nie ma Web Audio API)
+    vi.stubGlobal('AudioContext', MockAudioContext);
+
+    vi.resetModules();
+    const mod = await import('../src/main.js');
+    Application = mod.Application;
+    app = new Application();
+  });
+
+  afterEach(() => {
+    if (app) {
+      try { app.dispose(); } catch { /* już zdisposed */ }
+    }
+    app = null;
+    document.body.innerHTML = '';
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  // W1: 5 nowych kontrolerów jest instancjonowanych (sprawdzamy przez nazwy konstruktora
+  // bo vi.resetModules() tworzy nowy moduł cache — instanceof różnych instancji klas nie działa)
+  it('W1: po new Application() ma pola tooltipManager, audioController, keyboardController, labelOverlay, helpModal', () => {
+    expect(app.tooltipManager?.constructor?.name).toBe('TooltipManager');
+    expect(app.audioController?.constructor?.name).toBe('AudioController');
+    expect(app.keyboardController?.constructor?.name).toBe('KeyboardController');
+    expect(app.labelOverlay?.constructor?.name).toBe('LabelOverlay');
+    expect(app.helpModal?.constructor?.name).toBe('HelpModal');
+  });
+
+  // W2: tickables zawiera LabelOverlay.update callback
+  it('W2: tickables zawiera callback wołający labelOverlay.update()', () => {
+    const updateSpy = vi.spyOn(app.labelOverlay, 'update');
+    // Znajdź callback labelOverlay w tickables (dodany po simulationTick + raycastHysteresis)
+    const labelTickable = app.tickables.find(fn => {
+      // Wywołaj callback i sprawdź czy update zostało wywołane
+      try { fn(16); } catch { /* ignoruj błędy innych tickables */ }
+      return updateSpy.mock.calls.length > 0;
+    });
+    expect(labelTickable).toBeDefined();
+    expect(updateSpy).toHaveBeenCalled();
+  });
+
+  // W3: bootstrap localStorage — difficulty i audioMuted z localStorage
+  it('W3: bootstrap localStorage — difficulty=egzamin + audioMuted=true z localStorage', async () => {
+    // Ustaw localStorage przed stworzeniem nowej instancji
+    localStorage.setItem('pm300:difficulty:v1', 'egzamin');
+    localStorage.setItem('pm300:audio-mute:v1', 'true');
+
+    vi.resetModules();
+    const mod2 = await import('../src/main.js');
+    const App2 = mod2.Application;
+    const app2 = new App2();
+
+    expect(app2.store.getState().difficulty).toBe('egzamin');
+    expect(app2.store.getState().audioMuted).toBe(true);
+
+    app2.dispose();
+  });
+
+  // W4: bootstrap graceful — localStorage throw → domyślne wartości
+  it('W4: bootstrap graceful — localStorage throw → difficulty nauka, audioMuted false', async () => {
+    const getItemSpy = vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
+      throw new Error('private mode');
+    });
+
+    vi.resetModules();
+    const mod3 = await import('../src/main.js');
+    const App3 = mod3.Application;
+    const app3 = new App3();
+
+    expect(app3.store.getState().difficulty).toBe('nauka');
+    expect(app3.store.getState().audioMuted).toBe(false);
+
+    app3.dispose();
+    getItemSpy.mockRestore();
+  });
+
+  // W5: persist subscriber — setState({difficulty}) → localStorage.setItem
+  it('W5: persist subscriber — difficulty i audioMuted zapisywane do localStorage', () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+
+    app.store.setState({ difficulty: 'egzamin' });
+    expect(setItemSpy).toHaveBeenCalledWith('pm300:difficulty:v1', 'egzamin');
+
+    app.store.setState({ audioMuted: true });
+    expect(setItemSpy).toHaveBeenCalledWith('pm300:audio-mute:v1', 'true');
+  });
+
+  // W6: dispose order — Phase 5 w odwrotnej kolejności tworzenia, przed Phase 4
+  it('W6: dispose order — tooltipManager przed confirmModal przed helpModal przed labelOverlay przed keyboardController przed audioController; raycast przed emissive', () => {
+    const tooltipSpy   = vi.spyOn(app.tooltipManager, 'dispose');
+    const confirmSpy   = vi.spyOn(app.confirmModal, 'dispose');
+    const helpSpy      = vi.spyOn(app.helpModal, 'dispose');
+    const labelSpy     = vi.spyOn(app.labelOverlay, 'dispose');
+    const keySpy       = vi.spyOn(app.keyboardController, 'dispose');
+    const audioSpy     = vi.spyOn(app.audioController, 'dispose');
+    const hmSpy        = vi.spyOn(app.highlightManager, 'dispose');
+    const edgeSpy      = vi.spyOn(app.edgeOutlineController, 'dispose');
+    const raycastSpy   = vi.spyOn(app.raycastController, 'dispose');
+    const emissiveSpy  = vi.spyOn(app.emissiveController, 'dispose');
+
+    app.dispose();
+
+    const order = (spy) => spy.mock.invocationCallOrder[0];
+
+    // Phase 5 odwrotna kolejność
+    expect(order(tooltipSpy)).toBeLessThan(order(confirmSpy));
+    expect(order(confirmSpy)).toBeLessThan(order(helpSpy));
+    expect(order(helpSpy)).toBeLessThan(order(labelSpy));
+    expect(order(labelSpy)).toBeLessThan(order(keySpy));
+    expect(order(keySpy)).toBeLessThan(order(audioSpy));
+    // Phase 4 po Phase 5
+    expect(order(audioSpy)).toBeLessThan(order(hmSpy));
+    // T-04-14: raycast PRZED emissive
+    expect(order(raycastSpy)).toBeLessThan(order(emissiveSpy));
+
+    app = null;
+  });
+
+  // W7: modal-aware pause — activeModal != null → currentAngle nie rośnie
+  it('W7: modal-aware pause — activeModal !== null blokuje currentAngle integration', () => {
+    // Najpierw bez modalu — kąt powinien rosnąć gdy _omega > 0
+    app._omega = 1; // symulujemy obrót
+    const angleBefore = app.currentAngle;
+    app.store.setState({ activeModal: null });
+    app.simulationTick(100); // 100ms
+    const angleAfterNoModal = app.currentAngle;
+    expect(angleAfterNoModal).toBeGreaterThan(angleBefore);
+
+    // Z modalem — kąt nie powinien rosnąć
+    const angleBeforeModal = app.currentAngle;
+    app.store.setState({ activeModal: 'help' });
+    app.simulationTick(100);
+    expect(app.currentAngle).toBe(angleBeforeModal);
+  });
+
+  // W8: onHoverChange wired — wywołuje tooltipManager.onHoverEnter/onHoverLeave
+  it('W8: onHoverChange wired — callback wołający tooltipManager.onHoverEnter i onHoverLeave', () => {
+    const enterSpy = vi.spyOn(app.tooltipManager, 'onHoverEnter');
+    const leaveSpy = vi.spyOn(app.tooltipManager, 'onHoverLeave');
+
+    // Symuluj hover enter
+    app.raycastController._onHoverChange('kolo-zamachowe', {});
+    expect(enterSpy).toHaveBeenCalledWith('kolo-zamachowe', app.sceneSetup.renderer.domElement);
+
+    // Symuluj hover leave
+    app.raycastController._onHoverChange(null, null);
+    expect(leaveSpy).toHaveBeenCalled();
+  });
+
+  // W9: ConfirmModal wired
+  it('W9: ConfirmModal wired — app.confirmModal constructor.name + store openConfirmModal aktywuje stan', () => {
+    expect(app.confirmModal?.constructor?.name).toBe('ConfirmModal');
+    // openConfirmModal ustawia activeModal='confirm-scenario-switch' w store (smoke)
+    app.store.getState().openConfirmModal({ current: 'uruchomienie', next: 'uruchomienie' });
+    expect(app.store.getState().activeModal).toBe('confirm-scenario-switch');
+    // dialog element istnieje w DOM (ConfirmModal._build() tworzy <dialog>)
+    const dialog = document.querySelector('dialog');
+    expect(dialog).not.toBeNull();
+  });
+
+  // W10: window.__app__ — src/main.js zawiera import.meta.env?.DEV guard
+  it('W10: src/main.js zawiera window.__app__ z import.meta.env?.DEV guard', () => {
+    const src = readFileSync('src/main.js', 'utf-8');
+    expect(src).toMatch(/import\.meta\.env\?\.DEV/);
+    expect(src).toMatch(/globalThis\.__app__/);
   });
 });
