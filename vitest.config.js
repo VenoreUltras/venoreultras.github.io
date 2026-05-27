@@ -7,6 +7,10 @@ export default defineConfig({
     environment: 'node',
     environmentMatchGlobs: [
       ['tests/disclaimerBanner.test.js', 'jsdom'],
+      ['tests/KeyboardController.test.js', 'jsdom'],
+      ['tests/HelpModal.test.js', 'jsdom'],
+      ['tests/StatusPanel.test.js', 'jsdom'],
+      ['tests/StepPanel.test.js', 'jsdom'],
     ],
     globals: false,
     include: ['tests/**/*.test.js'],
