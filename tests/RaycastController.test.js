@@ -327,3 +327,68 @@ describe('RaycastController — D-Phase3-04: wrong-mesh emituje engine-side viol
     controller.dispose();
   });
 });
+
+describe('RaycastController — Phase 5: onHoverChange DI (D-Phase5-08 + Pitfall 7)', () => {
+  it('Test 15: ctor z onHoverChange callback NIE rzuca (opcjonalne DI)', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    const interactables = new Map([['estop', makeMesh('estop', 'manipulation')]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const cb = vi.fn();
+
+    expect(() => {
+      const rc = new RaycastController({ renderer, camera, interactables, store, emissive, onHoverChange: cb });
+      rc.dispose();
+    }).not.toThrow();
+  });
+
+  it('Test 16: backward compat — konstruktor bez onHoverChange NIE rzuca (Plan 04-05 sygnatura)', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    const interactables = new Map([['estop', makeMesh('estop', 'manipulation')]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+
+    expect(() => {
+      const rc = new RaycastController({ renderer, camera, interactables, store, emissive });
+      rc.dispose();
+    }).not.toThrow();
+  });
+
+  it('Test 17: _commitHover(mesh) wywołuje callback z (meshId, mesh)', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    const meshFixture = makeMesh('estop', 'manipulation');
+    const interactables = new Map([['estop', meshFixture]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const cb = vi.fn();
+
+    const rc = new RaycastController({ renderer, camera, interactables, store, emissive, onHoverChange: cb });
+    rc._commitHover(meshFixture);
+
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(cb).toHaveBeenCalledWith(meshFixture.userData.id, meshFixture);
+    rc.dispose();
+  });
+
+  it('Test 18: _commitLeave() wywołuje callback z (null, null)', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    const meshFixture = makeMesh('estop', 'manipulation');
+    const interactables = new Map([['estop', meshFixture]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const cb = vi.fn();
+
+    const rc = new RaycastController({ renderer, camera, interactables, store, emissive, onHoverChange: cb });
+    rc._commitHover(meshFixture);
+    cb.mockClear();
+    rc._commitLeave();
+
+    expect(cb).toHaveBeenCalledTimes(1);
+    expect(cb).toHaveBeenCalledWith(null, null);
+    rc.dispose();
+  });
+});
