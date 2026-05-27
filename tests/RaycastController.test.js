@@ -65,15 +65,16 @@ describe('RaycastController — konstruktor i dispose', () => {
 
     const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
 
-    expect(renderer.domElement.addEventListener).toHaveBeenCalledTimes(3);
+    expect(renderer.domElement.addEventListener).toHaveBeenCalledTimes(4);
     const calls = renderer.domElement.addEventListener.mock.calls.map(c => c[0]);
     expect(calls).toContain('pointermove');
     expect(calls).toContain('pointerdown');
     expect(calls).toContain('pointerup');
+    expect(calls).toContain('pointerleave');
     controller.dispose();
   });
 
-  it('dispose() wywoluje removeEventListener 3x + resetuje state machine (warning #6)', () => {
+  it('dispose() wywoluje removeEventListener 4x + resetuje state machine (warning #6)', () => {
     const renderer = makeMockRenderer();
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
@@ -86,7 +87,7 @@ describe('RaycastController — konstruktor i dispose', () => {
     controller._pendingCount = 1;
 
     controller.dispose();
-    expect(renderer.domElement.removeEventListener).toHaveBeenCalledTimes(3);
+    expect(renderer.domElement.removeEventListener).toHaveBeenCalledTimes(4);
     // Warning #6: dispose musi resetowac pending state machine
     expect(controller._pendingTarget).toBeNull();
     expect(controller._pendingCount).toBe(0);

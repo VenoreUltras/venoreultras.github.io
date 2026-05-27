@@ -58,11 +58,18 @@ export class RaycastController {
     this._onPointerMove = this._handlePointerMove.bind(this);
     this._onPointerDown = this.handlePointerDown.bind(this);
     this._onPointerUp = this._handlePointerUp.bind(this);
+    this._onPointerLeave = () => {
+      // Mysz opuściła canvas — commit leave od razu (no-hover stan).
+      if (this._committedTarget) this._commitLeave();
+      this._pendingTarget = null;
+      this._pendingCount = 0;
+    };
 
     const el = renderer.domElement;
     el.addEventListener('pointermove', this._onPointerMove);
     el.addEventListener('pointerdown', this._onPointerDown);
     el.addEventListener('pointerup', this._onPointerUp);
+    el.addEventListener('pointerleave', this._onPointerLeave);
   }
 
   /**
@@ -83,11 +90,8 @@ export class RaycastController {
    */
   _runHysteresis(_dt) {
     if (!this._pointerDirty) {
-      // Brak ruchu myszy — jesli jest committed target, sprawdzamy stale leave
-      if (this._committedTarget) {
-        this._pendingCount--;
-        if (this._pendingCount <= 0) this._commitLeave();
-      }
+      // Brak ruchu myszy — committed hover trzymamy bez zmian. Leave nastąpi
+      // dopiero gdy realny ruch + raycast minie target, lub pointerleave canvasa.
       return;
     }
     this._pointerDirty = false;
@@ -181,6 +185,7 @@ export class RaycastController {
     el.removeEventListener('pointermove', this._onPointerMove);
     el.removeEventListener('pointerdown', this._onPointerDown);
     el.removeEventListener('pointerup', this._onPointerUp);
+    el.removeEventListener('pointerleave', this._onPointerLeave);
     if (this._committedTarget) this._commitLeave();
     this._pendingTarget = null;
     this._pendingCount = 0;
