@@ -37,6 +37,9 @@ export class LabelOverlay {
     const mount = document.getElementById('label-overlay-container');
     if (!mount) throw new Error('LabelOverlay: brak #label-overlay-container w DOM');
     mount.appendChild(this._css2dRenderer.domElement);
+    // CSS2DRenderer's domElement (wrapper div) ma domyślnie pointer-events:auto —
+    // przechwytuje mysz nad sceną i powoduje flicker hover. Wyłączamy explicit.
+    this._css2dRenderer.domElement.style.pointerEvents = 'none';
     // setSize z window.innerWidth/Height — pewne wymiary nawet gdy canvas nie jest jeszcze
     // zlayoutowany w momencie konstruktora.
     this._css2dRenderer.setSize(window.innerWidth, window.innerHeight);
