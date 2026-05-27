@@ -262,24 +262,52 @@ input[type=range]::-webkit-slider-thumb:hover {
    Wong amber #E69F00 (Wong palette CRIT-4 prevention)
    ────────────────────────────────────────────────────────── */
 .disclaimer-banner {
-  position: sticky;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: fixed;
+  bottom: 16px;
+  right: 16px;
+  left: auto;
+  top: auto;
+  max-width: 360px;
   z-index: 100;
-  background-color: rgba(230, 159, 0, 0.15);
-  border-bottom: 1px solid rgba(230, 159, 0, 0.4);
+  background-color: rgba(230, 159, 0, 0.18);
+  border: 1px solid rgba(230, 159, 0, 0.6);
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
   font-family: var(--font-sans);
   color: var(--text-main);
   pointer-events: auto;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .disclaimer-banner__bar {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  padding: 8px 16px;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 14px;
   min-height: 44px;
+}
+
+.disclaimer-banner__ack {
+  align-self: flex-end;
+  min-height: 32px;
+  padding: 6px 12px;
+  border: 1px solid rgba(230, 159, 0, 0.6);
+  border-radius: 6px;
+  background: #E69F00;
+  color: #1f1300;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.disclaimer-banner__ack:hover,
+.disclaimer-banner__ack:focus-visible {
+  background: #f5b53a;
+  outline: 2px solid #E69F00;
+  outline-offset: 2px;
 }
 
 .disclaimer-banner__toggle {
@@ -322,23 +350,29 @@ input[type=range]::-webkit-slider-thumb:hover {
   line-height: 1.5;
 }
 
-/* Collapsed state — bar 8px, tylko ikona widoczna (D-13 "widoczny stale") */
-.disclaimer-banner--collapsed .disclaimer-banner__bar {
-  padding: 0 16px;
-  min-height: 8px;
+/* Collapsed state — kompaktowa ikona "!" w dolnym prawym rogu (D-13 "widoczny stale") */
+.disclaimer-banner--collapsed {
+  max-width: 48px;
+  background-color: rgba(230, 159, 0, 0.85);
+  border: 1px solid rgba(230, 159, 0, 0.9);
 }
 
-.disclaimer-banner--collapsed .disclaimer-banner__content {
+.disclaimer-banner--collapsed .disclaimer-banner__bar {
+  padding: 0;
+  min-height: 44px;
+  justify-content: center;
+  align-items: center;
+}
+
+.disclaimer-banner--collapsed .disclaimer-banner__content,
+.disclaimer-banner--collapsed .disclaimer-banner__ack {
   display: none;
 }
 
-.disclaimer-banner--collapsed .disclaimer-banner__chevron {
-  transform: rotate(180deg);
-}
-
-.disclaimer-banner--collapsed {
-  border-left: 3px solid #E69F00;
-  background-color: rgba(230, 159, 0, 0.6);
+.disclaimer-banner--collapsed .disclaimer-banner__toggle {
+  border: none;
+  background: transparent;
+  color: #1f1300;
 }
 
 /* ──────────────────────────────────────────────────────────
@@ -373,7 +407,7 @@ input[type=range]::-webkit-slider-thumb:hover {
 /* === Phase 4 — top bar StatusPanel === */
 .status-panel {
   position: fixed;
-  top: 56px; /* clear sticky .disclaimer-banner (min-height 44px + ~12px breathing room) */
+  top: 0;
   left: 0;
   right: 0;
   z-index: 50;
@@ -391,6 +425,46 @@ input[type=range]::-webkit-slider-thumb:hover {
   align-items: center;
   gap: 1rem;
   width: 100%;
+}
+
+.status-panel__controls {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex: 1;
+  flex-wrap: wrap;
+}
+
+.status-panel__hamburger {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  color: var(--text-main);
+  font-size: 18px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.status-panel__hamburger:hover,
+.status-panel__hamburger:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+  outline: 2px solid rgba(255, 255, 255, 0.4);
+  outline-offset: 2px;
+}
+
+.status-panel--collapsed {
+  width: auto;
+  right: auto;
+}
+
+.status-panel--collapsed .status-panel__controls {
+  display: none;
 }
 
 .status-panel__icon {
@@ -571,6 +645,7 @@ body.training-complete #status-panel {
 
 /* ── Etykiety 3D (FEEDBACK-06, CSS2DRenderer) ────────────── */
 .label-3d {
+  position: absolute;
   font-size: 13px;
   font-weight: 600;
   line-height: 1.2;

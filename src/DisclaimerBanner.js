@@ -34,12 +34,20 @@ export class DisclaimerBanner {
     }
     this.toggleBtn = this.root.querySelector('.disclaimer-banner__toggle');
     this.contentEl = this.root.querySelector('#disclaimer-banner__content');
+    this.ackBtn = this.root.querySelector('.disclaimer-banner__ack');
 
     const persisted = this._readPersisted();
     this._setExpanded(!persisted);
 
     this._onToggleClick = () => this.toggle();
     this.toggleBtn.addEventListener('click', this._onToggleClick);
+
+    // "Rozumiem" → collapse (D-13: nie dismiss z DOM; tylko zwija do ikony !).
+    this._onAckClick = () => {
+      this._setExpanded(false);
+      this._writePersisted(true);
+    };
+    if (this.ackBtn) this.ackBtn.addEventListener('click', this._onAckClick);
   }
 
   _create() {
@@ -56,13 +64,14 @@ export class DisclaimerBanner {
           aria-expanded="true"
           aria-controls="disclaimer-banner__content">
           <span class="disclaimer-banner__icon" aria-hidden="true">!</span>
-          <span class="disclaimer-banner__chevron" aria-hidden="true">&#9662;</span>
         </button>
         <div id="disclaimer-banner__content" class="disclaimer-banner__content"></div>
+        <button class="disclaimer-banner__ack" type="button"></button>
       </div>
     `;
     // textContent — XSS-safe (RESEARCH § Security threat patterns row 1, T-05-01)
     root.querySelector('#disclaimer-banner__content').textContent = pl.disclaimer.full;
+    root.querySelector('.disclaimer-banner__ack').textContent = pl.disclaimer.acknowledge;
     return root;
   }
 
@@ -106,5 +115,8 @@ export class DisclaimerBanner {
   /** Zwalnia event listener (STATE-03; wywoływane z Application.dispose()). */
   dispose() {
     this.toggleBtn.removeEventListener('click', this._onToggleClick);
+    if (this.ackBtn && this._onAckClick) {
+      this.ackBtn.removeEventListener('click', this._onAckClick);
+    }
   }
 }

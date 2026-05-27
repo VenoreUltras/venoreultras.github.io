@@ -60,14 +60,19 @@ export class StatusPanel {
   _build() {
     this._root.innerHTML = `
       <div class="status-panel__bar">
-        <span class="status-panel__icon" aria-hidden="true"></span>
-        <span class="status-panel__state"></span>
-        <span class="status-panel__score"></span>
-        <span class="difficulty-badge"></span>
-        <button class="status-panel__difficulty-toggle" type="button" aria-pressed="false"></button>
-        <span class="free-roam-indicator"></span>
-        <button class="status-panel__labels-toggle" type="button" aria-pressed="false"></button>
-        <button class="status-panel__hc-toggle" type="button" aria-pressed="false"></button>
+        <button class="status-panel__hamburger" type="button" aria-expanded="true" aria-controls="status-panel-controls">
+          <span class="status-panel__hamburger-icon" aria-hidden="true">☰</span>
+        </button>
+        <div id="status-panel-controls" class="status-panel__controls">
+          <span class="status-panel__icon" aria-hidden="true"></span>
+          <span class="status-panel__state"></span>
+          <span class="status-panel__score"></span>
+          <span class="difficulty-badge"></span>
+          <button class="status-panel__difficulty-toggle" type="button" aria-pressed="false"></button>
+          <span class="free-roam-indicator"></span>
+          <button class="status-panel__labels-toggle" type="button" aria-pressed="false"></button>
+          <button class="status-panel__hc-toggle" type="button" aria-pressed="false"></button>
+        </div>
       </div>
     `;
     this._iconEl             = this._root.querySelector('.status-panel__icon');
@@ -78,6 +83,9 @@ export class StatusPanel {
     this._freeRoamIndicator  = this._root.querySelector('.free-roam-indicator');
     this._labelsBtn          = this._root.querySelector('.status-panel__labels-toggle');
     this._hcBtn              = this._root.querySelector('.status-panel__hc-toggle');
+    this._hamburgerBtn       = this._root.querySelector('.status-panel__hamburger');
+    this._controlsEl         = this._root.querySelector('.status-panel__controls');
+    this._hamburgerBtn.setAttribute('aria-label', pl.ui.statusPanelToggleAria);
 
     this._onHcClick = () => {
       const next = !(this._store.getState().hcOutlineMode);
@@ -98,6 +106,12 @@ export class StatusPanel {
       this._store.getState().toggleLabels();
     };
     this._labelsBtn.addEventListener('click', this._onLabelsClick);
+
+    this._onHamburgerClick = () => {
+      const collapsed = this._root.classList.toggle('status-panel--collapsed');
+      this._hamburgerBtn.setAttribute('aria-expanded', String(!collapsed));
+    };
+    this._hamburgerBtn.addEventListener('click', this._onHamburgerClick);
   }
 
   _wireSubscribers() {
@@ -153,6 +167,9 @@ export class StatusPanel {
     }
     if (this._labelsBtn && this._onLabelsClick) {
       this._labelsBtn.removeEventListener('click', this._onLabelsClick);
+    }
+    if (this._hamburgerBtn && this._onHamburgerClick) {
+      this._hamburgerBtn.removeEventListener('click', this._onHamburgerClick);
     }
     for (const u of this._unsubscribers) u();
     this._unsubscribers = [];

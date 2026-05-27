@@ -12,6 +12,7 @@ export const pl = {
     ariaLabel: 'Zastrzeżenie symulatora',
     toggleExpand: 'Pokaż disclaimer',
     toggleCollapse: 'Zwiń disclaimer',
+    acknowledge: 'Rozumiem',
   },
 
   webgl: {
@@ -44,6 +45,7 @@ export const pl = {
     setDifficultyEgzamin: 'Przełącz na Egzamin',
     labelsToggleOn:      'Etykiety: WŁ',
     labelsToggleOff:     'Etykiety: WYŁ',
+    statusPanelToggleAria: 'Zwiń / rozwiń pasek statusu',
   },
 
   // Komunikaty bledow PhysicsEngine (UI-06 enforcement — wczesniej inline w throw)
