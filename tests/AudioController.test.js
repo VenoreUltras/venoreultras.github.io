@@ -64,7 +64,9 @@ function buildMockCtx() {
 beforeEach(() => {
   mockCtxCurrentTime = 0;
   mockCtx = buildMockCtx();
-  vi.stubGlobal('AudioContext', vi.fn(() => mockCtx));
+  // vi.fn() z function (nie arrow) — wymagane by `new AudioContext()` działało jako constructor
+  const AudioContextCtor = vi.fn(function AudioContext() { return mockCtx; });
+  vi.stubGlobal('AudioContext', AudioContextCtor);
 });
 
 afterEach(() => {
@@ -110,13 +112,12 @@ describe('AudioController — constructor + lazy AudioContext', () => {
     const store = createTrainingStore();
     store.getState().startScenario(minimalScenario);
 
-    const AudioContextMock = vi.fn(() => mockCtx);
-    vi.stubGlobal('AudioContext', AudioContextMock);
-
     // eslint-disable-next-line no-new
     const ctrl = new AudioController({ store });
 
-    expect(AudioContextMock).not.toHaveBeenCalled();
+    // Jeśli AudioContext był tworzony, mockCtx.createGain byłoby wywołane (setup hum/master)
+    expect(mockCtx.createGain).not.toHaveBeenCalled();
+    expect(mockCtx.createOscillator).not.toHaveBeenCalled();
     ctrl.dispose();
   });
 
@@ -146,15 +147,17 @@ describe('AudioController — alarm trigger', () => {
     // Trigger: przejście do 'awaria'
     store.setState({ machineState: 'awaria' });
 
-    // Kontekst powinien być utworzony
-    expect(global.AudioContext).toHaveBeenCalledTimes(1);
-    // 2× burst → 2 oscylatory
-    expect(mockCtx.createOscillator).toHaveBeenCalledTimes(2);
+    // Kontekst powinien być utworzony — masterGain i humOsc tworzone w _getOrCreateContext
+    expect(mockCtx.createGain).toHaveBeenCalled();
+    // _getOrCreateContext tworzy 1 humOsc, playAlarm tworzy 2 burstOsc → łącznie 3
+    expect(mockCtx.createOscillator).toHaveBeenCalledTimes(3);
 
-    // Każdy oscylator ma type='square' i frequency 600Hz
-    const oscCalls = mockCtx.createOscillator.mock.results;
-    for (const result of oscCalls) {
-      const osc = result.value;
+    // Burst osc to results[1] i results[2] (results[0] = humOsc tworzony w _getOrCreateContext)
+    const burstOscs = [
+      mockCtx.createOscillator.mock.results[1].value,
+      mockCtx.createOscillator.mock.results[2].value,
+    ];
+    for (const osc of burstOscs) {
       expect(osc.type).toBe('square');
       expect(osc.frequency.setValueAtTime).toHaveBeenCalledWith(600, expect.any(Number));
     }
@@ -200,10 +203,11 @@ describe('AudioController — confirm trigger', () => {
       steps: { ...s.steps, 'krok-1': { status: 'done' } },
     }));
 
-    expect(mockCtx.createOscillator).toHaveBeenCalledTimes(1);
-    const osc = mockCtx.createOscillator.mock.results[0].value;
-    expect(osc.type).toBe('sine');
-    expect(osc.frequency.setValueAtTime).toHaveBeenCalledWith(880, expect.any(Number));
+    // _getOrCreateContext tworzy humOsc (index 0), playConfirm tworzy confirmOsc (index 1)
+    expect(mockCtx.createOscillator).toHaveBeenCalledTimes(2);
+    const confirmOsc = mockCtx.createOscillator.mock.results[1].value;
+    expect(confirmOsc.type).toBe('sine');
+    expect(confirmOsc.frequency.setValueAtTime).toHaveBeenCalledWith(880, expect.any(Number));
 
     ctrl.dispose();
   });
