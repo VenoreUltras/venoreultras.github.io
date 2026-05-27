@@ -258,9 +258,10 @@ describe('LabelOverlay — Declutter (D-Phase5-10)', () => {
 
     overlay.update();
 
-    // Jeden z nich musi mieć translateY(-20px)
-    const transformed = [labelA, labelB].filter(l => l.element.style.transform === 'translateY(-20px)');
-    expect(transformed.length).toBe(1);
+    // Jeden z nich musi mieć marginTop=-20px (declutter używa marginTop by nie kasować
+    // transform ustawionego przez CSS2DRenderer.render).
+    const offset = [labelA, labelB].filter(l => l.element.style.marginTop === '-20px');
+    expect(offset.length).toBe(1);
 
     overlay.dispose();
   });

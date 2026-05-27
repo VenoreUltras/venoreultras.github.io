@@ -30,24 +30,48 @@ export class LabelOverlay {
     this._scene = scene;
     this._camera = camera;
     this._store = store;
+    this._renderer = renderer;
 
     // Tworzenie CSS2DRenderer i montowanie do #label-overlay-container (Plan 05-01)
     this._css2dRenderer = new CSS2DRenderer();
     const mount = document.getElementById('label-overlay-container');
     if (!mount) throw new Error('LabelOverlay: brak #label-overlay-container w DOM');
     mount.appendChild(this._css2dRenderer.domElement);
-    this._css2dRenderer.setSize(renderer.domElement.clientWidth, renderer.domElement.clientHeight);
+    // setSize z window.innerWidth/Height — pewne wymiary nawet gdy canvas nie jest jeszcze
+    // zlayoutowany w momencie konstruktora.
+    this._css2dRenderer.setSize(window.innerWidth, window.innerHeight);
+    // Resize handler — bez tego renderer "zamarznięty" w starszym wymiarze.
+    this._onResize = () => {
+      this._css2dRenderer.setSize(window.innerWidth, window.innerHeight);
+    };
+    window.addEventListener('resize', this._onResize);
 
     /** @type {Map<THREE.Mesh, CSS2DObject>} jeden CSS2DObject per mesh */
     this._labels = new Map();
 
-    // Prebuild — raz w konstruktorze (analog EdgeOutlineController prebuild pattern)
+    // Prebuild — raz w konstruktorze (analog EdgeOutlineController prebuild pattern).
+    // Label.position w lokalnym układzie mesha → wybijamy nad bounding-box mesha
+    // (top + małe offset 0.15) by tekst nie nakładał się na geometrię.
+    const bbox = new THREE.Box3();
     for (const [id, mesh] of interactables) {
       const div = document.createElement('div');
       div.className = 'label-3d';
       div.textContent = mesh.userData.labelPL; // Phase 2 D-Phase2-04 invariant — identity field
       const label = new CSS2DObject(div);
       label.visible = false; // ukryte domyślnie; widoczność przez update() per-frame
+      // Offset Y w lokalnym układzie mesha — nad bounding-boxem mesha (geometria).
+      if (mesh.geometry) {
+        mesh.geometry.computeBoundingBox?.();
+        if (mesh.geometry.boundingBox) {
+          bbox.copy(mesh.geometry.boundingBox);
+          const topY = bbox.max.y;
+          label.position.set(0, topY + 0.15, 0);
+        } else {
+          label.position.set(0, 0.5, 0);
+        }
+      } else {
+        label.position.set(0, 0.5, 0);
+      }
       mesh.add(label); // analog EdgeOutlineController.mesh.add(segs) — child podąża za meshem
       this._labels.set(mesh, label);
     }
@@ -60,7 +84,6 @@ export class LabelOverlay {
         if (!labelsVisible || difficulty === 'egzamin') {
           for (const lbl of this._labels.values()) lbl.visible = false;
         }
-        // Gdy włączone — widoczność ustawiana per-frame przez update() (camera-facing filter)
       },
       { equalityFn: (a, b) => a[0] === b[0] && a[1] === b[1] },
     );
@@ -80,65 +103,58 @@ export class LabelOverlay {
       return;
     }
 
-    // D-Phase5-10: pokaż etykiety meshy znajdujących się PRZED kamerą.
-    // RESEARCH A2 (naive forward=+Z rotated by mesh.quaternion) nie pasuje do
-    // geometrii prasy (BoxGeometry/CylinderGeometry obracane różnie). Zamiast
-    // tego: mesh przed kamerą jeśli (meshWorldPos - cameraPos)·cameraDir > 0.
+    // Pokaż etykiety meshy znajdujących się PRZED kamerą (dot > 0 w cameraDir).
+    // Niewidoczne (za kamerą) ukryte przez label.visible=false — CSS2DRenderer ich
+    // wtedy nie renderuje. Pozycję labelek (transform: translate) liczy WYŁĄCZNIE
+    // CSS2DRenderer.render() — declutter przez marginTop, NIE przez transform.
     this._applyCameraFacing();
     this._css2dRenderer.render(this._scene, this._camera);
-    // D-Phase5-10: declutter — offset labelek które nachodzą na siebie (post-render)
     this._declutter();
   }
 
   /**
-   * Filtr "mesh przed kamerą": vector (meshWorldPos - cameraPos) · cameraDir > 0.
-   * Ukrywa tylko labele za kamerą (rzadkie przy OrbitControls). Wcześniejsze
-   * podejście (worldNormal=+Z) nie pasowało do geometrii prasy — RESEARCH A2.
+   * Pokaż labelki meshy przed kamerą: (meshWorldPos - cameraPos) · cameraDir > 0.
    */
   _applyCameraFacing() {
     const cameraDir = new THREE.Vector3();
     this._camera.getWorldDirection(cameraDir);
     const cameraPos = this._camera.position;
     const meshPos = new THREE.Vector3();
+    const toMesh = new THREE.Vector3();
 
     for (const [mesh, label] of this._labels) {
       mesh.getWorldPosition(meshPos);
-      const dot = meshPos.sub(cameraPos).dot(cameraDir);
-      label.visible = dot > 0;
+      toMesh.copy(meshPos).sub(cameraPos);
+      label.visible = toMesh.dot(cameraDir) > 0;
     }
   }
 
   /**
-   * Declutter: sort po Z (odległość od kamery), O(n²) dla n=15 = 105 par/tick.
-   * T-05-05-PERF: acceptable dla n=15 (RESEARCH §134-135).
-   * Gdy dwa visible labele są bliżej niż 40px ekranu → drugi (dalszy) dostaje
-   * translateY(-20px) by zmniejszyć nakładanie.
+   * Declutter: gdy dwa visible labele są bliżej niż 40px ekranu → drugiemu
+   * (dalszemu w iteracji) ustaw marginTop:-20px by przesunąć WIZUALNIE w górę,
+   * NIE dotykając transform (transform należy do CSS2DRenderer).
    *
-   * UWAGA: jsdom getBoundingClientRect zwraca 0×0 (RESEARCH Pitfall 3) —
-   * testy stubują getBoundingClientRect per label.element.
+   * WAŻNE: NIE czyść transform — kasuje to projekcję 3D→2D wykonaną w render().
+   * marginTop działa addytywnie na pozycję CSS2DObject.
    */
   _declutter() {
-    // Zbierz rects tylko dla visible labelek
-    const visible = [];
+    const visibleEntries = [];
     for (const label of this._labels.values()) {
+      // Reset poprzedniego marginu zanim zmierzymy nową pozycję.
+      label.element.style.marginTop = '';
       if (!label.visible) continue;
-      // Resetuj transform przed obliczeniem (czysty stan)
-      label.element.style.transform = '';
       const rect = label.element.getBoundingClientRect();
       const cx = (rect.left + rect.right) / 2;
       const cy = (rect.top + rect.bottom) / 2;
-      visible.push({ label, cx, cy });
+      visibleEntries.push({ label, cx, cy });
     }
 
-    // O(n²): podwójna pętla — znajdź pary bliżej niż 40px
-    for (let i = 0; i < visible.length; i++) {
-      for (let j = i + 1; j < visible.length; j++) {
-        const dx = visible[i].cx - visible[j].cx;
-        const dy = visible[i].cy - visible[j].cy;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist < 40) {
-          // j jest drugi (dalszy numerycznie) — przesuń go w górę o 20px
-          visible[j].label.element.style.transform = 'translateY(-20px)';
+    for (let i = 0; i < visibleEntries.length; i++) {
+      for (let j = i + 1; j < visibleEntries.length; j++) {
+        const dx = visibleEntries[i].cx - visibleEntries[j].cx;
+        const dy = visibleEntries[i].cy - visibleEntries[j].cy;
+        if (Math.sqrt(dx * dx + dy * dy) < 40) {
+          visibleEntries[j].label.element.style.marginTop = '-20px';
         }
       }
     }
@@ -154,6 +170,11 @@ export class LabelOverlay {
    */
   dispose() {
     if (this._labels.size === 0 && !this._unsub) return; // idempotent guard
+
+    if (this._onResize) {
+      window.removeEventListener('resize', this._onResize);
+      this._onResize = null;
+    }
 
     if (this._unsub) {
       this._unsub();
