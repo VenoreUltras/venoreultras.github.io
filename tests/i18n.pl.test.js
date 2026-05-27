@@ -76,3 +76,80 @@ describe('pl.ui — Phase 4 nowe klucze (D-Phase4-08, D-Phase4-16)', () => {
     expect(pl.ui.stepFormatPrefix).toBe('Krok ');
   });
 });
+
+// Phase 5 (D-Phase5-19, D-Phase5-23, D-Phase5-24): keymap + modals + difficulty labels
+describe('Phase 5 — keymap + modals + difficulty labels', () => {
+  it('Test 1: pl.keymap jest Array o długości 11', () => {
+    expect(Array.isArray(pl.keymap)).toBe(true);
+    expect(pl.keymap).toHaveLength(11);
+  });
+
+  it('Test 2: każdy wpis pl.keymap ma kształt {key, descriptionPL, group: sterowanie|tryby|pomoc}', () => {
+    const validGroups = new Set(['sterowanie', 'tryby', 'pomoc']);
+    for (const entry of pl.keymap) {
+      expect(typeof entry.key).toBe('string');
+      expect(entry.key.length).toBeGreaterThan(0);
+      expect(typeof entry.descriptionPL).toBe('string');
+      expect(entry.descriptionPL.length).toBeGreaterThan(0);
+      expect(validGroups.has(entry.group)).toBe(true);
+    }
+  });
+
+  it('Test 3: pl.keymap zawiera klucze R, T, 1, 2, 3, 4, Space, Esc, H, L, M', () => {
+    const keys = pl.keymap.map(e => e.key);
+    const expected = ['R', 'T', '1', '2', '3', '4', 'Space', 'Esc', 'H', 'L', 'M'];
+    for (const k of expected) {
+      expect(keys).toContain(k);
+    }
+  });
+
+  it('Test 4: pl.modals.help zawiera 12 wymaganych kluczy', () => {
+    const h = pl.modals.help;
+    expect(h).toBeDefined();
+    // 4 sekcje
+    expect(typeof h.title).toBe('string');
+    expect(typeof h.sectionKeymap).toBe('string');
+    expect(typeof h.sectionColors).toBe('string');
+    expect(typeof h.sectionIcons).toBe('string');
+    expect(typeof h.sectionDisclaimer).toBe('string');
+    // 3 nagłówki tabeli
+    expect(typeof h.keyHeader).toBe('string');
+    expect(typeof h.actionHeader).toBe('string');
+    expect(typeof h.groupHeader).toBe('string');
+    // 4 kolory legendy
+    expect(typeof h.colorError).toBe('string');
+    expect(typeof h.colorSuccess).toBe('string');
+    expect(typeof h.colorHint).toBe('string');
+    expect(typeof h.colorHC).toBe('string');
+  });
+
+  it('Test 5: pl.modals.confirmScenarioSwitch ma title/body(fn)/confirm/cancel; body zwraca string z oboma nazwami', () => {
+    const c = pl.modals.confirmScenarioSwitch;
+    expect(typeof c.title).toBe('string');
+    expect(typeof c.body).toBe('function');
+    expect(typeof c.confirm).toBe('string');
+    expect(typeof c.cancel).toBe('string');
+    const result = c.body('uruchomienie', 'awaria');
+    expect(typeof result).toBe('string');
+    expect(result).toContain('uruchomienie');
+    expect(result).toContain('awaria');
+  });
+
+  it('Test 6: pl.modals.closeAria === "Zamknij"', () => {
+    expect(pl.modals.closeAria).toBe('Zamknij');
+  });
+
+  it('Test 7: pl.ui zawiera 5 nowych kluczy Phase 5', () => {
+    expect(typeof pl.ui.difficultyNauka).toBe('string');
+    expect(typeof pl.ui.difficultyEgzamin).toBe('string');
+    expect(typeof pl.ui.freeRoamActive).toBe('string');
+    expect(typeof pl.ui.setDifficultyNauka).toBe('string');
+    expect(typeof pl.ui.setDifficultyEgzamin).toBe('string');
+  });
+
+  it('Test 8: pl.ui.difficultyNauka === "📚 Nauka"; pl.ui.difficultyEgzamin === "📝 Egzamin"; pl.ui.freeRoamActive === "🆓 Tryb wolny"', () => {
+    expect(pl.ui.difficultyNauka).toBe('📚 Nauka');
+    expect(pl.ui.difficultyEgzamin).toBe('📝 Egzamin');
+    expect(pl.ui.freeRoamActive).toBe('🆓 Tryb wolny');
+  });
+});

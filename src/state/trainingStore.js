@@ -44,6 +44,20 @@ export function createTrainingStore(opts = {}) {
       // Default false (większość użytkowników bez wymagania HC). Flag NIE jest resetowany
       // przez startScenario — to user preference, nie scenario state.
       hcOutlineMode: false,
+      // D-Phase5-01: trzy ortogonalne flagi dydaktyczne (single source of truth).
+      // Persist warstwa: Application bootstrap (Plan 05-07), analogicznie jak hcOutlineMode.
+      // 'nauka' domyślnie (D-Phase5-04); freeRoam NIE jest persistowany (eksploracja).
+      difficulty: 'nauka',
+      freeRoam: false,
+      // D-Phase5-01: stan aktywnego modalu — null lub 'help' lub 'confirm-scenario-switch'.
+      // Pauza animacji gdy activeModal !== null (Plan 05-07 — gsap ticker predicate).
+      activeModal: null,
+      // D-Phase5-18: globalny mute audio — persist w 'pm300:audio-mute:v1' przez Application.
+      audioMuted: false,
+      // D-Phase5-10: toggle etykiet 3D przez klawisz L (KeyboardController Plan 05-03).
+      labelsVisible: false,
+      // Wewnętrzny payload dla ConfirmModal (Plan 05-03) — nie eksponowany w UI bezpośrednio.
+      _confirmPayload: null,
       _now: now,
       _spinUpTimerHandle: null,
 
@@ -89,6 +103,51 @@ export function createTrainingStore(opts = {}) {
         machineState: 'gotowa-do-pracy',
         events: [...s.events, { type: 'session.spinUp.done', timestamp: now() }],
       })),
+
+      // ── Phase 5: akcje dydaktyczne (D-Phase5-01..18) ──────────────────────────
+      // UWAGA: żadna z tych akcji NIE pisze do localStorage — persist = Application bootstrap.
+
+      /** Ustawia tryb trudności ('nauka' | 'egzamin'). D-Phase5-01/02/04. */
+      setDifficulty: (mode) => set({ difficulty: mode }),
+
+      /** Przełącza tryb swobodnej eksploracji. D-Phase5-05. */
+      toggleFreeRoam: () => set(s => ({ freeRoam: !s.freeRoam })),
+
+      /**
+       * Przełącza modal pomocy (help overlay). D-Phase5-23.
+       * null → 'help'; 'help' → null (toggle).
+       */
+      toggleHelp: () => set(s => ({
+        activeModal: s.activeModal === 'help' ? null : 'help',
+      })),
+
+      /** Zamyka dowolny aktywny modal. D-Phase5-20 (Esc precedencja). */
+      closeModal: () => set({ activeModal: null, _confirmPayload: null }),
+
+      /**
+       * Otwiera modal potwierdzenia zmiany scenariusza. D-Phase5-07.
+       * @param {{ current: string, next: string }} payload
+       */
+      openConfirmModal: (payload) => set({
+        activeModal: 'confirm-scenario-switch',
+        _confirmPayload: payload,
+      }),
+
+      /** Przełącza globalny mute audio. D-Phase5-18. */
+      toggleMute: () => set(s => ({ audioMuted: !s.audioMuted })),
+
+      /** Przełącza widoczność etykiet 3D. D-Phase5-10. */
+      toggleLabels: () => set(s => ({ labelsVisible: !s.labelsVisible })),
+
+      /**
+       * Resetuje aktywny scenariusz do stanu początkowego. D-Phase5-05.
+       * No-op gdy activeScenario === null.
+       */
+      resetScenario: () => {
+        const scenario = get().activeScenario;
+        if (!scenario) return;
+        get().startScenario(scenario);
+      },
     }))
   );
 }
