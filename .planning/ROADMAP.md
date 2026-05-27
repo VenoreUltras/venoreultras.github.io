@@ -128,14 +128,14 @@ Plans:
   3. Free-roam mode (toggle from main menu / `T` key) lets the trainee click any component without SOP validation; difficulty toggle switches between Nauka (hints, highlights, rationale visible) and Egzamin (no hints, no retry from store, final score only). The store flag is the single source of truth for both modes.
   4. WebAudio cues fire on the right events: alarm (~600 Hz, 2× burst) on critical errors, gentle confirm (~880 Hz, 200ms) on correct steps, low-frequency hum on flywheel rotation proportional to RPM. The `M` key globally mutes all audio and persists the preference.
   5. Keyboard shortcuts work and are documented in a `H`-toggleable help overlay: `R` reset, `T` free-roam, `1-4` scenario select, `Space` start/pauza, `Esc` E-stop, `H` help, `L` labels, `M` mute.
-**Plans:** 6/8 plans executed
+**Plans:** 7/8 plans executed
 Plans:
 - [x] 05-01-PLAN.md — Fundament: trainingStore +5 pól + 8 akcji, pl.keymap + pl.modals, index.html mount points, style.css Phase 5, @floating-ui/dom install
 - [x] 05-02-PLAN.md — AudioController (WebAudio: alarm 600Hz×2, confirm 880Hz/200ms, hum freq=80+1.2·RPM, mute) EDU-03
 - [x] 05-03-PLAN.md — KeyboardController (11 klawiszy + Esc precedencja + modal-block) + HelpModal (keymap+legendy+disclaimer) INTERACT-06
 - [x] 05-04-PLAN.md — TooltipManager (@floating-ui/dom 600ms) + RaycastController onHoverChange DI UI-03
 - [x] 05-05-PLAN.md — EmissiveController stack 3-warstwowy + HighlightManager hint warstwa + LabelOverlay (CSS2DRenderer 15 etykiet) FEEDBACK-06
-- [ ] 05-06-PLAN.md — UI brownfield: StepPanel rationale + StatusPanel difficulty badge/toggle/free-roam indicator + RaycastController free-roam guard UI-04/EDU-01/EDU-02
+- [x] 05-06-PLAN.md — UI brownfield: StepPanel rationale + StatusPanel difficulty badge/toggle/free-roam indicator + RaycastController free-roam guard UI-04/EDU-01/EDU-02
 - [ ] 05-07-PLAN.md — Application wiring + bootstrap localStorage + modal-aware pause + dispose chain + boundaries +5 entries + integration test + manual QA
 - [x] 05-08-PLAN.md — ConfirmModal (D-Phase5-07 scenario switch mid-run) + KeyboardController._loadScenario gating INTERACT-06
 **UI hint**: yes
@@ -201,7 +201,7 @@ These are not requirements per se — they are the policies that prevent the cri
 | 2. Digital Twin Geometry | 6/6 | Complete | 2026-05-06 |
 | 3. Click-to-State Pipeline | 0/5 | Not started | - |
 | 4. Visual Feedback Layer | 2/6 | In progress (Plan 04-01 + 04-02 done; 33%) | - |
-| 5. Educational Layer | 6/8 | In Progress|  |
+| 5. Educational Layer | 7/8 | In Progress|  |
 | 6. Scenarios + Replay + Retry + Export | 0/? | Not started | - |
 | 7. (v2) Differentiators | 0/? | v2 frontier | - |
 
