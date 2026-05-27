@@ -56,6 +56,8 @@ export function createTrainingStore(opts = {}) {
       audioMuted: false,
       // D-Phase5-10: toggle etykiet 3D przez klawisz L (KeyboardController Plan 05-03).
       labelsVisible: false,
+      // Tryb etykiet: false=wszystkie naraz, true=tylko pod kursorem (hover).
+      labelsHoverOnly: false,
       // Wewnętrzny payload dla ConfirmModal (Plan 05-03) — nie eksponowany w UI bezpośrednio.
       _confirmPayload: null,
       _now: now,
@@ -138,6 +140,9 @@ export function createTrainingStore(opts = {}) {
 
       /** Przełącza widoczność etykiet 3D. D-Phase5-10. */
       toggleLabels: () => set(s => ({ labelsVisible: !s.labelsVisible })),
+
+      /** Przełącza tryb hover-only dla etykiet 3D. */
+      toggleLabelsHoverOnly: () => set(s => ({ labelsHoverOnly: !s.labelsHoverOnly })),
 
       /**
        * Resetuje aktywny scenariusz do stanu początkowego. D-Phase5-05.

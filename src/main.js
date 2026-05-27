@@ -156,6 +156,8 @@ export class Application {
     this.raycastController._onHoverChange = (id, mesh) => {
       if (id) this.tooltipManager.onHoverEnter(id, this.sceneSetup.renderer.domElement);
       else this.tooltipManager.onHoverLeave();
+      // LabelOverlay tryb hover-only — śledzi bieżący hovered mesh.
+      this.labelOverlay.onHoverChange(id, mesh);
     };
 
     // Dev-only: expose Application na window dla manualnego QA (D-Phase5-Discretion).

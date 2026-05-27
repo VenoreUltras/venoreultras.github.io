@@ -48,6 +48,8 @@ export class LabelOverlay {
 
     /** @type {Map<THREE.Mesh, CSS2DObject>} jeden CSS2DObject per mesh */
     this._labels = new Map();
+    /** Bieżąco hover'owany mesh — wpina się przez onHoverChange callback z RaycastController. */
+    this._hoveredMesh = null;
 
     // Prebuild — raz w konstruktorze (analog EdgeOutlineController prebuild pattern).
     // Label.position w lokalnym układzie mesha → wybijamy nad bounding-box mesha
@@ -93,8 +95,16 @@ export class LabelOverlay {
    * Wpięte do Application.tickables przez main.js (Plan 05-07).
    * Per-frame: sprawdza flagi store, stosuje camera-facing filter i declutter.
    */
+  /**
+   * Wpięte przez Application — RaycastController.onHoverChange(id, mesh).
+   * Aktualizuje wewnętrzny pointer hover'owanego mesha (używany w trybie labelsHoverOnly).
+   */
+  onHoverChange(_id, mesh) {
+    this._hoveredMesh = mesh ?? null;
+  }
+
   update() {
-    const { labelsVisible, difficulty } = this._store.getState();
+    const { labelsVisible, difficulty, labelsHoverOnly } = this._store.getState();
     const visible = labelsVisible && difficulty !== 'egzamin';
 
     if (!visible) {
@@ -103,10 +113,17 @@ export class LabelOverlay {
       return;
     }
 
-    // Pokaż etykiety meshy znajdujących się PRZED kamerą (dot > 0 w cameraDir).
-    // Niewidoczne (za kamerą) ukryte przez label.visible=false — CSS2DRenderer ich
-    // wtedy nie renderuje. Pozycję labelek (transform: translate) liczy WYŁĄCZNIE
-    // CSS2DRenderer.render() — declutter przez marginTop, NIE przez transform.
+    if (labelsHoverOnly) {
+      // Tylko etykieta hover'owanego mesha widoczna.
+      for (const [mesh, label] of this._labels) {
+        label.visible = mesh === this._hoveredMesh;
+      }
+      this._css2dRenderer.render(this._scene, this._camera);
+      this._declutter();
+      return;
+    }
+
+    // Tryb "wszystkie naraz" — filtr camera-facing (mesh przed kamerą).
     this._applyCameraFacing();
     this._css2dRenderer.render(this._scene, this._camera);
     this._declutter();

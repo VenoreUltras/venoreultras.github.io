@@ -71,6 +71,7 @@ export class StatusPanel {
           <button class="status-panel__difficulty-toggle" type="button" aria-pressed="false"></button>
           <span class="free-roam-indicator"></span>
           <button class="status-panel__labels-toggle" type="button" aria-pressed="false"></button>
+          <button class="status-panel__labels-mode" type="button" aria-pressed="false"></button>
           <button class="status-panel__hc-toggle" type="button" aria-pressed="false"></button>
         </div>
       </div>
@@ -82,6 +83,7 @@ export class StatusPanel {
     this._difficultyToggleBtn = this._root.querySelector('.status-panel__difficulty-toggle');
     this._freeRoamIndicator  = this._root.querySelector('.free-roam-indicator');
     this._labelsBtn          = this._root.querySelector('.status-panel__labels-toggle');
+    this._labelsModeBtn      = this._root.querySelector('.status-panel__labels-mode');
     this._hcBtn              = this._root.querySelector('.status-panel__hc-toggle');
     this._hamburgerBtn       = this._root.querySelector('.status-panel__hamburger');
     this._controlsEl         = this._root.querySelector('.status-panel__controls');
@@ -107,6 +109,11 @@ export class StatusPanel {
     };
     this._labelsBtn.addEventListener('click', this._onLabelsClick);
 
+    this._onLabelsModeClick = () => {
+      this._store.getState().toggleLabelsHoverOnly();
+    };
+    this._labelsModeBtn.addEventListener('click', this._onLabelsModeClick);
+
     this._onHamburgerClick = () => {
       const collapsed = this._root.classList.toggle('status-panel--collapsed');
       this._hamburgerBtn.setAttribute('aria-expanded', String(!collapsed));
@@ -123,6 +130,7 @@ export class StatusPanel {
       this._store.subscribe((s) => s.difficulty,      () => this._render()),
       this._store.subscribe((s) => s.freeRoam,        () => this._render()),
       this._store.subscribe((s) => s.labelsVisible,   () => this._render()),
+      this._store.subscribe((s) => s.labelsHoverOnly, () => this._render()),
     );
   }
 
@@ -154,6 +162,12 @@ export class StatusPanel {
     this._labelsBtn.setAttribute('aria-pressed', String(labelsOn));
     this._labelsBtn.textContent = labelsOn ? pl.ui.labelsToggleOn : pl.ui.labelsToggleOff;
     this._labelsBtn.disabled = s.difficulty === 'egzamin';
+
+    // Labels mode toggle — widoczny tylko gdy etykiety włączone i nie egzamin.
+    const hoverOnly = !!s.labelsHoverOnly;
+    this._labelsModeBtn.setAttribute('aria-pressed', String(hoverOnly));
+    this._labelsModeBtn.textContent = hoverOnly ? pl.ui.labelsModeHover : pl.ui.labelsModeAll;
+    this._labelsModeBtn.disabled = !labelsOn || s.difficulty === 'egzamin';
   }
 
   /** Zwalnia subskrypcje + click listenery (STATE-03). Idempotent. */
@@ -167,6 +181,9 @@ export class StatusPanel {
     }
     if (this._labelsBtn && this._onLabelsClick) {
       this._labelsBtn.removeEventListener('click', this._onLabelsClick);
+    }
+    if (this._labelsModeBtn && this._onLabelsModeClick) {
+      this._labelsModeBtn.removeEventListener('click', this._onLabelsModeClick);
     }
     if (this._hamburgerBtn && this._onHamburgerClick) {
       this._hamburgerBtn.removeEventListener('click', this._onHamburgerClick);

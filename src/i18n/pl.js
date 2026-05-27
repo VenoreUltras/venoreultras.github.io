@@ -45,6 +45,8 @@ export const pl = {
     setDifficultyEgzamin: 'Przełącz na Egzamin',
     labelsToggleOn:      'Etykiety: WŁ',
     labelsToggleOff:     'Etykiety: WYŁ',
+    labelsModeAll:       'Tryb: wszystkie',
+    labelsModeHover:     'Tryb: hover',
     statusPanelToggleAria: 'Zwiń / rozwiń pasek statusu',
   },
 
