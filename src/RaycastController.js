@@ -154,6 +154,10 @@ export class RaycastController {
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist >= CLICK_DRAG_THRESHOLD_PX) return; // drag — nie click
 
+    // D-Phase5-05: free-roam pauzuje SOP — klik = no-op (hover wciąż działa,
+    // tooltipy i etykiety 3D nadal renderują, wyjście z free-roam wraca do bieżącego kroku).
+    if (this._store.getState().freeRoam) return;
+
     const rect = this._renderer.domElement.getBoundingClientRect();
     this._ndc.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     this._ndc.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
