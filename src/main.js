@@ -13,8 +13,16 @@ import { EdgeOutlineController } from './highlight/EdgeOutlineController.js';
 import { StatusPanel } from './ui/StatusPanel.js';
 import { StepPanel } from './ui/StepPanel.js';
 import uruchomienie from './training/scenarios/uruchomienie.js';
+import { TooltipManager } from './education/TooltipManager.js';
+import { AudioController } from './education/AudioController.js';
+import { KeyboardController } from './education/KeyboardController.js';
+import { LabelOverlay } from './education/LabelOverlay.js';
+import { HelpModal } from './ui/HelpModal.js';
+import { ConfirmModal } from './ui/ConfirmModal.js';
 
 const HC_STORAGE_KEY = 'pm300:hc-outline:v1'; // D-Phase4-09
+const DIFFICULTY_KEY = 'pm300:difficulty:v1';  // D-Phase5-04
+const AUDIO_MUTE_KEY = 'pm300:audio-mute:v1';  // D-Phase5-18
 
 export class Application {
   constructor() {
@@ -47,6 +55,30 @@ export class Application {
       catch { return false; }
     })();
     this.store.setState({ hcOutlineMode: hcInitial });
+
+    // D-Phase5-04 + D-Phase5-18 bootstrap. Graceful catch (analog hcInitial pattern T-04-13).
+    const difficultyInitial = (() => {
+      try {
+        const v = localStorage.getItem(DIFFICULTY_KEY);
+        return (v === 'nauka' || v === 'egzamin') ? v : 'nauka';
+      } catch { return 'nauka'; }
+    })();
+    const audioMutedInitial = (() => {
+      try { return localStorage.getItem(AUDIO_MUTE_KEY) === 'true'; }
+      catch { return false; }
+    })();
+    this.store.setState({ difficulty: difficultyInitial, audioMuted: audioMutedInitial });
+
+    // Persist warstwa — store-side toggleMute/setDifficulty zmienia state, Application
+    // zapisuje do localStorage. trainingStore zachowuje boundary clean (D-Phase5-26).
+    this._unsubscribers.push(
+      this.store.subscribe((s) => s.difficulty, (v) => {
+        try { localStorage.setItem(DIFFICULTY_KEY, v); } catch { /* silent */ }
+      }),
+      this.store.subscribe((s) => s.audioMuted, (v) => {
+        try { localStorage.setItem(AUDIO_MUTE_KEY, String(v)); } catch { /* silent */ }
+      }),
+    );
 
     // D-Phase3-01: auto-start scenariusza uruchomienie (Phase 6 doda dropdown wyboru).
     this.store.getState().startScenario(uruchomienie);
@@ -85,15 +117,65 @@ export class Application {
     // isRunning → #status-text z UI.updateStatus() (D-Phase4-02/D-Phase4-17).
     this.statusPanel = new StatusPanel({ store: this.store });
     this.stepPanel = new StepPanel({ store: this.store });
+
+    // Phase 5 D-Phase5-25 — kolejność tworzenia:
+    // (a) AudioController (boundary-clean, store-only — niezależny)
+    this.audioController = new AudioController({ store: this.store });
+
+    // (b) KeyboardController (window listener)
+    this.keyboardController = new KeyboardController({
+      store: this.store,
+      scenarios: { uruchomienie },
+    });
+
+    // (c) LabelOverlay (per-frame tickable)
+    this.labelOverlay = new LabelOverlay({
+      scene: this.sceneSetup.scene,
+      camera: this.sceneSetup.camera,
+      renderer: this.sceneSetup.renderer,
+      interactables: this.pressModel.getInteractables(),
+      store: this.store,
+    });
+    this.tickables.push(() => this.labelOverlay.update());  // FEEDBACK-06 per-frame
+
+    // (d) HelpModal (DOM modal blocker)
+    this.helpModal = new HelpModal({ store: this.store });
+
+    // (d.2) ConfirmModal — modal dla potwierdzenia zmiany scenariusza mid-run (D-Phase5-07).
+    this.confirmModal = new ConfirmModal({
+      store: this.store,
+      scenarios: { uruchomienie },
+    });
+
+    // (e) TooltipManager — PO RaycastController, by wpiąć onHoverChange callback po-hoc
+    this.tooltipManager = new TooltipManager({
+      store: this.store,
+      raycastController: this.raycastController,
+    });
+    // Po-hoc assign onHoverChange (TooltipManager wymaga raycastController instancji, circular dep w ctor)
+    this.raycastController._onHoverChange = (id, mesh) => {
+      if (id) this.tooltipManager.onHoverEnter(id, this.sceneSetup.renderer.domElement);
+      else this.tooltipManager.onHoverLeave();
+    };
+
+    // Dev-only: expose Application na window dla manualnego QA (D-Phase5-Discretion).
+    if (import.meta.env?.DEV) {
+      globalThis.__app__ = this;
+    }
   }
 
   simulationTick(deltaTime) {
     // GSAP 3.x ticker: deltaTime w milisekundach (kontrakt zablokowany ~3.15.0 pin w package.json — INFRA-03).
     const dtSeconds = deltaTime / 1000;
+    const state = this.store.getState();
+    const { machineState, activeModal } = state;
+
+    // D-Phase5-23 + D-Phase5-28: pauza integration gdy modal otwarty.
+    // Rendering + raycaster + label overlay nadal działają (poza tym predicatem).
+    const integrationPaused = activeModal !== null;
 
     // Prędkość kątowa wyprowadzona z machineState (SOP-aware spin-up). Slider RPM ustawia target.
     // Manual override: gdy operator naciśnie Start/Stop, slider tor sumuje się gdy machineState idle.
-    const machineState = this.store.getState().machineState;
     const targetRpm = this.ui.speed;
     const targetOmega = (targetRpm / 60) * Math.PI * 2;
     const spinActive = machineState === 'rozpedzanie'
@@ -107,7 +189,7 @@ export class Application {
     const delta = desiredOmega - this._omega;
     this._omega += Math.sign(delta) * Math.min(Math.abs(delta), maxStep);
 
-    if (this._omega > 0) {
+    if (!integrationPaused && this._omega > 0) {
       this.currentAngle = (this.currentAngle + this._omega * dtSeconds) % (Math.PI * 2);
     }
 
@@ -121,6 +203,10 @@ export class Application {
 
     // Aktualizujemy dane w UI
     this.ui.updateTelemetry(this.currentAngle, displacement);
+
+    // D-Phase5-17: AudioController hum freq/gain proporcjonalny do effective RPM.
+    const rpmEffective = (this._omega / (Math.PI * 2)) * 60;
+    this.audioController?.updateHum(rpmEffective);
   }
 
   /**
@@ -138,12 +224,21 @@ export class Application {
     for (const unsub of this._unsubscribers) unsub();
     this._unsubscribers = [];
     if (this.disclaimerBanner) this.disclaimerBanner.dispose();
-    if (this.stepPanel) this.stepPanel.dispose();                       // Phase 4
-    if (this.statusPanel) this.statusPanel.dispose();                   // Phase 4
-    if (this.highlightManager) this.highlightManager.dispose();         // Phase 4
-    if (this.edgeOutlineController) this.edgeOutlineController.dispose(); // Phase 4
-    if (this.raycastController) this.raycastController.dispose();       // PRZED emissive — _commitLeave woła clearLayer
-    if (this.emissiveController) this.emissiveController.dispose();     // PO RaycastController (T-04-14)
+    // Phase 4
+    if (this.stepPanel) this.stepPanel.dispose();
+    if (this.statusPanel) this.statusPanel.dispose();
+    // Phase 5 — odwrotna kolejność tworzenia
+    if (this.tooltipManager) this.tooltipManager.dispose();
+    if (this.confirmModal) this.confirmModal.dispose();
+    if (this.helpModal) this.helpModal.dispose();
+    if (this.labelOverlay) this.labelOverlay.dispose();              // PRZED sceneSetup.dispose (CSS2DRenderer order)
+    if (this.keyboardController) this.keyboardController.dispose();
+    if (this.audioController) this.audioController.dispose();        // PRZED emissive (logiczna kolejność)
+    // Phase 4 cd.
+    if (this.highlightManager) this.highlightManager.dispose();
+    if (this.edgeOutlineController) this.edgeOutlineController.dispose();
+    if (this.raycastController) this.raycastController.dispose();    // PRZED emissive — _commitLeave woła clearLayer (T-04-14)
+    if (this.emissiveController) this.emissiveController.dispose();
     this.pressModel.disposeMaterials();  // TWIN-11 SC5 — release GPU buffers (materials + textures) na HMR
     this.sceneSetup.dispose();
   }
