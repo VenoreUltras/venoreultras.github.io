@@ -42,6 +42,8 @@ export const pl = {
     freeRoamActive:      '🆓 Tryb wolny',
     setDifficultyNauka:  'Przełącz na Naukę',
     setDifficultyEgzamin: 'Przełącz na Egzamin',
+    labelsToggleOn:      'Etykiety: WŁ',
+    labelsToggleOff:     'Etykiety: WYŁ',
   },
 
   // Komunikaty bledow PhysicsEngine (UI-06 enforcement — wczesniej inline w throw)

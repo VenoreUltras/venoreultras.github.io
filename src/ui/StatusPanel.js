@@ -66,6 +66,7 @@ export class StatusPanel {
         <span class="difficulty-badge"></span>
         <button class="status-panel__difficulty-toggle" type="button" aria-pressed="false"></button>
         <span class="free-roam-indicator"></span>
+        <button class="status-panel__labels-toggle" type="button" aria-pressed="false"></button>
         <button class="status-panel__hc-toggle" type="button" aria-pressed="false"></button>
       </div>
     `;
@@ -75,6 +76,7 @@ export class StatusPanel {
     this._difficultyBadge    = this._root.querySelector('.difficulty-badge');
     this._difficultyToggleBtn = this._root.querySelector('.status-panel__difficulty-toggle');
     this._freeRoamIndicator  = this._root.querySelector('.free-roam-indicator');
+    this._labelsBtn          = this._root.querySelector('.status-panel__labels-toggle');
     this._hcBtn              = this._root.querySelector('.status-panel__hc-toggle');
 
     this._onHcClick = () => {
@@ -91,6 +93,11 @@ export class StatusPanel {
       this._store.getState().setDifficulty(cur === 'nauka' ? 'egzamin' : 'nauka');
     };
     this._difficultyToggleBtn.addEventListener('click', this._onDifficultyClick);
+
+    this._onLabelsClick = () => {
+      this._store.getState().toggleLabels();
+    };
+    this._labelsBtn.addEventListener('click', this._onLabelsClick);
   }
 
   _wireSubscribers() {
@@ -101,6 +108,7 @@ export class StatusPanel {
       this._store.subscribe((s) => s.hcOutlineMode,   () => this._render()),
       this._store.subscribe((s) => s.difficulty,      () => this._render()),
       this._store.subscribe((s) => s.freeRoam,        () => this._render()),
+      this._store.subscribe((s) => s.labelsVisible,   () => this._render()),
     );
   }
 
@@ -126,6 +134,12 @@ export class StatusPanel {
     // Free-roam indicator (visibility-toggle by uniknąć reflowu — UI-SPEC §336-341)
     this._freeRoamIndicator.textContent = pl.ui.freeRoamActive;
     this._freeRoamIndicator.style.visibility = s.freeRoam ? 'visible' : 'hidden';
+
+    // Labels toggle (D-Phase5-22: w trybie egzamin disabled, force-hide)
+    const labelsOn = !!s.labelsVisible;
+    this._labelsBtn.setAttribute('aria-pressed', String(labelsOn));
+    this._labelsBtn.textContent = labelsOn ? pl.ui.labelsToggleOn : pl.ui.labelsToggleOff;
+    this._labelsBtn.disabled = s.difficulty === 'egzamin';
   }
 
   /** Zwalnia subskrypcje + click listenery (STATE-03). Idempotent. */
@@ -136,6 +150,9 @@ export class StatusPanel {
     // D-Phase5-01: odpięcie listenera difficulty toggle (T-05-06-LEAK mitigation, Test S9).
     if (this._difficultyToggleBtn && this._onDifficultyClick) {
       this._difficultyToggleBtn.removeEventListener('click', this._onDifficultyClick);
+    }
+    if (this._labelsBtn && this._onLabelsClick) {
+      this._labelsBtn.removeEventListener('click', this._onLabelsClick);
     }
     for (const u of this._unsubscribers) u();
     this._unsubscribers = [];
