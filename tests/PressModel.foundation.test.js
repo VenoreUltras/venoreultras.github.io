@@ -42,14 +42,34 @@ describe('PressModel — Phase 8-01 GEO-01 fundament + 4 śruby kotwowe', () => 
     pressModel = new PressModel(scene);
   });
 
-  it('dodaje DOKŁADNIE 7 decoration meshes total (2 łożyska + 1 fundament + 4 śruby)', () => {
+  it('fundament + 4 śruby = 5 decoration meshes z _buildFoundation (filtr po geometrii — odporny na rozszerzanie poolu)', () => {
     const decorations = collectDecorations(pressModel);
-    expect(decorations).toHaveLength(7);
+    // Filtr: fundament (BoxGeometry 6×0.8×4) + 4 śruby (CylinderGeometry h=0.3).
+    // Phase 8-02+ pool decoration rośnie (np. stół 3×0.3×2.5) — filtr po wymiarach utrzymuje
+    // pierwotny invariant 08-01 "_buildFoundation produkuje DOKŁADNIE 5 meshes".
+    const foundationBox = decorations.filter((d) =>
+      d.geometry.type === 'BoxGeometry' &&
+      Math.abs(d.geometry.parameters.width - 6) < 1e-6 &&
+      Math.abs(d.geometry.parameters.height - 0.8) < 1e-6 &&
+      Math.abs(d.geometry.parameters.depth - 4) < 1e-6
+    );
+    const anchorBolts = decorations.filter((d) =>
+      d.geometry.type === 'CylinderGeometry' &&
+      Math.abs(d.geometry.parameters.height - 0.3) < 1e-6
+    );
+    expect(foundationBox).toHaveLength(1);
+    expect(anchorBolts).toHaveLength(4);
   });
 
   it('fundament: dokładnie 1 BoxGeometry(6, 0.8, 4) @ world (0, -0.4, 0)', () => {
     const decorations = collectDecorations(pressModel);
-    const boxes = decorations.filter((d) => d.geometry.type === 'BoxGeometry');
+    // Filtr fundamentu po pełnych wymiarach — Phase 8-02 dodaje stół BoxGeometry(3, 0.3, 2.5).
+    const boxes = decorations.filter((d) =>
+      d.geometry.type === 'BoxGeometry' &&
+      Math.abs(d.geometry.parameters.width - 6) < 1e-6 &&
+      Math.abs(d.geometry.parameters.height - 0.8) < 1e-6 &&
+      Math.abs(d.geometry.parameters.depth - 4) < 1e-6
+    );
     expect(boxes).toHaveLength(1);
     const foundation = boxes[0];
     const p = foundation.geometry.parameters;
@@ -101,12 +121,24 @@ describe('PressModel — Phase 8-01 GEO-01 fundament + 4 śruby kotwowe', () => 
 
   it('fundament + śruby są dziećmi this.group (NIE this.shaftAxis) — KIN-01 invariant', () => {
     const decorations = collectDecorations(pressModel);
-    // 5 nowych meshes (fundament + 4 śruby) musi być bezpośrednim dzieckiem this.group
-    const directGroupDecorations = pressModel.group.children.filter(
-      (c) => c.userData && c.userData.kind === 'decoration'
-    );
-    // 2 łożyska Phase 7 + 5 fundament-related = 7
-    expect(directGroupDecorations).toHaveLength(7);
+    // Filtr fundament + śruby (08-01 scope). Phase 8-02+ doda kolejne decoration meshes
+    // (np. stół) — invariant pozostaje: 5 meshes z _buildFoundation jest bezpośrednim
+    // dzieckiem this.group.
+    const foundationMeshes = decorations.filter((d) => {
+      if (d.geometry.type === 'BoxGeometry') {
+        const p = d.geometry.parameters;
+        return Math.abs(p.width - 6) < 1e-6 && Math.abs(p.height - 0.8) < 1e-6 && Math.abs(p.depth - 4) < 1e-6;
+      }
+      if (d.geometry.type === 'CylinderGeometry') {
+        return Math.abs(d.geometry.parameters.height - 0.3) < 1e-6;
+      }
+      return false;
+    });
+    expect(foundationMeshes).toHaveLength(5);
+    // Każdy fundament-mesh jest direct child this.group
+    for (const m of foundationMeshes) {
+      expect(pressModel.group.children).toContain(m);
+    }
     // Negatywne: shaftAxis nie zawiera żadnego decoration
     const shaftDecorations = [];
     pressModel.shaftAxis.traverse((node) => {

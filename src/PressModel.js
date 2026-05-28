@@ -168,6 +168,7 @@ export class PressModel {
     this._buildClutchLever();
     this._buildBearings();    // Phase 7 ANCHOR-02 — D-Phase7-03
     this._buildFoundation();  // Phase 8 GEO-01 — D-Phase8-01
+    this._buildWorktable();   // Phase 8 GEO-02 — D-Phase8-02
 
     // Inicjalizacja położenia
     this.update(0);
@@ -829,6 +830,66 @@ export class PressModel {
       bolt.userData = { kind: 'decoration' };
       this.group.add(bolt);
     }
+  }
+
+  /**
+   * GEO-02 / D-Phase8-02: stół roboczy (worktable) jako decoration mesh pod suwakiem.
+   *
+   * Wizualnie: industrial steel grey płyta na której teoretycznie ląduje sztanca tłocząca.
+   * Bez stołu suwak "uderza w nic" w dolnej martwej strefie.
+   *
+   * Geometria:
+   *  - BoxGeometry(3, 0.3, 2.5) — wymiary z D-Phase8-02 fallback (szerokość X=3, grubość Y=0.3,
+   *    głębokość Z=2.5; mniejszy niż fundament 6×4 by wizualnie wyróżniał się jako "płyta na fundamencie").
+   *  - Centrowany w X=0, Z=0 (pod suwakiem).
+   *
+   * Pozycja Y — DERYWOWANA z PhysicsEngine (NIE hardcoded):
+   *   sliderMinCenterY = shaftY - (r + l)      // max currentY dla r<l zawsze @ angle=0
+   *   sliderMinBottom  = sliderMinCenterY - sliderHalfH     // dolna krawędź suwaka @ najniżej
+   *   tableTopY        = sliderMinBottom - clearance        // gwarantowana szczelina
+   *   tableCenterY     = tableTopY - tableHeight/2
+   *
+   * Dla LIVE r=0.8, l=4.0, shaftY=8.0, sliderHalfH=0.75, clearance=0.2:
+   *   sliderMinCenterY = 8.0 - 4.8 = 3.2
+   *   sliderMinBottom  = 3.2 - 0.75 = 2.45
+   *   tableTopY        = 2.45 - 0.2 = 2.25
+   *   tableCenterY     = 2.25 - 0.15 = 2.10
+   *
+   * Dlaczego derywacja a nie hardcode: gdy użytkownik zmieni this.r / this.l / this.shaftY
+   * (linie 19-21), stół auto-dopasuje się i NIE skoliduje z suwakiem. CONTEXT fallback
+   * y≈5.0 jest nieaktualny (zakładał r=0.5, l=2.0 — historyczne wartości).
+   *
+   * Clearance 0.2 — D-Phase8-02 user choice ("tuż pod dolną martwą strefą"). Wystarczy
+   * by wizualnie był widoczny rowek, nie tak dużo by stół wyglądał na zawieszony w powietrzu.
+   *
+   * Boundary:
+   *  - Dziecko `this.group` (NIE `this.shaftAxis`) → KIN-01 invariant (statyczny pod update).
+   *  - `userData.kind === 'decoration'` (minimalny kontrakt).
+   *  - NIE wywołuje `_registerInteractable` (D-Phase8-05) → poza `getInteractables()`
+   *    i `getMeshDictionary()` (oba nadal size===15).
+   *  - Brak wpisu w `src/i18n/pl.js parts` (decoration nie wymaga labelPL).
+   *
+   * Materiał: lokalny MeshStandardMaterial (placeholder per D-Phase8-06).
+   * Phase 9 MAT-04 dorobi PBR steel-look (metalness/roughness/normal map).
+   */
+  _buildWorktable() {
+    // Derywacja pozycji Y z PhysicsEngine (auto-fit do najniższej pozycji suwaka).
+    // Dla r<l (geometria slider-crank): max currentY @ angle=0 → min slider.center.y.
+    const sliderMinCenterY = this.shaftY - (this.r + this.l);
+    const sliderHalfH = 0.75;                                  // BoxGeometry(2, 1.5, 1.5)
+    const sliderMinBottom = sliderMinCenterY - sliderHalfH;
+    const tableHeight = 0.3;
+    const clearance = 0.2;                                     // D-Phase8-02 user choice
+    const tableCenterY = sliderMinBottom - clearance - tableHeight / 2;
+
+    const matWorktable = new THREE.MeshStandardMaterial({ color: 0x5a5a5a, roughness: 0.5 });
+    const worktableGeo = new THREE.BoxGeometry(3, tableHeight, 2.5);
+    const worktable = new THREE.Mesh(worktableGeo, matWorktable);
+    worktable.position.set(0, tableCenterY, 0);
+    worktable.castShadow = true;
+    worktable.receiveShadow = true;
+    worktable.userData = { kind: 'decoration' };
+    this.group.add(worktable); // NIE shaftAxis — KIN-01 invariant
   }
 
   // === CRIT-6 + CRIT-7 INVARIANT (Phase 1 lock-in, Phase 2 enforcement) ===
