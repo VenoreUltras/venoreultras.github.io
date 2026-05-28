@@ -823,37 +823,47 @@ export class PressModel {
 
   /**
    * Aktualizuje pozycje elementów maszyny na podstawie kąta obrotu wału.
+   *
+   * D-Phase7-01 (side-view kinematics):
+   * - Wał obraca się wokół osi X (poziomej, wchodzącej w ekran przy kamerze z +X).
+   * - Eccentric pin orbituje w płaszczyźnie YZ (lokalny offset (0, r, 0) pod rotation.x).
+   * - Korbowód odchyla się w płaszczyźnie YZ (rotation.x = atan2(dz, -dy)).
+   * - Suwak porusza się wyłącznie wzdłuż osi Y (Y-only invariant).
+   *
    * @param {number} angle - Kąt obrotu wału (radiany)
    */
   update(angle) {
-    // Wał obraca się wokół własnej osi (Z)
-    this.shaftAxis.rotation.z = -angle;
+    // Defensive reset: nie pozwól żeby stara wartość rotation.z (sprzed Phase 7 fix)
+    // pozostała w obiekcie po HMR.
+    this.shaftAxis.rotation.z = 0;
+    // Wał obraca się wokół własnej osi X (side-view; flywheel jak tarcza zegara front-facing).
+    this.shaftAxis.rotation.x = -angle;
 
     // Pobieramy aktualną globalną pozycję sworznia mimośrodu (reuse pre-allocated Vector3, zero GC).
     const pinPosition = this._pinPosition;
     this.eccentricPin.getWorldPosition(pinPosition);
 
-    // Obliczamy pozycję y suwaka używając PhysicsEngine (odległość od wału w dół)
-    // Fizyka operuje w płaszczyźnie, zakładamy że wał jest w (0,0)
-    // Ze wzoru: pozycja dolna to y = r * cos(alpha) + sqrt(l^2 - (r * sin(alpha))^2)
-    // Skoro nasze 0 to shaftY, suwak znajduje się na Y = shaftY - y
+    // Obliczamy pozycję y suwaka używając PhysicsEngine (odległość od wału w dół).
+    // Formula: y = r * cos(alpha) + sqrt(l^2 - (r * sin(alpha))^2) opisuje displacement
+    // wzdłuż osi przeciwnej do offset radialnego (tu: oś Y), niezależnie od osi rotacji wału.
+    // Sygnatura PhysicsEngine niezmieniona (D-Phase7-04).
     const currentY = PhysicsEngine.calculateSliderPosition(angle, this.r, this.l);
     this.slider.position.y = this.shaftY - currentY;
-    
-    // Suwak porusza się tylko w pionie
+
+    // Suwak porusza się tylko w pionie (Y-only invariant).
     this.slider.position.x = 0;
     this.slider.position.z = 0;
 
     // Korbowód łączy sworzeń mimośrodu z suwakiem.
-    // Ustawiamy górny koniec korbowodu na pinPosition
+    // Ustawiamy górny koniec korbowodu na pinPosition (pin orbituje w YZ).
     this.rod.position.copy(pinPosition);
-    
-    // Obliczamy kąt odchylenia korbowodu
-    // Różnica w X między suwakiem a sworzniem (X sworznia to r * -sin(angle))
-    const dx = this.slider.position.x - pinPosition.x;
+
+    // Defensive reset: zeruj rotation.z sprzed Phase 7 fix.
+    this.rod.rotation.z = 0;
+    // Obliczamy kąt odchylenia korbowodu w płaszczyźnie YZ.
+    const dz = this.slider.position.z - pinPosition.z;
     const dy = this.slider.position.y - pinPosition.y;
-    // Kąt odchylenia korbowodu od pionu
-    const rodAngle = Math.atan2(dx, -dy); 
-    this.rod.rotation.z = rodAngle;
+    const rodAngle = Math.atan2(dz, -dy);
+    this.rod.rotation.x = rodAngle;
   }
 }
