@@ -1,5 +1,19 @@
 # PM-300 Trener — Symulator Szkoleniowy Prasy Mimośrodowej
 
+## Current State
+
+**Shipped:** ✅ v1.0 — SOP Training Layer (2026-05-28)
+
+Pełny SOP trener PM-300 wdrożony: 4 scenariusze grywalne (uruchomienie / cykl-pracy / zatrzymanie / awaria), redundant visual feedback (color + icon + text), warstwa edukacyjna (tooltipy + audio + 3D labels + difficulty modes), replay z scrubberem, eksport sesji do polskiego PDF + JSON. 6 faz, 38 planów, 642/642 testów zielonych. Audit: `.planning/v1.0-MILESTONE-AUDIT.md`.
+
+## Next Milestone Goals
+
+_None defined._ Możliwe kierunki:
+- **v1.1 (polish)** — domknięcie tech debt z audytu: ConfirmModal boundary entry, formalna re-verification odroczonych manual checkpointów (60 FPS, deuteranopia, WebAudio cues), font-size scaling
+- **v2 (Phase 7 frontier)** — DIFF-01..04: ExplodedViewController (klawisz E), randomized fault eventy, supervisor recommendations w PDF, high-contrast theme
+
+Uruchom `/gsd-new-milestone <version>` żeby zdefiniować scope następnego milestone.
+
 ## What This Is
 
 Przeglądarkowy digital twin prasy mimośrodowej PM-300, który uczy operatorów poprawnej procedury obsługi maszyny przez interakcję z modelem 3D. Uczeń przechodzi przez SOP (Standard Operating Procedure) — uruchomienie, cykl pracy, zatrzymanie, reakcja na awarię — klikając rzeczywiste komponenty w scenie i zaznaczając kroki kontrolne na liście. Narzędzie szkoleniowe dla operatorów wewnątrz zakładu, działające w pełni po stronie klienta (bez backendu).
@@ -22,21 +36,7 @@ Uczeń, który ukończy sesję szkoleniową w symulatorze, wie w jakiej kolejno�
 
 ### Active
 
-<!-- Hipotezy do walidacji przez wdrożenie. -->
-
-- [ ] Pełny digital twin: dodanie koła zamachowego, sprzęgła, hamulca, układu smarowania, osłon bezpieczeństwa, E-stop, panelu sterowania — każde jako osobny, klikalny mesh
-- [ ] Raycasting: każdy istotny komponent procedury jest klikalny w przestrzeni 3D
-- [ ] System SOP — silnik procedur obsługujący 4 scenariusze v1: **uruchomienie**, **cykl pracy**, **zatrzymanie**, **reakcja na awarię**
-- [ ] `validateStep()` — funkcja rygorystycznie sprawdzająca kolejność kroków, blokująca akcje wykonane poza kolejnością
-- [ ] Feedback wizualny: pulsujące czerwone podświetlenie pominiętych/błędnych elementów, zielone podświetlenie dla poprawnie wykonanych (emissive material / shader)
-- [ ] Hybrydowa interakcja: klik w 3D dla akcji manipulacyjnych (E-stop, osłony, dźwignia sprzęgła) + zaznaczanie checkboxów dla inspekcji wzrokowej (np. "sprawdziłem poziom oleju")
-- [ ] Lista kontrolna kroków w panelu bocznym — widoczna instrukcja po polsku, status każdego kroku (oczekuje / aktywny / poprawny / błąd)
-- [ ] Status maszyny w czasie rzeczywistym: "Oczekiwanie na inspekcję" / "Gotowa do pracy" / "W cyklu" / "Zatrzymana" / "Awaria — błąd procedury"
-- [ ] Warstwa dydaktyczna: tooltipy on-hover (nazwa + funkcja komponentu), tryb wolny (free roam bez procedury), exploded view, krótki opis "o co chodzi w tym kroku"
-- [ ] Scoring lokalny: liczba błędów, czas ukończenia, lista pominiętych kroków, zapis w `localStorage`, eksport sesji do JSON i PDF
-- [ ] Centralny store stanu szkolenia (Zustand vanilla) — synchronizacja kroków SOP, statusu komponentów 3D, wskaźników UI
-- [ ] Testy jednostkowe logiki procedury (Vitest) — kolejność, walidacja, scoring, edge case'y
-- [ ] Wszystkie nowe stringi UI, komunikaty błędów, dokumentacja JSDoc — po polsku
+_None._ Wszystkie wymagania v1.0 dostarczone — zobacz archiwum milestone v1.0 (`milestones/v1.0-REQUIREMENTS.md` + `milestones/v1.0-ROADMAP.md`). Nowy milestone definiuje się przez `/gsd-new-milestone <version>`.
 
 ### Out of Scope
 
@@ -78,12 +78,12 @@ Uczeń, który ukończy sesję szkoleniową w symulatorze, wie w jakiej kolejno�
 
 | Decision | Rationale | Outcome |
 |----------|-----------|---------|
-| Pełny digital twin (koło zamachowe, sprzęgło, hamulec, smarowanie, osłony, E-stop, panel) | Brief zakłada, że każdy element procedury musi być klikalny w 3D — minimum dydaktyczne nie pokryje cyklu pracy ani reakcji na awarię | — Pending |
-| Zustand vanilla jako store stanu szkolenia | Framework-agnostic, ~1.2KB, native vanilla API (nie tylko React), idealny pod Three.js bez warstwy reaktywnej; trend 2026 dla małych aplikacji 3D | — Pending |
-| Hybrydowa interakcja (klik 3D + checklist) | Realistyczne — niektóre kroki SOP to fizyczna manipulacja (E-stop, osłony), inne to inspekcja wzrokowa ("sprawdziłem olej") nie wymagająca interakcji 3D | — Pending |
-| Vitest jako framework testowy | Native dla Vite, brak dodatkowej konfiguracji, jsdom dla testów DOM-zależnych — zero overhead | — Pending |
-| Scoring lokalny (localStorage + eksport JSON/PDF) | Brak backendu w v1; szkolenie wewnętrzne firmy — brygadzista może dostać plik mailem | — Pending |
-| Pełen zakres SOP v1 (4 procedury) | Bez procedury cyklu / stop / awarii narzędzie nie pokrywa najczęstszych sytuacji wypadkowych — kompromis dydaktyczny niedopuszczalny | — Pending |
+| Pełny digital twin (koło zamachowe, sprzęgło, hamulec, smarowanie, osłony, E-stop, panel) | Brief zakłada, że każdy element procedury musi być klikalny w 3D — minimum dydaktyczne nie pokryje cyklu pracy ani reakcji na awarię | ✓ Validated v1.0 |
+| Zustand vanilla jako store stanu szkolenia | Framework-agnostic, ~1.2KB, native vanilla API (nie tylko React), idealny pod Three.js bez warstwy reaktywnej; trend 2026 dla małych aplikacji 3D | ✓ Validated v1.0 |
+| Hybrydowa interakcja (klik 3D + checklist) | Realistyczne — niektóre kroki SOP to fizyczna manipulacja (E-stop, osłony), inne to inspekcja wzrokowa ("sprawdziłem olej") nie wymagająca interakcji 3D | ✓ Validated v1.0 |
+| Vitest jako framework testowy | Native dla Vite, brak dodatkowej konfiguracji, jsdom dla testów DOM-zależnych — zero overhead | ✓ Validated v1.0 |
+| Scoring lokalny (localStorage + eksport JSON/PDF) | Brak backendu w v1; szkolenie wewnętrzne firmy — brygadzista może dostać plik mailem | ✓ Validated v1.0 |
+| Pełen zakres SOP v1 (4 procedury) | Bez procedury cyklu / stop / awarii narzędzie nie pokrywa najczęstszych sytuacji wypadkowych — kompromis dydaktyczny niedopuszczalny | ✓ Validated v1.0 |
 | Polski we wszystkich nowych stringach i JSDoc | Spójność z istniejącą bazą; odbiorca to polskojęzyczni operatorzy | ✓ Good |
 
 ## Evolution
@@ -104,4 +104,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-05 after initialization*
+*Last updated: 2026-05-28 after milestone v1.0 archive*
