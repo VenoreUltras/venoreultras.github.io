@@ -90,13 +90,22 @@ export class ReplayEngine {
       this._applyEventToStore(fresh, this._events[i]);
     }
     const snap = fresh.getState();
+    // Phase 6 Pitfall 1: tylko step.done/step.violation niosą `angle`. Dla event'ów bez
+    // angle używamy ostatniej znanej wartości (lub 0), żeby prasa nie skakała do zera.
+    let resolvedAngle = 0;
+    for (let i = idx; i >= 0; i--) {
+      if (typeof this._events[i]?.angle === 'number') {
+        resolvedAngle = this._events[i].angle;
+        break;
+      }
+    }
     this._liveStore.setState({
       steps: snap.steps,
       currentStepId: snap.currentStepId,
       machineState: snap.machineState,
       meshStates: snap.meshStates,
       scoring: snap.scoring,
-      _currentAngle: this._events[idx]?.angle ?? 0,
+      _currentAngle: resolvedAngle,
     });
     this._eventIdx = idx + 1;
     this._cursor = (this._events[idx]?.timestamp ?? this._startTimestamp) - this._startTimestamp;

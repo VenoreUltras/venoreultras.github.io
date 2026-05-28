@@ -275,7 +275,20 @@ export class Application {
     // GSAP 3.x ticker: deltaTime w milisekundach (kontrakt zablokowany ~3.15.0 pin w package.json — INFRA-03).
     const dtSeconds = deltaTime / 1000;
     const state = this.store.getState();
-    const { machineState, activeModal } = state;
+    const { machineState, activeModal, replayOpen } = state;
+
+    // Phase 6 — podczas replay: czytaj angle Z store (ReplayEngine.scrubTo go ustawia),
+    // pomiń integration, ale dalej renderuj scene + telemetry dla wizualnego feedbacku.
+    if (replayOpen) {
+      const replayAngle = state._currentAngle ?? 0;
+      this.currentAngle = replayAngle;
+      this.pressModel.update(replayAngle);
+      const displacement = PhysicsEngine.calculateSliderPosition(
+        replayAngle, this.pressModel.r, this.pressModel.l,
+      );
+      this.ui.updateTelemetry(replayAngle, displacement);
+      return;
+    }
 
     // D-Phase5-23 + D-Phase5-28: pauza integration gdy modal otwarty.
     // Rendering + raycaster + label overlay nadal działają (poza tym predicatem).
