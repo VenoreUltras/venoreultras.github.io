@@ -53,9 +53,12 @@ describe('PressModel — Phase 8-01 GEO-01 fundament + 4 śruby kotwowe', () => 
       Math.abs(d.geometry.parameters.height - 0.8) < 1e-6 &&
       Math.abs(d.geometry.parameters.depth - 4) < 1e-6
     );
+    // Phase 9-02 dodaje InstancedMesh bolts (R=0.12) i welds (R=0.05) — wykluczamy radiusem 0.1.
     const anchorBolts = decorations.filter((d) =>
+      !d.isInstancedMesh &&
       d.geometry.type === 'CylinderGeometry' &&
-      Math.abs(d.geometry.parameters.height - 0.3) < 1e-6
+      Math.abs(d.geometry.parameters.height - 0.3) < 1e-6 &&
+      Math.abs(d.geometry.parameters.radiusTop - 0.1) < 1e-6
     );
     expect(foundationBox).toHaveLength(1);
     expect(anchorBolts).toHaveLength(4);
@@ -86,10 +89,13 @@ describe('PressModel — Phase 8-01 GEO-01 fundament + 4 śruby kotwowe', () => 
 
   it('4 śruby kotwowe: CylinderGeometry(0.1, 0.1, 0.3) w 4 narożnikach (±2.8, -0.15, ±1.8)', () => {
     const decorations = collectDecorations(pressModel);
-    // Wyłączamy łożyska (height=0.8) — śruby mają height=0.3
+    // Wyłączamy łożyska (height=0.8) — śruby mają height=0.3.
+    // Phase 9-02 dodaje InstancedMesh bolts (R=0.12) i welds (R=0.05) — filtrujemy radiusem 0.1.
     const bolts = decorations.filter(
-      (d) => d.geometry.type === 'CylinderGeometry' &&
-             Math.abs(d.geometry.parameters.height - 0.3) < 1e-6
+      (d) => !d.isInstancedMesh &&
+             d.geometry.type === 'CylinderGeometry' &&
+             Math.abs(d.geometry.parameters.height - 0.3) < 1e-6 &&
+             Math.abs(d.geometry.parameters.radiusTop - 0.1) < 1e-6
     );
     expect(bolts).toHaveLength(4);
     for (const bolt of bolts) {
@@ -125,12 +131,15 @@ describe('PressModel — Phase 8-01 GEO-01 fundament + 4 śruby kotwowe', () => 
     // (np. stół) — invariant pozostaje: 5 meshes z _buildFoundation jest bezpośrednim
     // dzieckiem this.group.
     const foundationMeshes = decorations.filter((d) => {
+      if (d.isInstancedMesh) return false; // Phase 9-02 InstancedMesh excluded
       if (d.geometry.type === 'BoxGeometry') {
         const p = d.geometry.parameters;
         return Math.abs(p.width - 6) < 1e-6 && Math.abs(p.height - 0.8) < 1e-6 && Math.abs(p.depth - 4) < 1e-6;
       }
       if (d.geometry.type === 'CylinderGeometry') {
-        return Math.abs(d.geometry.parameters.height - 0.3) < 1e-6;
+        // Phase 8 anchor bolts: R=0.1 H=0.3 (Phase 9-02 welds R=0.05 wykluczone radiusem)
+        return Math.abs(d.geometry.parameters.height - 0.3) < 1e-6 &&
+               Math.abs(d.geometry.parameters.radiusTop - 0.1) < 1e-6;
       }
       return false;
     });

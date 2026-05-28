@@ -243,6 +243,7 @@ export class PressModel {
     this._buildWorktable();   // Phase 8 GEO-02 — D-Phase8-02
     this._buildBearingBrackets(); // Phase 8 GEO-03 — D-Phase8-03
     this._buildCrossBrace();      // Phase 8 GEO-04 — D-Phase8-04 (minimal mid-brace)
+    this._buildBoltsAndWelds();   // Phase 9 DEC-01 — D-Phase9-02 (3 InstancedMesh + 8 welds)
 
     // Inicjalizacja położenia
     this.update(0);
@@ -1044,6 +1045,157 @@ export class PressModel {
     midBrace.receiveShadow = true;
     midBrace.userData = { kind: 'decoration' };
     this.group.add(midBrace); // NIE shaftAxis — KIN-01 invariant
+  }
+
+  /**
+   * DEC-01 / D-Phase9-02: industrial bolts (InstancedMesh × 3 groups, 20 śrub total)
+   * + spawy (8 osobnych Cylinder na łączeniach kluczowych).
+   *
+   * Performance: 20 śrub jako 3 InstancedMesh = 3 draw calls zamiast 20 (shared geom+mat).
+   * Spawy (8) — pozostają jako osobne Mesh: count<10, instancing nie daje znaczących oszczędności,
+   * a osobne meshy ułatwiają per-position fine-tuning.
+   *
+   * Grupy śrub:
+   *  - bolts-frame-base (8): 4 narożniki + 4 boki górnej powierzchni fundamentu (y=0)
+   *  - bolts-brackets (8): 4 na lewy bracket + 4 na prawy bracket (front face brackets z=0)
+   *  - bolts-safety-panel (4): 4 narożniki górnej powierzchni pulpitu (panel @ (0, 2, 2.5))
+   *
+   * Materiał śrub: lokalny matAnchorBolt (color 0x1a1a1a, metalness 0.8, roughness 0.9 — PBR
+   * z 09-01 baseline upgrade). Reuse koncepcji z _buildFoundation().
+   * Materiał spawów: this.matBody (Grupa A z 09-01 — "wytopiony" look identyczny ze stalą ramy).
+   *
+   * Spawy:
+   *  - 4 mid-brace ↔ kolumna (po 1 z każdej strony) — small cylinder R=0.05 H=0.3.
+   *    Mid-brace @ (0, 4, -1) ends at x=±2; kolumna inner face x=±1. Spawy @ (±1.95, ~4, -1).
+   *  - 4 bracket ↔ łożysko (po 2 per bracket) — bracket @ (±2, 8, -0.5), bearing @ (±2, 8, 0).
+   *    Spawy @ (±1.7, 8, ~-0.2) i (±2.3, 8, ~-0.2).
+   *
+   * Boundary:
+   *  - Wszystkie nowe meshy dzieci `this.group` (NIE `this.shaftAxis`) → KIN-01 static.
+   *  - `userData.kind === 'decoration'` (minimalny kontrakt, identical do Phase 8 decoration).
+   *  - NIE wywołują `_registerInteractable` → poza `getInteractables()` / `getMeshDictionary()`.
+   *  - Brak wpisów w `src/i18n/pl.js parts`.
+   */
+  _buildBoltsAndWelds() {
+    // Shared geometries (12 segments dla śrub — radial perf compromise; 8 dla spawów — mniejsze).
+    const boltGeo = new THREE.CylinderGeometry(0.12, 0.12, 0.3, 12);
+    const weldGeo = new THREE.CylinderGeometry(0.05, 0.05, 0.3, 8);
+
+    // Shared material dla wszystkich 3 InstancedMesh — PBR anchor-bolt look (rozszerzenie
+    // matAnchorBolt z _buildFoundation, ale tym razem z metalness 0.8 zgodnie z Grupa A PBR
+    // z 09-01). Lokalny żeby nie kolidować z matAnchorBolt z _buildFoundation (różne instancje,
+    // disposeAll() w MaterialRegistry nie obejmuje tych dwóch — ale są używane TYLKO tutaj
+    // i tam, więc renderer.dispose() pochwyci je przy zamknięciu sceny).
+    const matBolts = new THREE.MeshStandardMaterial({
+      color: 0x1a1a1a,
+      metalness: 0.8,
+      roughness: 0.9,
+    });
+
+    // === Grupa 1: bolts-frame-base (8 śrub na górnej powierzchni fundamentu) ===
+    // Fundament: BoxGeometry(6, 0.8, 4) @ y=-0.4 → top face y=0; X ∈ [-3, 3], Z ∈ [-2, 2].
+    // 8 pozycji: 4 narożniki (lekko do wewnątrz: ±2.5, ±1.5) + 4 środki boków.
+    // Śruby y=0.15 → środek śruby na top face (y=0) + half-height 0.15.
+    const frameBolts = new THREE.InstancedMesh(boltGeo, matBolts, 8);
+    frameBolts.userData = { id: 'bolts-frame-base', kind: 'decoration' };
+    const frameBoltPositions = [
+      [-2.5, 0.15, -1.5], [ 2.5, 0.15, -1.5],
+      [-2.5, 0.15,  1.5], [ 2.5, 0.15,  1.5],
+      [ 0.0, 0.15, -1.5], [ 0.0, 0.15,  1.5],
+      [-2.5, 0.15,  0.0], [ 2.5, 0.15,  0.0],
+    ];
+    const matrix = new THREE.Matrix4();
+    for (let i = 0; i < 8; i++) {
+      const [x, y, z] = frameBoltPositions[i];
+      matrix.makeTranslation(x, y, z);
+      frameBolts.setMatrixAt(i, matrix);
+    }
+    frameBolts.instanceMatrix.needsUpdate = true;
+    frameBolts.castShadow = true;
+    this.group.add(frameBolts);
+
+    // === Grupa 2: bolts-brackets (8 śrub na bracket'ach łożysk) ===
+    // Bracket lewy @ (-2, 8, -0.5) Box(0.4, 1, 1) → front face z=0, X face x=-1.8 (-2+0.2),
+    // Y range [7.5, 8.5]. 4 śruby na front face per bracket: corners @ z=0.05 (lekko wystają).
+    // Lewy: 4 corners przy front face x=-1.8: (-1.8, 7.6, 0.05), (-1.8, 8.4, 0.05) ← top edge corners.
+    //                                                                  Plus inner/outer X variants.
+    // Faktycznie: 4 śruby per bracket na licu front (Z=0+), w 4 cornerach face'a.
+    // Front face brackets: 4 corners of (X-range, Y-range) rectangle on z=0 face.
+    // Lewy bracket front face corners: (-2.15, 7.6, 0.05), (-1.85, 7.6, 0.05), (-2.15, 8.4, 0.05), (-1.85, 8.4, 0.05)
+    // Bracket szerokość X=0.4 → half=0.2; X corners @ -2±0.15 = [-2.15, -1.85].
+    // Bracket wysokość Y=1.0 → half=0.5; Y corners @ 8±0.4 = [7.6, 8.4].
+    const bracketBolts = new THREE.InstancedMesh(boltGeo, matBolts, 8);
+    bracketBolts.userData = { id: 'bolts-brackets', kind: 'decoration' };
+    const bracketBoltPositions = [
+      // Lewy bracket — 4 corners front face
+      [-2.15, 7.6, 0.05], [-1.85, 7.6, 0.05],
+      [-2.15, 8.4, 0.05], [-1.85, 8.4, 0.05],
+      // Prawy bracket — 4 corners front face (symetria względem YZ)
+      [ 1.85, 7.6, 0.05], [ 2.15, 7.6, 0.05],
+      [ 1.85, 8.4, 0.05], [ 2.15, 8.4, 0.05],
+    ];
+    // Śruby brackets orientowane na zewnątrz (osie Z): rotation X=π/2 by walce wskazywały Z.
+    // CylinderGeometry default oś Y → rotateX(π/2) ustawi oś walca wzdłuż Z (głowica do widza).
+    for (let i = 0; i < 8; i++) {
+      const [x, y, z] = bracketBoltPositions[i];
+      const m = new THREE.Matrix4().makeRotationX(Math.PI / 2);
+      m.setPosition(x, y, z);
+      bracketBolts.setMatrixAt(i, m);
+    }
+    bracketBolts.instanceMatrix.needsUpdate = true;
+    bracketBolts.castShadow = true;
+    this.group.add(bracketBolts);
+
+    // === Grupa 3: bolts-safety-panel (4 śruby na corner'ach pulpitu) ===
+    // safetyPanel @ (0, 2, 2.5) Box(1.6, 0.1, 0.7) → top face y=2.05; X ∈ [-0.8, 0.8], Z ∈ [2.15, 2.85].
+    // 4 corners pulpitu: (±0.7, 2.1, 2.5±0.25). Y=2.1 → środek śruby (top face y=2.05 + half 0.05; bolt sticks up 0.15).
+    // Note: panel jest dzieckiem this.safetyPanel grupy w (0,2,2.5); ale tu dodajemy InstancedMesh
+    // do this.group (NIE this.safetyPanel) → pozycje WORLD coords. KIN-static — safetyPanel jest statyczny.
+    const panelBolts = new THREE.InstancedMesh(boltGeo, matBolts, 4);
+    panelBolts.userData = { id: 'bolts-safety-panel', kind: 'decoration' };
+    const panelBoltPositions = [
+      [-0.7, 2.1, 2.25], [ 0.7, 2.1, 2.25],
+      [-0.7, 2.1, 2.75], [ 0.7, 2.1, 2.75],
+    ];
+    for (let i = 0; i < 4; i++) {
+      const [x, y, z] = panelBoltPositions[i];
+      matrix.makeTranslation(x, y, z);
+      panelBolts.setMatrixAt(i, matrix);
+    }
+    panelBolts.instanceMatrix.needsUpdate = true;
+    panelBolts.castShadow = true;
+    this.group.add(panelBolts);
+
+    // === Spawy: 8 osobnych Cylinder (4 mid-brace + 4 bracket-bearing) ===
+    // Mid-brace @ (0, 4, -1) Box(4, 0.4, 0.4) ends at x=±2. Kolumny inner faces @ x=±1.
+    // Spawy @ łączeniach mid-brace ↔ kolumna: (±1.95, 4, -1) — po jednym z każdej strony,
+    // dolnej i górnej krawędzi mid-brace dla pełności (4 spawy total na tej grupie).
+    // Spaw orientowany horyzontalnie (oś walca wzdłuż X) — rotateZ(π/2).
+    const weldPositions = [
+      // Mid-brace ↔ kolumna lewa (2 spawy: top i bottom edge mid-brace @ x≈-1.95)
+      { pos: [-1.95, 4.15, -1], rotZ: Math.PI / 2 },
+      { pos: [-1.95, 3.85, -1], rotZ: Math.PI / 2 },
+      // Mid-brace ↔ kolumna prawa (analogicznie)
+      { pos: [ 1.95, 4.15, -1], rotZ: Math.PI / 2 },
+      { pos: [ 1.95, 3.85, -1], rotZ: Math.PI / 2 },
+      // Bracket lewy ↔ łożysko (2 spawy: at junction bracket front face z=0 ↔ bearing)
+      // Bracket @ (-2, 8, -0.5), bearing @ (-2, 8, 0). Junction interface @ z≈-0.05.
+      // Spaw poziomy wzdłuż X przy junction, top/bottom of bearing diameter (R=0.6 → y=8±0.3).
+      { pos: [-2, 8.25, -0.1], rotZ: Math.PI / 2 },
+      { pos: [-2, 7.75, -0.1], rotZ: Math.PI / 2 },
+      // Bracket prawy ↔ łożysko (analogicznie)
+      { pos: [ 2, 8.25, -0.1], rotZ: Math.PI / 2 },
+      { pos: [ 2, 7.75, -0.1], rotZ: Math.PI / 2 },
+    ];
+    for (let i = 0; i < weldPositions.length; i++) {
+      const { pos, rotZ } = weldPositions[i];
+      const weld = new THREE.Mesh(weldGeo, this.matBody);
+      weld.position.set(pos[0], pos[1], pos[2]);
+      weld.rotation.z = rotZ;
+      weld.castShadow = true;
+      weld.userData = { id: `spaw-${i}`, kind: 'decoration' };
+      this.group.add(weld);
+    }
   }
 
   // === CRIT-6 + CRIT-7 INVARIANT (Phase 1 lock-in, Phase 2 enforcement) ===
