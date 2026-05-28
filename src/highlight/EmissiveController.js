@@ -40,6 +40,13 @@ export class EmissiveController {
     this._layers = new Map();
     /** @type {Map<THREE.Mesh, gsap.core.Timeline>} aktywne pulse/flash timelines per mesh */
     this._timelines = new Map();
+    // Phase 9 — D-Phase9-05 (MAT-04): pre-flash MaterialState backup. Defensywnie zapisujemy
+    // pełny stan PBR (color + emissive + metalness + roughness) PRZED flash timeline, żeby
+    // przyszłe rozszerzenia flash mogły mutować PBR bez leak'u do baseline. Phase 4 flash
+    // modyfikuje tylko emissiveIntensity → save/restore są semantycznie no-op dla obecnego
+    // kodu (regression-safe vs 24 testy HighlightManager).
+    /** @type {Map<THREE.Mesh, {color: number, emissive: number, metalness: number, roughness: number}>} */
+    this._preFlashBackups = new Map();
     for (const mesh of this._meshes) {
       // D-Phase5-03: stack 3-warstwowy (baseline < hover < hint < state)
       this._layers.set(mesh, { hover: null, hint: null, state: null });
@@ -110,7 +117,11 @@ export class EmissiveController {
         this._timelines.set(mesh, newTl);
       } else if (slot.state.flash) {
         // D-Phase4-12: dwa tweens, łącznie ~800ms.
-        const newTl = gsap.timeline()
+        // D-Phase9-05 (MAT-04): snapshot pełnego MaterialState PRZED gsap timeline, restore w onComplete.
+        this._savePreFlash(mesh);
+        const newTl = gsap.timeline({
+          onComplete: () => this._restorePreFlash(mesh),
+        })
           .to(mesh.material, { emissiveIntensity: FLASH_PEAK, duration: FLASH_RISE_S, ease: 'power1.in' })
           .to(mesh.material, { emissiveIntensity: 0,         duration: FLASH_FALL_S, ease: 'power2.out' });
         this._timelines.set(mesh, newTl);
@@ -129,9 +140,47 @@ export class EmissiveController {
       mesh.material.emissiveIntensity = HOVER_INTENSITY;
     } else {
       // baseline
+      // D-Phase9-05 (MAT-04): jeśli wcześniej był flash → restore pełnego PBR snapshotu.
+      // No-op gdy brak backupu (idempotent get + early return w _restorePreFlash).
+      this._restorePreFlash(mesh);
       mesh.material.emissive.setHex(BASELINE_HEX);
       mesh.material.emissiveIntensity = BASELINE_INTENSITY;
     }
+  }
+
+  /**
+   * Phase 9 — D-Phase9-05 (MAT-04): backup pełnego MaterialState (color + emissive +
+   * metalness + roughness) PRZED flash. Idempotent — jeśli backup już istnieje, NIE
+   * nadpisuje (rapid retry safety: drugi setLayer(flash) zachowuje original pre-flash
+   * snapshot, żeby restore wracał do prawdziwie pre-pierwszego-flash state).
+   * @param {THREE.Mesh} mesh
+   */
+  _savePreFlash(mesh) {
+    if (!mesh.material || !mesh.material.emissive) return;
+    if (this._preFlashBackups.has(mesh)) return; // idempotent
+    const m = mesh.material;
+    this._preFlashBackups.set(mesh, {
+      color: m.color ? m.color.getHex() : 0x000000,
+      emissive: m.emissive.getHex(),
+      metalness: typeof m.metalness === 'number' ? m.metalness : 0,
+      roughness: typeof m.roughness === 'number' ? m.roughness : 1,
+    });
+  }
+
+  /**
+   * Phase 9 — D-Phase9-05 (MAT-04): restore pełnego MaterialState po flash. Po restore
+   * backup jest usuwany — kolejny flash może zrobić fresh snapshot.
+   * @param {THREE.Mesh} mesh
+   */
+  _restorePreFlash(mesh) {
+    const backup = this._preFlashBackups.get(mesh);
+    if (!backup) return;
+    const m = mesh.material;
+    if (m.color) m.color.setHex(backup.color);
+    if (m.emissive) m.emissive.setHex(backup.emissive);
+    if (typeof m.metalness === 'number') m.metalness = backup.metalness;
+    if (typeof m.roughness === 'number') m.roughness = backup.roughness;
+    this._preFlashBackups.delete(mesh);
   }
 
   /**
@@ -148,5 +197,6 @@ export class EmissiveController {
       mesh.material.emissiveIntensity = BASELINE_INTENSITY;
     }
     this._layers.clear();
+    this._preFlashBackups.clear(); // D-Phase9-05 (MAT-04)
   }
 }
