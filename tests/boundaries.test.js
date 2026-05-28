@@ -88,6 +88,10 @@ const FORBIDDEN_PAIRS = [
   // JsonExporter — może document (download anchor) ale NIE THREE/training/state/store/highlight/replay.
   { file: 'src/export/JsonExporter.js',
     mustNotImport: ['three', 'gsap', '../training/', './training/', '../state/', './state/', '../ui/', './ui/', '../highlight/', './highlight/', '../replay/', './replay/', '@floating-ui/dom'] },
+  // Phase 6 (Plan 06-07): PdfExporter — dynamic import('jspdf'); może document + i18n; NIE THREE/training/state/ui/highlight/replay.
+  // computeMetrics + scenarioTitlePL wstrzykiwane przez consumer (DI z SessionOverlay).
+  { file: 'src/export/PdfExporter.js',
+    mustNotImport: ['three', 'gsap', '../training/', './training/', '../state/', './state/', '../ui/', './ui/', '../highlight/', './highlight/', '../replay/', './replay/', '@floating-ui/dom'] },
 
   // Phase 6 (Plan 06-04): replay layer + drawer boundaries.
   // ReplayEngine — TYLKO createTrainingStore z ../state/ (re-execution); gsap przez DI.
