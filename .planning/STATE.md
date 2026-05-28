@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 06 in progress (4/8 plans)
-last_updated: "2026-05-28T06:38:29.848Z"
+status: Phase 06 code complete (8/8 plans wired; Plan 06-08 manual checkpoint pending)
+last_updated: "2026-05-28T08:43:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 38
-  completed_plans: 37
-  percent: 83
+  completed_plans: 38
+  percent: 100
 ---
 
 # Project State: PM-300 Trener
@@ -32,8 +32,8 @@ progress:
 
 ## Current Position
 
-Phase: 06 (scenarios-replay-retry-export) — EXECUTING
-Plan: 7 of 8 (06-01, 06-02, 06-03, 06-04 complete)
+Phase: 06 (scenarios-replay-retry-export) — CODE COMPLETE (Plan 06-08 manual checkpoint pending)
+Plan: 8 of 8 (06-01..06-08 wired; 642/642 tests green; jspdf code-split; manual browser QA Task 3 pending user verification)
 Phase 04 — COMPLETE (267 tests green; UAT 5/5 pass; +5 in-session fixes: main-switch repositioning, wrong-click flash + ordering race, spinup animation, completion overlay)
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
 Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
@@ -73,6 +73,7 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 | Phase 06 P03 | 15min | 3 tasks | 14 files (517/517 tests green) |
 | Phase 06 P04 | ~15min | 2 tasks | 9 files (542/542 tests green; EDU-04 done) |
 | Phase 06 P07 | 25 min | 2 tasks | 13 files |
+| Phase 06 P08 | 45 min | 2 tasks auto + 1 manual checkpoint pending | 3 files (642/642 tests green; jspdf code-split; 11/11 Phase 6 wymagań wired) |
 
 ## Accumulated Context
 
