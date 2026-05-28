@@ -81,6 +81,14 @@ const FORBIDDEN_PAIRS = [
   { file: 'src/ui/HelpModal.js',
     mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/'] },
 
+  // Phase 6 (Plan 06-06): persistence + JsonExporter — pure utility layers.
+  // sessionPersistence — zero imports (pure localStorage + JSON).
+  { file: 'src/persistence/sessionPersistence.js',
+    mustNotImport: ['three', 'gsap', '../training/', './training/', '../state/', './state/', '../ui/', './ui/', '../highlight/', './highlight/', '../education/', './education/', '@floating-ui/dom'] },
+  // JsonExporter — może document (download anchor) ale NIE THREE/training/state/store/highlight/replay.
+  { file: 'src/export/JsonExporter.js',
+    mustNotImport: ['three', 'gsap', '../training/', './training/', '../state/', './state/', '../ui/', './ui/', '../highlight/', './highlight/', '../replay/', './replay/', '@floating-ui/dom'] },
+
   // Phase 6 (Plan 06-04): replay layer + drawer boundaries.
   // ReplayEngine — TYLKO createTrainingStore z ../state/ (re-execution); gsap przez DI.
   { file: 'src/replay/ReplayEngine.js',
