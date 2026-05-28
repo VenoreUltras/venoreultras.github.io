@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 05 complete
-last_updated: "2026-05-28T05:47:08.763Z"
+status: Phase 06 in progress (3/8 plans)
+last_updated: "2026-05-28T07:58:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 38
-  completed_plans: 32
-  percent: 83
+  completed_plans: 35
+  percent: 92
 ---
 
 # Project State: PM-300 Trener
@@ -33,7 +33,7 @@ progress:
 ## Current Position
 
 Phase: 06 (scenarios-replay-retry-export) — EXECUTING
-Plan: 3 of 8
+Plan: 4 of 8 (06-01, 06-02, 06-03 complete)
 Phase 04 — COMPLETE (267 tests green; UAT 5/5 pass; +5 in-session fixes: main-switch repositioning, wrong-click flash + ordering race, spinup animation, completion overlay)
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
 Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
@@ -70,6 +70,7 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 | FPS target on integrated graphics | 60 | n/a (existing demo holds it; new layers must preserve it) |
 | Phase 06 P01 | 10min | 3 tasks | 9 files |
 | Phase 06 P02 | 5min | 2 tasks | 2 files |
+| Phase 06 P03 | 15min | 3 tasks | 14 files (517/517 tests green) |
 
 ## Accumulated Context
 
@@ -181,6 +182,10 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [Phase ?]: Bimanual+machineStateAttest helpery PRZED Branch 3 (Plan 06-01) — early-return zachowuje 4-branchową hierarchię ProcedureEngine bez zagnieżdżenia
 - [Phase ?]: machineStateAttest brak-match zwraca no-op (Plan 06-01) — store w Plan 06-02 dorzuci subscriber (s)=>s.machineState który wywoła attemptMachineStateAttest
 - [Phase ?]: pluralPL używa cached Intl.PluralRules('pl-PL') na module-level (Plan 06-01, D-Phase6-18); pl.overlay.metricErrors itp. arrow-fields wywołują pluralPL lazy bez TDZ
+- [Phase 06]: faultRule oslona-otwarta-w-cyklu emituje granular 'awaria-os-otwarta' (NIE 'awaria') — pozwala scenariuszowi awaria celować validateBefore per fault source (Plan 06-03 cross-plan edit)
+- [Phase 06]: scenario.initialMeshStates: {meshId: string} jako optional pretext faultRule trigger — store.startScenario aplikuje + ewaluuje faultRules na initial state (Plan 06-03 cross-plan brownfield Plan 06-01/06-02)
+- [Phase 06]: cykl-pracy krok 5 effectsOnSuccess: tylko setMachineState 'w-cyklu' (BEZ wbudowanego timera) — cycle-end (3s → 'cykl-zakonczony') dostarczy Application subscriber w Plan 06-08 (Plan 06-03 Opcja B z planu)
+- [Phase 06]: awaria krok 1 effects NIE ustawia estop='pressed' — to triggerowałoby faultRule 'awaryjne-zatrzymanie' (estop+w-cyklu→'awaria') nadpisując pożądane 'awaria-brak-oleju' z brak-cisnienia-oleju (Plan 06-03 Rule 1 auto-fix)
 
 ### Blockers
 
