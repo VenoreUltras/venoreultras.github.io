@@ -35,7 +35,12 @@ Polish + visual realism milestone — naprawia 2 wizualne bugi z v1.0 (rotacja c
 3. Łożyska wału (lewe + prawe) jako nowe meshy widoczne między kolumnami ramy a wałem
 4. Replay z Phase 6 deterministycznie odgrywa stare sesje (regression test — angle injection from Phase 6 nadal działa)
 5. Korbowód `atan2(dx, -dy)` tilt nadal poprawny po fix rotacji
-**Plans**: TBD (4-5 plans via `/gsd-plan-phase 7`)
+**Plans**: 4 plans planned via `/gsd-plan-phase 7`; Status: 3/4 complete
+- ✅ Plan 07-01: Kinematic Fix & Camera Re-orient (rotation.x, atan2(dz,-dy), camera @ (20,5,0))
+- ✅ Plan 07-02: Bearing Decoration (2 łożyska między kolumnami a wałem; ANCHOR-02)
+- ✅ Plan 07-03: Anchor Audit & KIN Invariants (tests + attachsTo documentation for 15 interactables + 2 łożysk)
+- ⏳ Plan 07-04: Replay Regression Test (KIN-03 — replay flow assertion że rotation.x driven by `_currentAngle`)
+
 **UI hint:** Bug rotacji widoczny dopiero gdy operator naciska Start; fix sprawdzony w przeglądarce
 
 ### Phase 8: Press Body Expansion

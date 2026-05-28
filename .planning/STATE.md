@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Quality & Press Realism
 status: Milestone v1.1 defined — gotowe do /gsd-plan-phase 7
-last_updated: "2026-05-28T11:43:31.042Z"
+last_updated: "2026-05-28T13:45:00.000Z"
 progress:
   total_phases: 3
   completed_phases: 0
   total_plans: 4
-  completed_plans: 2
+  completed_plans: 3
   percent: 0
 ---
 
@@ -75,6 +75,8 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 | Phase 06 P07 | 25 min | 2 tasks | 13 files |
 | Phase 06 P08 | 45 min | 2 tasks auto + 1 manual checkpoint pending | 3 files (642/642 tests green; jspdf code-split; 11/11 Phase 6 wymagań wired) |
 | Phase 07 P01 | 10min | 3 tasks | 2 files |
+| Phase 07 P02 | ~10min | 2 tasks | 1 file (663 tests; +8 bearing tests; ANCHOR-02 łożyska decoration) |
+| Phase 07 P03 | ~12min | 2 tasks | 1 file (676 tests; +13 ANCHOR-01+KIN-01+KIN-02 invariants) |
 
 ## Accumulated Context
 
@@ -198,6 +200,9 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [Phase ?]: [Phase 07]: shaftAxis.rotation.x zamiast .z + atan2(dz,-dy) korbowodu — side-view kinematics D-Phase7-01 (Plan 07-01)
 - [Phase ?]: [Phase 07]: camera.position (20, 5, 0) — patrzymy z +X osi; OrbitControls target (0,4,0) niezmieniony (Plan 07-01)
 - [Phase ?]: [Phase 07]: defensive HMR resets rotation.z=0 PRZED .x assignment w update() — zapobiega artefaktom hot-reload z v1.0 stanu (Plan 07-01)
+- [Phase ?]: [Phase 07]: KIN-01 invariant testing pattern — snapshot worldPosition via Vector3.clone() przed/po update(angle), pressModel.group.updateMatrixWorld(true) wymagane w testach bez WebGLRenderer; DYNAMIC_IDS = {kolo-zamachowe} (Plan 07-03)
+- [Phase ?]: [Phase 07]: Phase 7 floor invariant: worldPosition.y >= 2.0 - EPSILON dla wszystkich interactables (panel-oburezny pulpit najniższy @ y=2); test floor wymaga updatu w Phase 8 gdy podstawa zejdzie na y=0 (Plan 07-03)
+- [Phase ?]: [Phase 07]: ANCHOR-03 outstanding — panel-oburezny + estop + wylacznik-glowny wymagają widocznych wsporników/kabli (deferred do Phase 8 GEO-02/04 + Phase 9 DEC-02) (Plan 07-03)
 
 ### Blockers
 
