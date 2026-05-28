@@ -62,6 +62,66 @@ export class PressModel {
     this.matGuardOrange = new THREE.MeshStandardMaterial({ color: 0xE07A1F, metalness: 0.05, roughness: 0.7 });
     this.matGuardRearBlack = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.0, roughness: 0.8 });
     this.matOilSightYellow = new THREE.MeshStandardMaterial({ color: 0xd4a017, metalness: 0.1, roughness: 0.4 });
+
+    // --- Phase 9 MAT-03 / D-Phase9-01 Grupa C — Beton (industrial install foundation) ---
+    // Promotujemy matFoundation z lokalnej zmiennej _buildFoundation() (Phase 8 placeholder)
+    // do instance field z PBR concrete: metalness 0 (non-metallic), roughness 0.95 (chropowaty
+    // beton), color 0x808080 (jasnoszary beton). NormalMap proceduralny (DataTexture 256x256,
+    // generated runtime — zero asset cost). normalScale (0.3, 0.3) — subtle bumps,
+    // nie kradną uwagi z funkcjonalnych elementów.
+    this.matFoundation = new THREE.MeshStandardMaterial({
+      color: 0x808080,
+      metalness: 0.0,
+      roughness: 0.95,
+    });
+    const concreteNormalMap = this._buildConcreteNormalMap();
+    this.matFoundation.normalMap = concreteNormalMap;
+    this.matFoundation.normalScale = new THREE.Vector2(0.3, 0.3);
+    // Trackowanie textury w registry — disposeAll() (Phase 2 dispose path) ją domknie.
+    this.materialRegistry.trackTexture('concrete-normal', concreteNormalMap);
+  }
+
+  /**
+   * Phase 9 MAT-03 / D-Phase9-04: procedural concrete normal map (DataTexture 256x256).
+   *
+   * Algorytm: per-pixel pseudo-random normal vector zakodowany w RGBA8:
+   *   R = 128 + variance_x  (tangent X — od -32 do +32)
+   *   G = 128 + variance_y  (tangent Y)
+   *   B = 255               (normal points up dominantly)
+   *   A = 255               (opacity full)
+   *
+   * Wariancja amplitude ±32 — subtle bumps; 0.3 normalScale i tak attenuuje wpływ.
+   * Hash: prosty deterministic noise z (x*73 + y*131) % 256 — zero zależności od Math.random,
+   * stabilny per build (snapshot-friendly).
+   *
+   * wrapS/wrapT = RepeatWrapping — fundament jest 6×4, textura tiled.
+   *
+   * @returns {THREE.DataTexture} 256x256 RGBA8 normal map
+   */
+  _buildConcreteNormalMap() {
+    const size = 256;
+    const data = new Uint8Array(size * size * 4);
+    for (let y = 0; y < size; y++) {
+      for (let x = 0; x < size; x++) {
+        const i = (y * size + x) * 4;
+        // Pseudo-random hash: deterministic per-pixel.
+        // Mieszamy x i y żeby uzyskać niezależne wariancje X i Y.
+        const hashX = (x * 73 + y * 131) & 0xff;
+        const hashY = (x * 191 + y * 47) & 0xff;
+        // Wariancja ±32 wokół 128 (neutral normal pointing straight up).
+        const varianceX = ((hashX - 128) >> 2); // [-32..+31]
+        const varianceY = ((hashY - 128) >> 2);
+        data[i + 0] = 128 + varianceX; // R = tangent X
+        data[i + 1] = 128 + varianceY; // G = tangent Y
+        data[i + 2] = 255;             // B = normal up
+        data[i + 3] = 255;             // A
+      }
+    }
+    const texture = new THREE.DataTexture(data, size, size, THREE.RGBAFormat, THREE.UnsignedByteType);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.RepeatWrapping;
+    texture.needsUpdate = true;
+    return texture;
   }
 
   buildPress() {
@@ -806,9 +866,10 @@ export class PressModel {
    */
   _buildFoundation() {
     // 1. Fundament — szeroka płyta pod istniejącą bazą.
-    const matFoundation = new THREE.MeshStandardMaterial({ color: 0x3a3a3a });
+    // Phase 9 MAT-03: matFoundation promotowany do instance field w buildMaterials() z PBR
+    // beton (metalness 0, rough 0.95, color 0x808080) + procedural normalMap DataTexture 256x256.
     const foundationGeo = new THREE.BoxGeometry(6, 0.8, 4);
-    const foundation = new THREE.Mesh(foundationGeo, matFoundation);
+    const foundation = new THREE.Mesh(foundationGeo, this.matFoundation);
     foundation.position.set(0, -0.4, 0); // środek bryły, y ∈ [-0.8, 0]
     foundation.castShadow = true;
     foundation.receiveShadow = true;
