@@ -24,9 +24,13 @@ export function createTrainingStore(opts = {}) {
   const now = opts.now ?? (() => Date.now());
   const scheduleTimer = opts.scheduleTimer ?? ((fn, ms) => setTimeout(fn, ms));
 
-  return createStore(
+  const store = createStore(
     subscribeWithSelector((set, get) => ({
-      session: { scenarioId: null, startedAt: null, finishedAt: null, retryCount: 0 },
+      // Phase 6 D-Phase6-09: attempts[] list (push przy retry()); retryCount = attempts.length.
+      session: { scenarioId: null, startedAt: null, finishedAt: null, attempts: [], retryCount: 0 },
+      // Phase 6 Pitfall 1 — Application setCurrentAngle per simulationTick (Plan 06-08).
+      // Wstrzykiwane do step.done / step.violation eventów w applyEffects (dla replay 3D).
+      _currentAngle: 0,
       currentStepId: null,
       steps: {},
       machineState: 'oczekiwanie-na-inspekcje',
@@ -68,7 +72,8 @@ export function createTrainingStore(opts = {}) {
         // sięgnie po niego z state, dzięki czemu warstwa wywołująca (RaycastController,
         // testy) nie musi już przekazywać scenario jako argument.
         activeScenario: scenario,
-        session: { scenarioId: scenario.id, startedAt: now(), finishedAt: null, retryCount: 0 },
+        // Phase 6 D-Phase6-09: attempts=[] na świeży start; retry() pushuje.
+        session: { scenarioId: scenario.id, startedAt: now(), finishedAt: null, attempts: [], retryCount: 0 },
         steps: Object.fromEntries(scenario.steps.map(s => [s.id, { status: 'pending' }])),
         currentStepId: scenario.steps[0].id,
         machineState: scenario.initialMachineState ?? 'oczekiwanie-na-inspekcje',
@@ -153,8 +158,141 @@ export function createTrainingStore(opts = {}) {
         if (!scenario) return;
         get().startScenario(scenario);
       },
+
+      // ── Phase 6: extensions (D-Phase6-04/05/09/12 + Pitfall 1) ───────────────
+
+      /**
+       * Ustawia bieżący kąt wału (Pitfall 1). Application woła per simulationTick
+       * (Plan 06-08). Wartość wstrzykiwana do step.done/step.violation eventów
+       * przez applyEffects appendEvent branch.
+       * @param {number} angle - radiany
+       */
+      setCurrentAngle: (angle) => set({ _currentAngle: angle }),
+
+      /**
+       * D-Phase6-09: nowa próba scenariusza. Pushuje aktualny attempt do
+       * session.attempts[], resetuje runtime state (steps/events/scoring/machineState),
+       * ZACHOWUJE session.startedAt (timeline cross-attempt).
+       * No-op gdy activeScenario === null.
+       */
+      retry: () => {
+        const state = get();
+        if (!state.activeScenario) return;
+        const t = now();
+        const scenario = state.activeScenario;
+        const currentAttempt = {
+          attemptIdx: state.session.attempts.length,
+          startedAt: state.session.startedAt ?? t,
+          finishedAt: t,
+          events: [...state.events],
+          scoring: { ...state.scoring },
+        };
+        const newAttempts = [...state.session.attempts, currentAttempt];
+        set({
+          session: {
+            scenarioId: state.session.scenarioId,
+            startedAt: state.session.startedAt,
+            finishedAt: null,
+            attempts: newAttempts,
+            retryCount: newAttempts.length,
+          },
+          steps: Object.fromEntries(scenario.steps.map(s => [s.id, { status: 'pending' }])),
+          currentStepId: scenario.steps[0].id,
+          machineState: scenario.initialMachineState ?? 'oczekiwanie-na-inspekcje',
+          meshStates: {},
+          events: [{ type: 'session.start', scenarioId: state.session.scenarioId, timestamp: t }],
+          scoring: { score: 100, criticalCount: 0, mediumCount: 0, minorCount: 0 },
+        });
+      },
+
+      /**
+       * D-Phase6-04: bimanual step intent — jednoczesny klik 2 meshy w window.
+       * Lock pattern identyczny do attemptStep (CRIT-8).
+       * @param {{firstMeshId:string, firstTimestamp:number, secondMeshId:string, secondTimestamp:number}} intent
+       */
+      attemptBimanualStep: (intent) => {
+        const state = get();
+        if (state.isAnimating) return;
+        if (!state.activeScenario) return;
+        set({ isAnimating: true });
+        try {
+          const fullIntent = { kind: 'bimanual', ...intent };
+          const result = validateStep(fullIntent, state, state.activeScenario);
+          applyEffects(set, get, result.effects, scheduleTimer);
+          const faultEffects = evaluateFaultRules(get(), faultRules);
+          if (faultEffects.length > 0) applyEffects(set, get, faultEffects, scheduleTimer);
+        } finally {
+          set({ isAnimating: false });
+        }
+      },
+
+      /**
+       * D-Phase6-05: machineStateAttest — sprawdza czy bieżący machineState
+       * matchuje targetMachineState aktualnego kroku. No-op gdy nie matchuje
+       * (ProcedureEngine zwraca reason='machine-state-not-matching').
+       * Wywoływany przez store-level subscriber na zmianę machineState.
+       */
+      attemptMachineStateAttest: () => {
+        const state = get();
+        // UWAGA: subscriber wywołuje tę akcję SYNCHRONICZNIE z set({machineState})
+        // wewnątrz applyEffects gdzie isAnimating === true. Dlatego NIE używamy
+        // isAnimating guard tutaj — re-entrancy jest bezpieczna bo machineStateAttest
+        // ma własną advanceStep idempotency (Phase 3 D-Phase3-14).
+        if (!state.activeScenario) return;
+        const intent = { kind: 'machineStateCheck' };
+        const result = validateStep(intent, state, state.activeScenario);
+        applyEffects(set, get, result.effects, scheduleTimer);
+        const faultEffects = evaluateFaultRules(get(), faultRules);
+        if (faultEffects.length > 0) applyEffects(set, get, faultEffects, scheduleTimer);
+      },
+
+      /**
+       * D-Phase6-12: deserializuje persisted snapshot (validator żyje w
+       * persistence module Plan 06-06). Tu tylko set bez walidacji.
+       * @param {{session:object, scoring?:object, events?:Array}} snapshot
+       */
+      loadPersistedSession: (snapshot) => set({
+        session: snapshot.session,
+        scoring: snapshot.scoring ?? { score: 100, criticalCount: 0, mediumCount: 0, minorCount: 0 },
+        events: snapshot.events ?? [],
+      }),
+
+      /**
+       * D-Phase6-09: zamyka sesję ustawiając finishedAt. Wywoływany automatycznie
+       * przez store-level subscriber na currentStepId === null transition,
+       * lub ręcznie przy fault triggered (Plan 06-08).
+       */
+      finishSession: () => set(s => ({
+        session: { ...s.session, finishedAt: now() },
+      })),
     }))
   );
+
+  // ── Phase 6 Plan 06-02: store-level subscribery (analog _onSpinUpComplete wzorca) ──
+  //
+  // UWAGA: Te subscribery NIE są dispose'owalne przez Application — żyją tyle co
+  // store (createTrainingStore jest fabryczne; replay engine tworzy własną instancję
+  // dla deterministic re-execution, swój subscriber też się ubije razem ze storem).
+  //
+  // EDGE CASE: jeśli scenariusz ma JEDEN step kind='machineStateAttest' jako PIERWSZY
+  // krok, subscriber NIE odpali się przy initial startScenario (machineState ustawiany
+  // synchronicznie w startScenario.set, ale subscriber czeka na CHANGE od poprzedniej
+  // wartości). Rozwiązanie: Plan 06-08 Application bootstrap wywoła
+  // attemptMachineStateAttest() po startScenario IF currentStep.kind === 'machineStateAttest'.
+
+  // D-Phase6-05: machineStateAttest auto-trigger — dwa kanały:
+  //   (a) zmiana machineState: wał osiągnął target podczas attestu → advance
+  //   (b) zmiana currentStepId: poprzedni krok advansował na machineStateAttest którego
+  //       target już matchuje bieżący machineState → advance natychmiast
+  const _tryAttest = () => {
+    const s = store.getState();
+    const step = s.activeScenario?.steps?.find(x => x.id === s.currentStepId);
+    if (step?.kind === 'machineStateAttest') s.attemptMachineStateAttest();
+  };
+  store.subscribe((s) => s.machineState, _tryAttest);
+  store.subscribe((s) => s.currentStepId, _tryAttest);
+
+  return store;
 }
 
 /**
@@ -171,12 +309,18 @@ function applyEffects(set, get, effects, scheduleTimer) {
       case 'setMeshState':
         set(s => ({ meshStates: { ...s.meshStates, [effect.meshId]: effect.value } }));
         break;
-      case 'appendEvent':
-        set(s => ({ events: [...s.events, effect.event] }));
-        if (effect.event.severity) {
-          set(s => ({ scoring: applyScoringEvent(s.scoring, effect.event.severity) }));
+      case 'appendEvent': {
+        // Phase 6 Pitfall 1 — step.done / step.violation potrzebują angle dla replay 3D.
+        // Pozostałe typy (session.start, fault.triggered, session.spinUp.done, step.note) bez angle.
+        const ev = (effect.event.type === 'step.done' || effect.event.type === 'step.violation')
+          ? { ...effect.event, angle: get()._currentAngle }
+          : effect.event;
+        set(s => ({ events: [...s.events, ev] }));
+        if (ev.severity) {
+          set(s => ({ scoring: applyScoringEvent(s.scoring, ev.severity) }));
         }
         break;
+      }
       case 'setStepStatus':
         set(s => ({ steps: { ...s.steps, [effect.stepId]: { status: effect.status } } }));
         break;
