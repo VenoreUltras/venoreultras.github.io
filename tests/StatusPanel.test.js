@@ -234,3 +234,77 @@ describe('StatusPanel — dispose (STATE-03)', () => {
     localStorage.clear();
   });
 });
+
+describe('Phase 6 — scenario selector (Plan 06-07, UI-SPEC §1)', () => {
+  let store, panel;
+  const scenarios = {
+    'uruchomienie':  { id: 'uruchomienie',  steps: [{ id: 'a' }, { id: 'b' }], initialMachineState: 'oczekiwanie-na-inspekcje' },
+    'cykl-pracy':    { id: 'cykl-pracy',    steps: [{ id: 'a' }],              initialMachineState: 'gotowa-do-pracy' },
+    'zatrzymanie':   { id: 'zatrzymanie',   steps: [{ id: 'a' }],              initialMachineState: 'w-cyklu' },
+    'awaria':        { id: 'awaria',        steps: [{ id: 'a' }],              initialMachineState: 'w-cyklu' },
+  };
+
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="status-panel"></div>';
+    localStorage.clear();
+    store = createTrainingStore();
+  });
+  afterEach(() => {
+    if (panel) panel.dispose();
+    panel = null;
+    document.body.innerHTML = '';
+    localStorage.clear();
+  });
+
+  it('renderuje 4 .scenario-btn (uruchomienie / cykl-pracy / zatrzymanie / awaria)', () => {
+    panel = new StatusPanel({ store, scenarios });
+    const btns = document.querySelectorAll('.scenario-btn');
+    expect(btns.length).toBe(4);
+    expect(btns[0].dataset.scenarioId).toBe('uruchomienie');
+    expect(btns[1].dataset.scenarioId).toBe('cykl-pracy');
+    expect(btns[2].dataset.scenarioId).toBe('zatrzymanie');
+    expect(btns[3].dataset.scenarioId).toBe('awaria');
+  });
+
+  it('.scenario-btn--active na buttonie matchującym state.session.scenarioId', () => {
+    panel = new StatusPanel({ store, scenarios });
+    store.getState().startScenario(scenarios['cykl-pracy']);
+    const cyklBtn = document.querySelector('.scenario-btn[data-scenario-id="cykl-pracy"]');
+    const uruchBtn = document.querySelector('.scenario-btn[data-scenario-id="uruchomienie"]');
+    expect(cyklBtn.classList.contains('scenario-btn--active')).toBe(true);
+    expect(uruchBtn.classList.contains('scenario-btn--active')).toBe(false);
+  });
+
+  it('klik na inny scenariusz mid-run → openConfirmModal called', () => {
+    panel = new StatusPanel({ store, scenarios });
+    store.getState().startScenario(scenarios['uruchomienie']);
+    // mid-run: currentStepId !== null, finishedAt === null
+    expect(store.getState().currentStepId).not.toBeNull();
+    expect(store.getState().session.finishedAt).toBeNull();
+    const awariaBtn = document.querySelector('.scenario-btn[data-scenario-id="awaria"]');
+    awariaBtn.click();
+    expect(store.getState().activeModal).toBe('confirm-scenario-switch');
+    expect(store.getState()._confirmPayload.nextScenarioId).toBe('awaria');
+  });
+
+  it('klik na inny scenariusz gdy finishedAt !== null → startScenario bezpośrednio', () => {
+    panel = new StatusPanel({ store, scenarios });
+    store.getState().startScenario(scenarios['uruchomienie']);
+    store.getState().finishSession();
+    expect(store.getState().session.finishedAt).not.toBeNull();
+    const cyklBtn = document.querySelector('.scenario-btn[data-scenario-id="cykl-pracy"]');
+    cyklBtn.click();
+    expect(store.getState().session.scenarioId).toBe('cykl-pracy');
+    expect(store.getState().activeModal).not.toBe('confirm-scenario-switch');
+  });
+
+  it('klik na ten sam scenariusz → no-op (żaden side effect)', () => {
+    panel = new StatusPanel({ store, scenarios });
+    store.getState().startScenario(scenarios['uruchomienie']);
+    const beforeStartedAt = store.getState().session.startedAt;
+    const uruchBtn = document.querySelector('.scenario-btn[data-scenario-id="uruchomienie"]');
+    uruchBtn.click();
+    expect(store.getState().session.startedAt).toBe(beforeStartedAt); // brak restartu
+    expect(store.getState().activeModal).toBeNull(); // brak modalu
+  });
+});

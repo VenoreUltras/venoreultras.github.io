@@ -69,6 +69,9 @@ export function createTrainingStore(opts = {}) {
       // do ReplayEngine. SessionOverlay (Plan 06-07) wywoła openReplay(attemptIdx) z button.
       replayOpen: false,
       replayAttemptIdx: 0,
+      // Phase 6 Plan 06-07 (D-Phase6-17): widoczność session-overlay (results modal).
+      // Subscriber niżej auto-otwiera gdy session.finishedAt zmienia z null → ts.
+      overlayOpen: false,
       // Phase 6 Plan 06-05 (D-Phase6-04): stan progress baru .bimanual-hint w StepPanel.
       // 'idle' | 'active' | 'timeout' | 'success'. RaycastController (Plan 06-05 Task 2)
       // toggle'uje wartości; StepPanel subskrybuje i zmienia klasy CSS bez full re-render.
@@ -300,13 +303,40 @@ export function createTrainingStore(opts = {}) {
       closeReplay: () => set({ replayOpen: false }),
 
       /**
+       * D-Phase6-17: zamyka session-overlay (X button lub backdrop click).
+       * Nie resetuje session.finishedAt — overlay można re-otworzyć ręcznie
+       * (np. przez StatusPanel "Wyświetl ostatnią sesję") jeśli Plan 06-08 doda.
+       */
+      closeOverlay: () => set({ overlayOpen: false }),
+
+      /**
        * D-Phase6-09: zamyka sesję ustawiając finishedAt. Wywoływany automatycznie
        * przez store-level subscriber na currentStepId === null transition,
        * lub ręcznie przy fault triggered (Plan 06-08).
        */
-      finishSession: () => set(s => ({
-        session: { ...s.session, finishedAt: now() },
-      })),
+      /**
+       * D-Phase6-09 + Plan 06-07 brownfield: push current attempt do session.attempts[]
+       * przed ustawieniem finishedAt — by replay/overlay miały spójny widok last attempt.
+       * Idempotent: jeśli finishedAt już ustawione, no-op.
+       */
+      finishSession: () => set(s => {
+        if (s.session.finishedAt !== null) return {};
+        const t = now();
+        const currentAttempt = {
+          attemptIdx: s.session.attempts.length,
+          startedAt: s.session.startedAt ?? t,
+          finishedAt: t,
+          events: [...s.events],
+          scoring: { ...s.scoring },
+        };
+        return {
+          session: {
+            ...s.session,
+            attempts: [...s.session.attempts, currentAttempt],
+            finishedAt: t,
+          },
+        };
+      }),
     }))
   );
 
@@ -333,6 +363,17 @@ export function createTrainingStore(opts = {}) {
   };
   store.subscribe((s) => s.machineState, _tryAttest);
   store.subscribe((s) => s.currentStepId, _tryAttest);
+
+  // D-Phase6-17 Plan 06-07: auto-open session-overlay gdy session.finishedAt
+  // zmienia z null → not-null. User może zamknąć przez closeOverlay (X / backdrop).
+  store.subscribe(
+    (s) => s.session.finishedAt,
+    (finishedAt, prev) => {
+      if (prev === null && finishedAt !== null) {
+        store.setState({ overlayOpen: true });
+      }
+    }
+  );
 
   // D-Phase6-09: finishSession auto-trigger gdy currentStepId staje się null
   // (advanceStep przeszedł poza ostatni krok). Idempotency: nie nadpisuj finishedAt

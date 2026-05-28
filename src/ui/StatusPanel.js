@@ -29,8 +29,11 @@ export class StatusPanel {
    * @param {{getState:Function, subscribe:Function, setState:Function}} deps.store
    * @param {string} [deps.rootElementId='status-panel']
    */
-  constructor({ store, rootElementId = 'status-panel' }) {
+  constructor({ store, scenarios, rootElementId = 'status-panel' }) {
     this._store = store;
+    // Phase 6 Plan 06-07: scenarios mapa { uruchomienie: scenario, 'cykl-pracy': ..., ... }
+    // Opcjonalna — gdy nie podana, ScenarioSelector nie renderuje się.
+    this._scenarios = scenarios ?? null;
     this._root = document.getElementById(rootElementId);
     if (!this._root) {
       throw new Error(`StatusPanel: brak #${rootElementId} w DOM`);
@@ -68,6 +71,7 @@ export class StatusPanel {
           <span class="status-panel__state"></span>
           <span class="status-panel__score"></span>
           <span class="difficulty-badge"></span>
+          <div class="scenario-selector" role="group" aria-label="Wybor scenariusza"></div>
           <button class="status-panel__difficulty-toggle" type="button" aria-pressed="false"></button>
           <span class="free-roam-indicator"></span>
           <button class="status-panel__labels-toggle" type="button" aria-pressed="false"></button>
@@ -87,6 +91,9 @@ export class StatusPanel {
     this._hcBtn              = this._root.querySelector('.status-panel__hc-toggle');
     this._hamburgerBtn       = this._root.querySelector('.status-panel__hamburger');
     this._controlsEl         = this._root.querySelector('.status-panel__controls');
+    this._scenarioSelector   = this._root.querySelector('.scenario-selector');
+    this._scenarioBtns       = {}; // id → button el
+    this._buildScenarioSelector();
     this._hamburgerBtn.setAttribute('aria-label', pl.ui.statusPanelToggleAria);
 
     this._onHcClick = () => {
@@ -121,6 +128,55 @@ export class StatusPanel {
     this._hamburgerBtn.addEventListener('click', this._onHamburgerClick);
   }
 
+  /**
+   * Phase 6 Plan 06-07 (D-Phase6-07, UI-SPEC §1): renderuje 4 przyciski scenariuszy
+   * w hamburger-controls. Klik delegate do _onScenarioClick.
+   * No-op gdy this._scenarios === null (legacy usage Phase 4).
+   */
+  _buildScenarioSelector() {
+    if (!this._scenarios || !this._scenarioSelector) return;
+    const ids = Object.keys(this._scenarios);
+    ids.forEach((id, idx) => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'scenario-btn';
+      btn.dataset.scenarioId = id;
+      btn.textContent = `${idx + 1}. ${pl.scenarios[id]?.title ?? id}`;
+      btn.addEventListener('click', () => this._onScenarioClick(id));
+      this._scenarioBtns[id] = btn;
+      this._scenarioSelector.appendChild(btn);
+    });
+    this._onScenarioClick = this._onScenarioClick.bind(this);
+  }
+
+  /**
+   * Klik handler scenario-btn:
+   *  - current === clicked → no-op
+   *  - sesja zakończona LUB brak procedury → bezpośredni startScenario
+   *  - mid-run → openConfirmModal (ConfirmModal Phase 5 obsłuży confirmation + delegate)
+   */
+  _onScenarioClick(clickedId) {
+    const s = this._store.getState();
+    const currentId = s.session.scenarioId;
+    if (currentId === clickedId) return;
+    if (!this._scenarios[clickedId]) return;
+
+    const noActiveProcedure = s.currentStepId === null;
+    const finished = s.session.finishedAt !== null;
+    if (noActiveProcedure || finished) {
+      s.startScenario(this._scenarios[clickedId]);
+      return;
+    }
+    // Mid-run — confirmModal
+    const currentTitle = pl.scenarios[currentId]?.title ?? currentId ?? '';
+    const nextTitle = pl.scenarios[clickedId]?.title ?? clickedId;
+    s.openConfirmModal({
+      current: currentTitle,
+      next: nextTitle,
+      nextScenarioId: clickedId,
+    });
+  }
+
   _wireSubscribers() {
     // D-Phase5-01: dorzucone 2 nowe subscribery (difficulty, freeRoam) → 5 łącznie.
     this._unsubscribers.push(
@@ -131,6 +187,8 @@ export class StatusPanel {
       this._store.subscribe((s) => s.freeRoam,        () => this._render()),
       this._store.subscribe((s) => s.labelsVisible,   () => this._render()),
       this._store.subscribe((s) => s.labelsHoverOnly, () => this._render()),
+      // Phase 6 Plan 06-07: scenario active highlight.
+      this._store.subscribe((s) => s.session.scenarioId, () => this._renderScenarioSelector()),
     );
   }
 
@@ -168,6 +226,20 @@ export class StatusPanel {
     this._labelsModeBtn.setAttribute('aria-pressed', String(hoverOnly));
     this._labelsModeBtn.textContent = hoverOnly ? pl.ui.labelsModeHover : pl.ui.labelsModeAll;
     this._labelsModeBtn.disabled = !labelsOn || s.difficulty === 'egzamin';
+
+    // Phase 6 Plan 06-07: scenario selector active state (na initial render).
+    this._renderScenarioSelector();
+  }
+
+  /**
+   * Toggle .scenario-btn--active na buttonie matchującym state.session.scenarioId.
+   */
+  _renderScenarioSelector() {
+    if (!this._scenarios || !this._scenarioBtns) return;
+    const activeId = this._store.getState().session.scenarioId;
+    for (const [id, btn] of Object.entries(this._scenarioBtns)) {
+      btn.classList.toggle('scenario-btn--active', id === activeId);
+    }
   }
 
   /** Zwalnia subskrypcje + click listenery (STATE-03). Idempotent. */
