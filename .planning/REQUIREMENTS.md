@@ -36,9 +36,9 @@ Wymagania dla wizualnego polish + bugfix milestone. Każde mapowane na fazę v1.
 
 ### Materials PBR (MAT)
 
-- [ ] **MAT-01**: Rama + wał + suwak — `MeshStandardMaterial` z metalness ≈ 0.7-0.9, roughness ≈ 0.4-0.6, ciemnoszary kolor industrial
-- [ ] **MAT-02**: Osłony + obudowy + panele — `MeshStandardMaterial` z metalness ≈ 0.1, roughness ≈ 0.7-0.9, jaśniejsze szarości/żółcie ostrzegawcze (osłony bezpieczeństwa zgodnie z normą BHP)
-- [ ] **MAT-03**: Podstawa/fundament — `MeshStandardMaterial` matowy ciemnoszary, opcjonalnie z subtle normal map dla betonowej tekstury
+- [x] **MAT-01**: Rama + wał + suwak — `MeshStandardMaterial` z metalness ≈ 0.7-0.9, roughness ≈ 0.4-0.6, ciemnoszary kolor industrial (Phase 9-01: Grupa A 0x4a4a4a / 0.8 / 0.5)
+- [x] **MAT-02**: Osłony + obudowy + panele — `MeshStandardMaterial` z metalness ≈ 0.1, roughness ≈ 0.7-0.9, jaśniejsze szarości/żółcie ostrzegawcze (osłony bezpieczeństwa zgodnie z normą BHP) (Phase 9-01: Grupa B 0.1 / 0.85, matGuardOrange 0xC8B400 BHP yellow)
+- [x] **MAT-03**: Podstawa/fundament — `MeshStandardMaterial` matowy ciemnoszary, opcjonalnie z subtle normal map dla betonowej tekstury (Phase 9-01: Grupa C 0x808080 / 0 / 0.95 + procedural DataTexture 256x256 normalMap, normalScale 0.3)
 - [ ] **MAT-04**: Materiały zachowują compat z istniejącym HighlightManager (Phase 4) — emissive flash overrides nie konfliktują z metalness; pre-flash backup pełen MaterialState
 
 ### Testing & Regression (TEST)

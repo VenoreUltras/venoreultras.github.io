@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Quality & Press Realism
 status: Milestone v1.1 defined — gotowe do /gsd-plan-phase 7
-last_updated: "2026-05-28T14:55:00.000Z"
+last_updated: "2026-05-28T15:20:00.000Z"
 progress:
   total_phases: 3
   completed_phases: 0
@@ -208,6 +208,7 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [Phase 08]: Plan 08-03 — _buildBearingBrackets() 2x BoxGeometry(0.4,1.0,1.0) @ (±2, 8, -0.5) + _buildCrossBrace() 1x BoxGeometry(4,0.4,0.4) @ (0,4,-1) mid-brace; reuse this.matBody (strukturalne mesh ramy); audit topFrame JUŻ istnieje (linie 88-93) — NIE duplikujemy; chamfers/X-cross deferred do v1.2+; 709/709 tests; +0.56 kB bundle (Plan 08-03)
 - [Phase 08]: Plan 08-04 — integration audit (10 testów: count===11, geometry inventory, size===15 x2, boundary 4 imports fs+regex, KIN-01 dla 11 decoration, forbidden IDs, floor >= -0.8, MeshStandardMaterial wszystkie) + anchoring test #4 defensywny (interactables y > -0.8 - EPSILON); 720/720 tests; bundle 771.91 kB (<800 KB hard limit ✓); Phase 8 CLOSED (Plan 08-04)
 - [Phase 08]: ROADMAP discrepancy note — success criterion mówi "size===13" błędnie (historyczne); faktyczna baseline Phase 2 + Phase 7 audit = 15; testy używają live state (15), rekomendacja update ROADMAP Phase 9 (Plan 08-04)
+- [Phase 09]: Plan 09-01 — PBR foundation 3 grupy: Grupa A Metalik (6 mat: matBody/Shaft/Eccentric/Slider/Flywheel/BrakeSteel) color 0x4a4a4a metalness 0.8 rough 0.5; Grupa B Plastik (4 mat: matSafetyPanelGray/SwitchBody/GuardOrange BHP 0xC8B400/GuardRearBlack) metalness 0.1 rough 0.85; Grupa C Beton matFoundation promoted to instance field color 0x808080 metalness 0 rough 0.95 + _buildConcreteNormalMap() DataTexture 256x256 RGBA8 deterministic hash noise + normalScale (0.3, 0.3) + trackTexture('concrete-normal'); matRod/matBase/matEStopRed/matSafetyButtonGreen/matReadyLamp/matNameplate/matOilSight/matLightCurtain niezmienione; HighlightManager flash compat preserved (emissive osobny kanał od PBR); 738/738 tests (+18 Phase 9 materials); bundle 772.49 kB (+0.58 kB); boundary 4 imports preserved; MAT-01/02/03 ✓ (Plan 09-01)
 
 ### Blockers
 
@@ -215,15 +216,24 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 08-04 execution (Wave 3 — Phase 8 closing integration audit + floor invariant extension; 2 commits: ced6773 task1 / 0dae02b task2). Files written:
+**Last session ended after:** Plan 09-01 execution (Wave 1 — Phase 9 PBR foundation; 3 commits: 703ad15 RED tests / f5c57f8 Grupa C / 970f996 Grupa A+B). Files written:
+
+- `.planning/phases/09-detail-material-pass/09-01-SUMMARY.md` (created)
+- `tests/PressModel.materials.phase9.test.js` (created — 18 testów PBR per-grupa + concrete normalMap + Wong regression + dispose path)
+- `src/PressModel.js` (modified — buildMaterials() Grupa A/B/C PBR + _buildConcreteNormalMap() helper + matFoundation promoted to instance field; _buildFoundation() używa this.matFoundation zamiast lokalnej zmiennej)
+- `.planning/REQUIREMENTS.md` (modified — MAT-01/02/03 [x] z details)
+- 738/738 tests green (+18 Phase 9); main bundle 772.49 kB (+0.58 kB vs Phase 8 baseline; pod 850 kB Phase 9 budget); boundary preserved (4 imports)
+- MAT-01 + MAT-02 + MAT-03 ✓; MAT-04 (HighlightManager compat) preserved przez D-Phase9-05 — emissive osobny kanał, brak konfliktu z PBR (formal HighlightManager backup extension w Plan 09-04)
+
+**Next session should:** Run Plan 09-02 (Wave 2 — DEC-01 śruby i spawy InstancedMesh per D-Phase9-02; 24 śruby w 3 grupach + 8 spawy; reuse Phase 9-01 PBR materials).
+
+**Earlier:** Plan 08-04 execution (Wave 3 — Phase 8 closing integration audit + floor invariant extension; 2 commits: ced6773 task1 / 0dae02b task2). Files written:
 
 - `.planning/phases/08-press-body-expansion/08-04-SUMMARY.md` (created)
 - `tests/PressModel.phase8.integration.test.js` (created — 10 testów aggregate Phase 8 audit)
 - `tests/PressModel.anchoring.test.js` (modified — header note + komentarz test #3 zaktualizowany + NEW test #4 defensywny interactables y > -0.8 - EPSILON)
 - 720/720 tests green; main bundle 771.91 kB (<800 KB hard limit, 28.09 kB headroom do Phase 9 850 KB final budget)
 - Phase 8 ZAMKNIĘTA — 11 decoration meshes, 15 interactables preserved, boundary D-Phase7-05 preserved (4 imports), wszystkie decoration MeshStandardMaterial (Phase 9 PBR ready)
-
-**Next session should:** `/gsd-verify-work 8` (formal verification Phase 8 — recommend manual smoke 5 min: npm run dev + visual confirm fundament/śruby/stół/wsporniki/mid-brace bez kolizji ze suwakiem) → `/gsd-discuss-phase 9` (materials PBR + decorative details DEC-01/02).
 
 **Earlier:** Plan 04-06 execution (Wave 5 — Application wiring + UI.updateStatus removal + boundaries +5 + integration FEEDBACK-04; 4 commits: 3390ba2 task1 / cd16546 task2 / fb363ec task3 / 092114c task4). Files written:
 
