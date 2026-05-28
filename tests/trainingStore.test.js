@@ -678,3 +678,85 @@ describe('Phase 6 — loadPersistedSession / finishSession', () => {
     expect(store.getState().session.finishedAt).toBe(5000);
   });
 });
+
+describe('Phase 6 Task 2 — finishSession auto-trigger + idempotency + bimanual lock', () => {
+  /** Minimalny 1-krokowy scenariusz dla testów finishSession auto-trigger. */
+  function makeOneStepScenario() {
+    return {
+      id: 'one-step',
+      titlePL: 'O', descriptionPL: 'O',
+      initialMachineState: 'oczekiwanie-na-inspekcje',
+      steps: [{
+        id: 'only',
+        kind: 'manipulation', targetMeshId: 'm',
+        labelPL: '', descriptionPL: '', rationalePL: '',
+        effectsOnSuccess: [],
+        effectsOnError: [],
+      }],
+    };
+  }
+
+  it('finishSession auto-fires gdy ostatni step advansuje (currentStepId → null)', () => {
+    let t = 1000;
+    const store = createTrainingStore({ now: () => t });
+    store.getState().startScenario(makeOneStepScenario());
+    expect(store.getState().session.finishedAt).toBeNull();
+    t = 2000;
+    store.getState().attemptStep({ kind: 'click', meshId: 'm' });
+    expect(store.getState().currentStepId).toBeNull();
+    expect(store.getState().session.finishedAt).toBe(2000);
+  });
+
+  it('finishSession NIE fires drugi raz gdy session.finishedAt już ustawione (idempotency)', () => {
+    let t = 1000;
+    const store = createTrainingStore({ now: () => t });
+    store.getState().startScenario(makeOneStepScenario());
+    t = 2000;
+    store.getState().attemptStep({ kind: 'click', meshId: 'm' });
+    const firstFinishedAt = store.getState().session.finishedAt;
+    t = 3000;
+    // Ponowne wywołanie subscribera (zmiana currentStepId z null na null nie wystąpi
+    // ale ręcznie weryfikujemy że auto-trigger nie nadpisuje finishedAt):
+    // Symulujemy "fake change" przez ręczny set wymuszający setState event.
+    store.setState({ machineState: 'lockout' }); // nie zmienia currentStepId
+    expect(store.getState().session.finishedAt).toBe(firstFinishedAt);
+  });
+
+  it('machineStateAttest no-op gdy machineState !== target (brak step.violation, brak advance)', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    const sc = {
+      id: 'wait-test', titlePL: 'W', descriptionPL: 'W',
+      initialMachineState: 'w-cyklu',
+      steps: [{
+        id: 'observe',
+        kind: 'machineStateAttest',
+        targetMachineState: 'cykl-zakonczony',
+        labelPL: '', descriptionPL: '', rationalePL: '',
+        effectsOnSuccess: [],
+        effectsOnError: [],
+      }],
+    };
+    store.getState().startScenario(sc);
+    // Zmieniamy machineState na non-target — subscriber odpali ale ProcedureEngine
+    // zwróci no-op (effects=[]). Brak step.violation, brak advance.
+    store.setState({ machineState: 'awaria' });
+    expect(store.getState().currentStepId).toBe('observe');
+    expect(store.getState().steps['observe'].status).toBe('pending');
+    expect(store.getState().events.some(e => e.type === 'step.violation')).toBe(false);
+  });
+
+  it('attemptBimanualStep z isAnimating=true → no-op (lock pattern CRIT-8)', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    const sc = makeBimanualScenario();
+    store.getState().startScenario(sc);
+    store.setState({ isAnimating: true });
+    const eventsBefore = store.getState().events.length;
+    store.getState().attemptBimanualStep({
+      firstMeshId: 'left', firstTimestamp: 100,
+      secondMeshId: 'right', secondTimestamp: 300,
+    });
+    expect(store.getState().events.length).toBe(eventsBefore);
+    expect(store.getState().currentStepId).toBe('press-both'); // brak advance
+  });
+});
+
