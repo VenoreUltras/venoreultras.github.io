@@ -23,11 +23,11 @@ Wymagania dla wizualnego polish + bugfix milestone. Każde mapowane na fazę v1.
 
 ### Press Body Expansion (GEO)
 
-- [ ] **GEO-01**: Podstawa/fundament prasy — solidny blok z 4 śrubami kotwowymi do podłoża (`userData.kind='decoration'`, nie klikalna)
-- [ ] **GEO-02**: Stół roboczy pod suwakiem — powierzchnia na której teoretycznie ląduje sztanca tłocząca; pozycja zgodna z dolną martwą strefą suwaka
+- [x] **GEO-01**: Podstawa/fundament prasy — solidny blok z 4 śrubami kotwowymi do podłoża (`userData.kind='decoration'`, nie klikalna) (Phase 8-01)
+- [x] **GEO-02**: Stół roboczy pod suwakiem — powierzchnia na której teoretycznie ląduje sztanca tłocząca; pozycja zgodna z dolną martwą strefą suwaka (Phase 8-02 — KIN-aware derywacja z PhysicsEngine; tableCenterY=2.10 dla LIVE r=0.8/l=4.0/shaftY=8.0)
 - [ ] **GEO-03**: Osłony łożysk + wsporniki wału — wizualne mocowanie wału do kolumn (eliminuje ANCHOR-02 floating)
 - [ ] **GEO-04**: Kolumny ramy bardziej press-like — opcjonalne frezowanie / pofazowania / cross-bracing, zachowując minimalizm (boxy proportions OK, drobne detale dla feel)
-- [ ] **GEO-05**: Wszystkie nowe meshy `userData.kind='decoration'` — nie pojawiają się w `getInteractables()` ani `getMeshDictionary()`, RaycastController je ignoruje
+- [ ] **GEO-05**: Wszystkie nowe meshy `userData.kind='decoration'` — nie pojawiają się w `getInteractables()` ani `getMeshDictionary()`, RaycastController je ignoruje (partial — fundament+śruby Phase 8-01, stół Phase 8-02; pozostałe meshe Phase 8-03/04)
 
 ### Industrial Detail Pass (DEC)
 

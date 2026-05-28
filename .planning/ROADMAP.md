@@ -54,9 +54,9 @@ Polish + visual realism milestone — naprawia 2 wizualne bugi z v1.0 (rotacja c
 4. Kolumny ramy z subtelnymi detalami (przekątne wsporniki LUB pofazowane krawędzie LUB cross-bracing) — minimalistyczna estetyka zachowana
 5. `getInteractables().size === 15` po fazie (bez zmian — nowe meshy decorative; Phase 7-03 audit ustalił faktyczną baseline 15, nie 13 — korekta vs poprzedni roadmap snapshot); RaycastController nie reaguje na nowe meshy
 6. Testy boundary: `pressModel.js` nadal nie importuje DOM/store
-**Plans**: 4 plans (decomposed via /gsd:plan-phase 8); Status: 0/4 complete
-- ⏳ Plan 08-01: Fundament + 4 śruby kotwowe (GEO-01) [Wave 1]
-- ⏳ Plan 08-02: Stół roboczy KIN-aware z PhysicsEngine derywacją (GEO-02) [Wave 2]
+**Plans**: 4 plans (decomposed via /gsd:plan-phase 8); Status: 2/4 complete
+- ✅ Plan 08-01: Fundament + 4 śruby kotwowe (GEO-01) [Wave 1]
+- ✅ Plan 08-02: Stół roboczy KIN-aware z PhysicsEngine derywacją (GEO-02) [Wave 2]
 - ⏳ Plan 08-03: Wsporniki łożysk + mid-brace (GEO-03, GEO-04) [Wave 2]
 - ⏳ Plan 08-04: Integration audit + floor invariant update (TEST-06/08 partial) [Wave 3]
 

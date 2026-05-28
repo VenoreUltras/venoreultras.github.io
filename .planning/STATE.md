@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Quality & Press Realism
 status: Milestone v1.1 defined — gotowe do /gsd-plan-phase 7
-last_updated: "2026-05-28T13:45:00.000Z"
+last_updated: "2026-05-28T14:45:00.000Z"
 progress:
   total_phases: 3
   completed_phases: 0
@@ -203,6 +203,8 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [Phase ?]: [Phase 07]: KIN-01 invariant testing pattern — snapshot worldPosition via Vector3.clone() przed/po update(angle), pressModel.group.updateMatrixWorld(true) wymagane w testach bez WebGLRenderer; DYNAMIC_IDS = {kolo-zamachowe} (Plan 07-03)
 - [Phase ?]: [Phase 07]: Phase 7 floor invariant: worldPosition.y >= 2.0 - EPSILON dla wszystkich interactables (panel-oburezny pulpit najniższy @ y=2); test floor wymaga updatu w Phase 8 gdy podstawa zejdzie na y=0 (Plan 07-03)
 - [Phase ?]: [Phase 07]: ANCHOR-03 outstanding — panel-oburezny + estop + wylacznik-glowny wymagają widocznych wsporników/kabli (deferred do Phase 8 GEO-02/04 + Phase 9 DEC-02) (Plan 07-03)
+- [Phase 08]: Plan 08-01 — _buildFoundation() decoration mesh: fundament BoxGeometry(6, 0.8, 4) @ y∈[-0.8, 0] + 4 śruby kotwowe CylinderGeometry(0.1, 0.1, 0.3) w narożnikach (±2.8, -0.15, ±1.8); placeholder kolory 0x3a3a3a / 0x1a1a1a; 691/691 tests; +0.46 kB bundle (Plan 08-01)
+- [Phase 08]: Plan 08-02 — _buildWorktable() decoration mesh KIN-aware: BoxGeometry(3, 0.3, 2.5) @ y=2.10 derywowane z PhysicsEngine (shaftY - (r+l) - sliderHalfH - clearance - tableHalfH); auto-fit gdy user zmieni r/l/shaftY; 16-kątowy clearance test; pattern filtru po geometrii w foundation.test.js Rule 2; 700/700 tests; +0.27 kB bundle (Plan 08-02)
 
 ### Blockers
 
