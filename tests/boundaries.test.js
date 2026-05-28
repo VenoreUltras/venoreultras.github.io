@@ -80,6 +80,14 @@ const FORBIDDEN_PAIRS = [
   // HelpModal — store + DOM + pl; NIE THREE/gsap/training/highlight/floating-ui.
   { file: 'src/ui/HelpModal.js',
     mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/'] },
+
+  // Phase 6 (Plan 06-04): replay layer + drawer boundaries.
+  // ReplayEngine — TYLKO createTrainingStore z ../state/ (re-execution); gsap przez DI.
+  { file: 'src/replay/ReplayEngine.js',
+    mustNotImport: ['three', 'gsap', '../ui/', './ui/', '../highlight/', './highlight/', '../education/', './education/', '@floating-ui/dom'] },
+  // ReplayDrawer — DOM + store + i18n + replayEngine (DI); NIE THREE/gsap/training/highlight/floating-ui.
+  { file: 'src/ui/ReplayDrawer.js',
+    mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/', '../education/', './education/'] },
 ];
 
 /** Regex: static + dynamic imports. Capturuje string specifier. */
