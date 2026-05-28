@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Phase 05 complete
-last_updated: "2026-05-28T05:38:50.831Z"
+last_updated: "2026-05-28T05:47:08.763Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 38
-  completed_plans: 31
-  percent: 82
+  completed_plans: 32
+  percent: 83
 ---
 
 # Project State: PM-300 Trener
@@ -33,7 +33,7 @@ progress:
 ## Current Position
 
 Phase: 06 (scenarios-replay-retry-export) — EXECUTING
-Plan: 2 of 8
+Plan: 3 of 8
 Phase 04 — COMPLETE (267 tests green; UAT 5/5 pass; +5 in-session fixes: main-switch repositioning, wrong-click flash + ordering race, spinup animation, completion overlay)
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
 Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
@@ -48,7 +48,7 @@ Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
 
 **Progress:**
 
-[████████░░] 82%
+[████████░░] 84%
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
 Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
 Phase 3: Click-to-State Pipeline             [█████████░] 95%  code complete (5/5 plans, manual checkpoint pending)
@@ -69,6 +69,7 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 | ProcedureEngine test coverage | ≥95% | n/a (Phase 1) |
 | FPS target on integrated graphics | 60 | n/a (existing demo holds it; new layers must preserve it) |
 | Phase 06 P01 | 10min | 3 tasks | 9 files |
+| Phase 06 P02 | 5min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
