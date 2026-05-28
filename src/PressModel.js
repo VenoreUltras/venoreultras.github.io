@@ -32,35 +32,47 @@ export class PressModel {
   }
 
   buildMaterials() {
-    // --- Istniejące materiały Phase 1 (niezmienione) ---
-    this.matBody = new THREE.MeshStandardMaterial({ color: 0x555555, roughness: 0.7 });
-    this.matShaft = new THREE.MeshStandardMaterial({ color: 0x888888, metalness: 0.8 });
-    this.matEccentric = new THREE.MeshStandardMaterial({ color: 0xaa3333, metalness: 0.5 });
+    // --- Phase 9 MAT-01 / D-Phase9-01 Grupa A — Metalik (industrial steel, 6 materiałów) ---
+    // Wszystkie: color 0x4a4a4a (ciemnoszary industrial), metalness 0.8, roughness 0.5.
+    // HighlightManager flash modyfikuje emissive runtime — PBR color/metalness/roughness
+    // są w osobnym kanale, bez konfliktu (D-Phase9-05).
+    this.matBody = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.8, roughness: 0.5 });
+    this.matShaft = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.8, roughness: 0.5 });
+    this.matEccentric = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.8, roughness: 0.5 });
+    this.matSlider = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.8, roughness: 0.5 });
+
+    // --- Niezmieniane (visual contrast / wewnętrzna podstawa) ---
     this.matRod = new THREE.MeshStandardMaterial({ color: 0x3333aa, metalness: 0.5 });
-    this.matSlider = new THREE.MeshStandardMaterial({ color: 0xaaaaaa, roughness: 0.4 });
     this.matBase = new THREE.MeshStandardMaterial({ color: 0x333333 });
 
-    // --- Nowe materiały Phase 2 (UI-SPEC §Color, paleta 60/30/10) ---
+    // --- Phase 9 MAT-02 / D-Phase9-01 Grupa B — Plastik / osłony (4 materiały) ---
+    // Wszystkie: metalness 0.1, roughness 0.85. Color zachowany dla matSafetyPanelGray
+    // (0x6b6b6b — neutralna szarość pulpitu) i matSwitchBody (0x404040 — ciemny korpus).
+    this.matSafetyPanelGray = new THREE.MeshStandardMaterial({ color: 0x6b6b6b, metalness: 0.1, roughness: 0.85 });
+    this.matSwitchBody = new THREE.MeshStandardMaterial({ color: 0x404040, metalness: 0.1, roughness: 0.85 });
 
-    // 60% Dominant — neutralne korpusowe szarości
-    this.matSafetyPanelGray = new THREE.MeshStandardMaterial({ color: 0x6b6b6b, metalness: 0.2, roughness: 0.6 });
-    this.matSwitchBody = new THREE.MeshStandardMaterial({ color: 0x404040, metalness: 0.3, roughness: 0.5 });
+    // --- Phase 9 Grupa A cd. — Flywheel + BrakeSteel (alignment do industrial metalik) ---
+    this.matFlywheel = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.8, roughness: 0.5 });
+    this.matBrakeSteel = new THREE.MeshStandardMaterial({ color: 0x4a4a4a, metalness: 0.8, roughness: 0.5 });
 
-    // 30% Secondary — metaliczne / komponenty obrotowe
-    this.matFlywheel = new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.85, roughness: 0.35 });
-    this.matBrakeSteel = new THREE.MeshStandardMaterial({ color: 0x5a5a5a, metalness: 0.7, roughness: 0.45 });
+    // --- Niezmieniane (paleta dydaktyczna Phase 2) ---
     this.matNameplateSilver = new THREE.MeshStandardMaterial({ color: 0xc8c8c8, metalness: 0.6, roughness: 0.4 });
     this.matLightCurtainBlack = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, metalness: 0.4, roughness: 0.5 });
 
-    // 10% Accent — color-coded safety-critical surfaces (paleta Wong)
+    // 10% Accent — color-coded safety-critical surfaces (paleta Wong) — NIE zmieniane
     this.matEStopRed = new THREE.MeshStandardMaterial({ color: 0xD55E00, metalness: 0.1, roughness: 0.55 });
     this.matSafetyButtonGreen = new THREE.MeshStandardMaterial({ color: 0x009E73, metalness: 0.1, roughness: 0.55 });
     // emissiveIntensity=0 explicit (T-02-11 / UI-SPEC negative criteria): lampka nie świeci w Phase 2.
     // Three.js MeshStandardMaterial defaults emissiveIntensity=1 — bez explicit 0 smoke test failuje.
     // Phase 4 ustawi emissive=0x009E73 + emissiveIntensity=1 przez store-driven update.
     this.matReadyLamp = new THREE.MeshStandardMaterial({ color: 0x009E73, metalness: 0.0, roughness: 0.3, emissive: 0x000000, emissiveIntensity: 0 });
-    this.matGuardOrange = new THREE.MeshStandardMaterial({ color: 0xE07A1F, metalness: 0.05, roughness: 0.7 });
-    this.matGuardRearBlack = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.0, roughness: 0.8 });
+
+    // --- Phase 9 Grupa B cd. — Osłony (matGuardOrange BHP override + matGuardRearBlack) ---
+    // matGuardOrange: BHP ostrzegawczy żółty 0xC8B400 (norma BHP), zmiana z 0xE07A1F Phase 2.
+    this.matGuardOrange = new THREE.MeshStandardMaterial({ color: 0xC8B400, metalness: 0.1, roughness: 0.85 });
+    this.matGuardRearBlack = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.1, roughness: 0.85 });
+
+    // --- Niezmieniane ---
     this.matOilSightYellow = new THREE.MeshStandardMaterial({ color: 0xd4a017, metalness: 0.1, roughness: 0.4 });
 
     // --- Phase 9 MAT-03 / D-Phase9-01 Grupa C — Beton (industrial install foundation) ---
