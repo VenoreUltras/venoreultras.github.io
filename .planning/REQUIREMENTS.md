@@ -11,8 +11,8 @@ Wymagania dla wizualnego polish + bugfix milestone. Każde mapowane na fazę v1.
 
 ### Kinematic Bugfix (KIN)
 
-- [ ] **KIN-01**: Bug rotacji — tylko `shaftAxis` (group wału) + wirujące koła zamachowe rotują wokół własnej osi; reszta hierarchii (rama, korbowód-suwak, podstawa) pozostaje statyczna podczas obrotu wału
-- [ ] **KIN-02**: Korbowód (rod) podąża za eccentricPin z prawidłowym `atan2(dx, -dy)` tilt — wizualnie zachowuje sztywność pivot point bez "podskoków" przy przekroczeniu dolnej martwej strefy
+- [x] **KIN-01**: Bug rotacji — tylko `shaftAxis` (group wału) + wirujące koła zamachowe rotują wokół własnej osi; reszta hierarchii (rama, korbowód-suwak, podstawa) pozostaje statyczna podczas obrotu wału
+- [x] **KIN-02**: Korbowód (rod) podąża za eccentricPin z prawidłowym `atan2(dx, -dy)` tilt — wizualnie zachowuje sztywność pivot point bez "podskoków" przy przekroczeniu dolnej martwej strefy
 - [ ] **KIN-03**: `pressModel.update(angle)` deterministycznie reprodukuje pozycję każdego ruchomego elementu (replay z Phase 6 nadal działa po fix rotacji — regresja-test)
 
 ### Anchoring — No Floating Elements (ANCHOR)

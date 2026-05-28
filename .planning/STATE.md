@@ -3,15 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Quality & Press Realism
 status: Milestone v1.1 defined — gotowe do /gsd-plan-phase 7
-last_updated: "2026-05-28T11:15:00.000Z"
+last_updated: "2026-05-28T11:36:38.064Z"
 progress:
   total_phases: 3
   completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
+  total_plans: 4
+  completed_plans: 1
   percent: 0
-archived_milestones:
-  - v1.0
 ---
 
 # Project State: PM-300 Trener
@@ -50,7 +48,7 @@ Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
 
 **Progress:**
 
-[██████████] 97%
+[███░░░░░░░] 25%
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
 Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
 Phase 3: Click-to-State Pipeline             [█████████░] 95%  code complete (5/5 plans, manual checkpoint pending)
@@ -76,6 +74,7 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 | Phase 06 P04 | ~15min | 2 tasks | 9 files (542/542 tests green; EDU-04 done) |
 | Phase 06 P07 | 25 min | 2 tasks | 13 files |
 | Phase 06 P08 | 45 min | 2 tasks auto + 1 manual checkpoint pending | 3 files (642/642 tests green; jspdf code-split; 11/11 Phase 6 wymagań wired) |
+| Phase 07 P01 | 10min | 3 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -196,6 +195,9 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [Phase 06]: scrubTo clamp idx do [0, events.length-1] (T-06-11 spoofed scrubber mitigation); setSpeed throw English message dla nieobsługiwanych wartości (boundary-clean wobec UI-06 Polish-literal scanner) (Plan 06-04)
 - [Phase ?]: Plan 06-07: cross-plan brownfield finishSession push current attempt do attempts[] przed finishedAt (Plan 06-02 store edit)
 - [Phase ?]: Plan 06-07: SessionOverlay i PdfExporter używają DI dla computeMetrics/JsonExporter/PdfExporter — boundary entries zabraniają nawet importu ../export/ w SessionOverlay
+- [Phase ?]: [Phase 07]: shaftAxis.rotation.x zamiast .z + atan2(dz,-dy) korbowodu — side-view kinematics D-Phase7-01 (Plan 07-01)
+- [Phase ?]: [Phase 07]: camera.position (20, 5, 0) — patrzymy z +X osi; OrbitControls target (0,4,0) niezmieniony (Plan 07-01)
+- [Phase ?]: [Phase 07]: defensive HMR resets rotation.z=0 PRZED .x assignment w update() — zapobiega artefaktom hot-reload z v1.0 stanu (Plan 07-01)
 
 ### Blockers
 
