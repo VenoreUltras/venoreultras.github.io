@@ -486,3 +486,193 @@ describe('Phase 5 — free-roam branch (EDU-01, D-Phase5-05)', () => {
     controller.dispose();
   });
 });
+
+// Phase 6 Plan 06-05 Task 2 — RaycastController bimanual flow (D-Phase6-04, SOP-04)
+describe('Phase 6 — bimanual flow (D-Phase6-04, SOP-04)', () => {
+  // Fixture scenariusza z jednym bimanual stepem.
+  const bimanualScenario = {
+    id: 'test-bimanual-rc',
+    initialMachineState: 'gotowa-do-pracy',
+    steps: [
+      {
+        id: 'oburezny-start',
+        kind: 'bimanual',
+        targetMeshIds: ['left', 'right'],
+        windowMs: 500,
+        labelPL: 'Oburęczny start',
+        effectsOnSuccess: [{ type: 'setMachineState', value: 'w-cyklu' }],
+        effectsOnError: [{
+          type: 'appendEvent',
+          event: { type: 'step.violation', errorCode: 'E-BIMANUAL-TIMEOUT', severity: 'medium' },
+        }],
+      },
+    ],
+  };
+
+  function setupBimanual(store) {
+    const meshL = makeMesh('left', 'manipulation');
+    const meshR = makeMesh('right', 'manipulation');
+    const interactables = new Map([['left', meshL], ['right', meshR]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
+    return { controller, meshL, meshR };
+  }
+
+  it('B1 pierwszy klik bimanual mesh → setBimanualHintState("active"); attemptBimanualStep NIE wywolane', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(bimanualScenario);
+    const { controller, meshL } = setupBimanual(store);
+
+    const hintSpy = vi.spyOn(store.getState(), 'setBimanualHintState');
+    const attemptSpy = vi.spyOn(store.getState(), 'attemptBimanualStep');
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: meshL }]);
+
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 400, clientY: 300 });
+
+    expect(hintSpy).toHaveBeenCalledWith('active');
+    expect(attemptSpy).not.toHaveBeenCalled();
+    expect(controller._lastBimanualDown).not.toBeNull();
+    expect(controller._lastBimanualDown.meshId).toBe('left');
+    controller.dispose();
+  });
+
+  it('B2 drugi klik innego targetu w window → attemptBimanualStep z poprawnym intentem', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(bimanualScenario);
+    const { controller, meshL, meshR } = setupBimanual(store);
+    const attemptSpy = vi.spyOn(store.getState(), 'attemptBimanualStep');
+    const intersectSpy = vi.spyOn(controller._raycaster, 'intersectObjects');
+
+    // Klik 1: left
+    intersectSpy.mockReturnValue([{ object: meshL }]);
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 400, clientY: 300 });
+
+    // Klik 2: right
+    intersectSpy.mockReturnValue([{ object: meshR }]);
+    controller.handlePointerDown({ clientX: 410, clientY: 300 });
+    controller._handlePointerUp({ clientX: 410, clientY: 300 });
+
+    expect(attemptSpy).toHaveBeenCalledTimes(1);
+    const intent = attemptSpy.mock.calls[0][0];
+    expect(intent.firstMeshId).toBe('left');
+    expect(intent.secondMeshId).toBe('right');
+    expect(typeof intent.firstTimestamp).toBe('number');
+    expect(typeof intent.secondTimestamp).toBe('number');
+    expect(controller._lastBimanualDown).toBeNull();
+    controller.dispose();
+  });
+
+  it('B3 pierwszy klik + 500ms timeout → setBimanualHintState("timeout"); _lastBimanualDown reset', () => {
+    vi.useFakeTimers();
+    try {
+      const store = createTrainingStore({ now: () => 1000 });
+      store.getState().startScenario(bimanualScenario);
+      const { controller, meshL } = setupBimanual(store);
+      const hintSpy = vi.spyOn(store.getState(), 'setBimanualHintState');
+      vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: meshL }]);
+
+      controller.handlePointerDown({ clientX: 400, clientY: 300 });
+      controller._handlePointerUp({ clientX: 400, clientY: 300 });
+      hintSpy.mockClear();
+
+      vi.advanceTimersByTime(500);
+      expect(hintSpy).toHaveBeenCalledWith('timeout');
+      expect(controller._lastBimanualDown).toBeNull();
+      controller.dispose();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('B4 drugi klik na ten sam mesh → NIE wywoluje attemptBimanualStep, hint zostaje active', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(bimanualScenario);
+    const { controller, meshL } = setupBimanual(store);
+    const attemptSpy = vi.spyOn(store.getState(), 'attemptBimanualStep');
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: meshL }]);
+
+    // Klik 1: left
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 400, clientY: 300 });
+    // Klik 2: znowu left (ten sam)
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 400, clientY: 300 });
+
+    expect(attemptSpy).not.toHaveBeenCalled();
+    // _lastBimanualDown nadal trzyma referencję do pierwszego kliku — czeka na różny mesh
+    expect(controller._lastBimanualDown).not.toBeNull();
+    expect(controller._lastBimanualDown.meshId).toBe('left');
+    controller.dispose();
+  });
+
+  it('B5 klik na mesh NIE w targetMeshIds (current step bimanual) → fall-through do zwyklego flow (attemptStep)', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(bimanualScenario);
+    // Mesh poza targetMeshIds — dodajemy 'tabliczka' do interactables
+    const meshOther = makeMesh('tabliczka-znamionowa', 'visual-target');
+    const interactables = new Map([['tabliczka-znamionowa', meshOther]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
+    const attemptBimSpy = vi.spyOn(store.getState(), 'attemptBimanualStep');
+    const attemptSpy = vi.spyOn(store.getState(), 'attemptStep');
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: meshOther }]);
+
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 400, clientY: 300 });
+
+    expect(attemptBimSpy).not.toHaveBeenCalled();
+    // Fall-through: zwykly attemptStep z {kind:'click', meshId}
+    expect(attemptSpy).toHaveBeenCalledWith({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    expect(controller._lastBimanualDown).toBeNull();
+    controller.dispose();
+  });
+
+  it('B6 current step kind=manipulation → bimanual branch nie odpala, zwykly attemptStep dziala', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie); // pierwszy krok = visual-target (manipulation-like dla testu)
+    const mesh = makeMesh('tabliczka-znamionowa', 'visual-target');
+    const interactables = new Map([['tabliczka-znamionowa', mesh]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
+    const attemptBimSpy = vi.spyOn(store.getState(), 'attemptBimanualStep');
+    const attemptSpy = vi.spyOn(store.getState(), 'attemptStep');
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: mesh }]);
+
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 400, clientY: 300 });
+
+    expect(attemptBimSpy).not.toHaveBeenCalled();
+    expect(attemptSpy).toHaveBeenCalledWith({ kind: 'click', meshId: 'tabliczka-znamionowa' });
+    controller.dispose();
+  });
+
+  it('B7 dispose() → clearTimeout dla _bimanualTimeoutHandle (T-06-12 mitigation)', () => {
+    vi.useFakeTimers();
+    try {
+      const store = createTrainingStore({ now: () => 1000 });
+      store.getState().startScenario(bimanualScenario);
+      const { controller, meshL } = setupBimanual(store);
+      vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: meshL }]);
+
+      controller.handlePointerDown({ clientX: 400, clientY: 300 });
+      controller._handlePointerUp({ clientX: 400, clientY: 300 });
+      expect(controller._bimanualTimeoutHandle).not.toBeNull();
+
+      const hintSpy = vi.spyOn(store.getState(), 'setBimanualHintState');
+      controller.dispose();
+      // Po dispose timer nie odpala
+      vi.advanceTimersByTime(500);
+      expect(hintSpy).not.toHaveBeenCalledWith('timeout');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
