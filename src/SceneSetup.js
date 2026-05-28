@@ -18,7 +18,8 @@ export class SceneSetup {
       0.1,
       1000
     );
-    this.camera.position.set(0, 5, 20);
+    // D-Phase7-01: side-view kamera — patrzymy z dodatniej osi X. Flywheel widoczny jak tarcza zegara front-facing.
+    this.camera.position.set(20, 5, 0);
     this.camera.lookAt(0, 0, 0);
 
     // Renderer
