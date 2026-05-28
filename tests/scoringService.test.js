@@ -3,7 +3,7 @@
 // SCORE-01, TEST-02
 
 import { describe, it, expect } from 'vitest';
-import { calculate } from '../src/training/ScoringService.js';
+import { calculate, computeMetrics } from '../src/training/ScoringService.js';
 import { DEFAULT_WEIGHTS, SCORE_BASELINE, SCORE_FLOOR } from '../src/training/scoringWeights.js';
 
 describe('ScoringService.calculate — defaults (SCORE-01, D-15/D-16)', () => {
@@ -123,5 +123,111 @@ describe('ScoringService.calculate — override (D-18)', () => {
   it('uses SCORE_BASELINE constant (sanity)', () => {
     expect(SCORE_BASELINE).toBe(100);
     expect(SCORE_FLOOR).toBe(0);
+  });
+});
+
+describe('ScoringService.computeMetrics — Phase 6 (SCORE-02, D-Phase6-14)', () => {
+  it('pusty events → wszystkie zera + score 100 + puste tablice', () => {
+    expect(computeMetrics([])).toEqual({
+      errorCount: 0,
+      criticalCount: 0,
+      mediumCount: 0,
+      minorCount: 0,
+      completionTimeMs: 0,
+      missedSteps: [],
+      sequenceViolations: [],
+      retryCount: 0,
+      score: 100,
+    });
+  });
+
+  it('2× step.violation severity medium → mediumCount=2, errorCount=2, score 80', () => {
+    const events = [
+      { type: 'step.violation', severity: 'medium', timestamp: 0 },
+      { type: 'step.violation', severity: 'medium', timestamp: 0 },
+    ];
+    const r = computeMetrics(events);
+    expect(r.errorCount).toBe(2);
+    expect(r.mediumCount).toBe(2);
+    expect(r.criticalCount).toBe(0);
+    expect(r.minorCount).toBe(0);
+    expect(r.score).toBe(80);
+  });
+
+  it('step.done step1 + step3 z pominiętym step2 → missedSteps + sequenceViolations', () => {
+    const scenario = { steps: [{ id: 'step1' }, { id: 'step2' }, { id: 'step3' }] };
+    const events = [
+      { type: 'session.start', timestamp: 0 },
+      { type: 'step.done', stepId: 'step1', timestamp: 100 },
+      { type: 'step.done', stepId: 'step3', timestamp: 200 },
+    ];
+    const r = computeMetrics(events, scenario);
+    expect(r.missedSteps).toEqual(['step2']);
+    expect(r.sequenceViolations).toEqual([{ from: 'step2', to: 'step3' }]);
+  });
+
+  it('completionTimeMs = last.timestamp - first.timestamp', () => {
+    const events = [
+      { type: 'session.start', timestamp: 1000 },
+      { type: 'step.done', stepId: 'a', timestamp: 1500 },
+      { type: 'step.done', stepId: 'b', timestamp: 4200 },
+    ];
+    expect(computeMetrics(events).completionTimeMs).toBe(3200);
+  });
+
+  it('events.length === 1 → completionTimeMs = 0', () => {
+    expect(computeMetrics([{ type: 'session.start', timestamp: 1000 }]).completionTimeMs).toBe(0);
+  });
+
+  it('bez scenario param → missedSteps i sequenceViolations to puste tablice', () => {
+    const events = [
+      { type: 'step.done', stepId: 'x', timestamp: 0 },
+      { type: 'step.violation', severity: 'minor', timestamp: 0 },
+    ];
+    const r = computeMetrics(events);
+    expect(r.missedSteps).toEqual([]);
+    expect(r.sequenceViolations).toEqual([]);
+    expect(r.errorCount).toBe(1);
+    expect(r.minorCount).toBe(1);
+  });
+
+  it('score z computeMetrics === score z calculate (delegacja)', () => {
+    const events = [
+      { type: 'step.violation', severity: 'critical', timestamp: 0 },
+      { type: 'step.violation', severity: 'medium', timestamp: 100 },
+    ];
+    expect(computeMetrics(events).score).toBe(calculate(events).score);
+  });
+
+  it('errorCount liczy step.violation + fault.triggered', () => {
+    const events = [
+      { type: 'step.violation', severity: 'minor', timestamp: 0 },
+      { type: 'fault.triggered', severity: 'critical', timestamp: 100 },
+      { type: 'step.done', stepId: 'x', timestamp: 200 },
+    ];
+    const r = computeMetrics(events);
+    expect(r.errorCount).toBe(2);
+    expect(r.criticalCount).toBe(1);
+    expect(r.minorCount).toBe(1);
+  });
+
+  it('retryCount === 0 (per-attempt level)', () => {
+    const events = [
+      { type: 'session.start', timestamp: 0 },
+      { type: 'step.violation', severity: 'medium', timestamp: 100 },
+    ];
+    expect(computeMetrics(events).retryCount).toBe(0);
+  });
+
+  it('happy path z scenario: wszystkie kroki w kolejności → brak missed/violations', () => {
+    const scenario = { steps: [{ id: 's1' }, { id: 's2' }] };
+    const events = [
+      { type: 'session.start', timestamp: 0 },
+      { type: 'step.done', stepId: 's1', timestamp: 100 },
+      { type: 'step.done', stepId: 's2', timestamp: 200 },
+    ];
+    const r = computeMetrics(events, scenario);
+    expect(r.missedSteps).toEqual([]);
+    expect(r.sequenceViolations).toEqual([]);
   });
 });
