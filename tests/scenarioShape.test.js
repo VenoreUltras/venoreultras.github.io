@@ -109,6 +109,108 @@ describe('Scenario shape (SOP-02)', () => {
     expect(() => loadScenario('nieistnieje')).toThrow(/nieznany scenariusz/);
   });
 
+  // Phase 6 — Plan 06-01 Task 1 (D-Phase6-04/05/06): nowe step kindy bimanual + machineStateAttest
+  // + walidacja rationalePL length cap.
+  describe('Phase 6 — nowe step kindy', () => {
+    const baseScenario = (step) => ({
+      id: 'phase6-test',
+      titlePL: 'Phase 6 test',
+      descriptionPL: 'd',
+      initialMachineState: 'gotowa-do-pracy',
+      steps: [step],
+    });
+
+    it('akceptuje poprawny step kind=bimanual z targetMeshIds długości 2', () => {
+      const step = {
+        id: 'oburecznie',
+        kind: 'bimanual',
+        targetMeshIds: ['przycisk-start-lewy', 'przycisk-start-prawy'],
+        labelPL: 'Oburęczny start',
+        descriptionPL: 'd',
+        rationalePL: 'r',
+      };
+      expect(() => validateScenario(baseScenario(step))).not.toThrow();
+    });
+
+    it('akceptuje poprawny step kind=bimanual z opcjonalnym windowMs', () => {
+      const step = {
+        id: 'oburecznie',
+        kind: 'bimanual',
+        targetMeshIds: ['a', 'b'],
+        windowMs: 300,
+        labelPL: 'l', descriptionPL: 'd', rationalePL: 'r',
+      };
+      expect(() => validateScenario(baseScenario(step))).not.toThrow();
+    });
+
+    it('akceptuje poprawny step kind=machineStateAttest z targetMachineState', () => {
+      const step = {
+        id: 'czekaj-na-koniec',
+        kind: 'machineStateAttest',
+        targetMachineState: 'cykl-zakonczony',
+        labelPL: 'l', descriptionPL: 'd', rationalePL: 'r',
+      };
+      expect(() => validateScenario(baseScenario(step))).not.toThrow();
+    });
+
+    it('odrzuca bimanual bez targetMeshIds', () => {
+      const step = { id: 's', kind: 'bimanual', labelPL: 'l', descriptionPL: 'd' };
+      expect(() => validateScenario(baseScenario(step))).toThrow(/targetMeshIds/);
+    });
+
+    it('odrzuca bimanual z targetMeshIds length 1', () => {
+      const step = { id: 's', kind: 'bimanual', targetMeshIds: ['a'], labelPL: 'l', descriptionPL: 'd' };
+      expect(() => validateScenario(baseScenario(step))).toThrow(/targetMeshIds/);
+    });
+
+    it('odrzuca bimanual z targetMeshIds length 3', () => {
+      const step = { id: 's', kind: 'bimanual', targetMeshIds: ['a', 'b', 'c'], labelPL: 'l', descriptionPL: 'd' };
+      expect(() => validateScenario(baseScenario(step))).toThrow(/targetMeshIds/);
+    });
+
+    it('odrzuca bimanual z windowMs <= 0', () => {
+      const step = { id: 's', kind: 'bimanual', targetMeshIds: ['a', 'b'], windowMs: 0, labelPL: 'l', descriptionPL: 'd' };
+      expect(() => validateScenario(baseScenario(step))).toThrow(/windowMs/);
+    });
+
+    it('odrzuca bimanual gdy obecne targetMeshId (zamiast targetMeshIds)', () => {
+      const step = { id: 's', kind: 'bimanual', targetMeshIds: ['a', 'b'], targetMeshId: 'x', labelPL: 'l', descriptionPL: 'd' };
+      expect(() => validateScenario(baseScenario(step))).toThrow(/bimanual/);
+    });
+
+    it('odrzuca machineStateAttest z targetMeshId', () => {
+      const step = { id: 's', kind: 'machineStateAttest', targetMachineState: 'cykl-zakonczony', targetMeshId: 'x', labelPL: 'l', descriptionPL: 'd' };
+      expect(() => validateScenario(baseScenario(step))).toThrow(/machineStateAttest/);
+    });
+
+    it('odrzuca machineStateAttest bez targetMachineState', () => {
+      const step = { id: 's', kind: 'machineStateAttest', labelPL: 'l', descriptionPL: 'd' };
+      expect(() => validateScenario(baseScenario(step))).toThrow(/targetMachineState/);
+    });
+
+    it('odrzuca step z rationalePL > 200 znaków', () => {
+      const step = {
+        id: 's',
+        kind: 'visual-attest',
+        labelPL: 'l',
+        descriptionPL: 'd',
+        rationalePL: 'x'.repeat(201),
+      };
+      expect(() => validateScenario(baseScenario(step))).toThrow(/rationalePL/);
+    });
+
+    it('akceptuje rationalePL dokładnie 200 znaków (boundary)', () => {
+      const step = {
+        id: 's',
+        kind: 'visual-attest',
+        labelPL: 'l',
+        descriptionPL: 'd',
+        rationalePL: 'x'.repeat(200),
+      };
+      expect(() => validateScenario(baseScenario(step))).not.toThrow();
+    });
+  });
+
   it('UI-06 enforcement: każdy errorCode w uruchomienie ma odpowiednik w pl.errors', async () => {
     // Coverage check: literal errorCode wartości w scenariuszu MUSZĄ być zarejestrowane w pl.js.
     // Brak entry = runtime crash przy display fault message (Phase 4 panele).
