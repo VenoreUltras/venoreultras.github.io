@@ -74,7 +74,12 @@ Polish + visual realism milestone — naprawia 2 wizualne bugi z v1.0 (rotacja c
 5. `npm test` 642+ tests zielone (brak regresji); nowe testy: position invariants, decorative ignored by raycaster, instancing draw call count
 6. `npm run build` < 850KB main bundle
 7. Manual smoke test: 60 FPS sustained przy włączonych etykietach + hover hysteresis + symulacja działająca
-**Plans**: TBD (4-5 plans via `/gsd-plan-phase 9`)
+**Plans**: 5 plans (decomposed via /gsd:plan-phase 9); Status: 0/5 complete
+- [ ] Plan 09-01: PBR materiały per grupa + concrete normalMap (MAT-01..03) [Wave 1]
+- [ ] Plan 09-02: Śruby InstancedMesh (3 groups, 20 instances) + 8 spawów (DEC-01) [Wave 2]
+- [ ] Plan 09-03: Kable pneumatyczny TubeGeometry + E-stop box segments (DEC-02) [Wave 3, sequence po 09-02 — file overlap PressModel.js]
+- [ ] Plan 09-04: EmissiveController pre-flash MaterialState backup (MAT-04) [Wave 2, parallel z 09-02/03 — file disjoint]
+- [ ] Plan 09-05: Integration audit + bundle <850KB + Phase 9 + v1.1 milestone close (TEST-06..08) [Wave 4]
 
 ## Phase Ordering Rationale
 
