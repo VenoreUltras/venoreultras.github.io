@@ -1,11 +1,11 @@
 ---
 gsd_state_version: 1.0
-milestone: none
-milestone_name: awaiting next milestone
-status: v1.0 SHIPPED 2026-05-28 — milestone archived
-last_updated: "2026-05-28T11:00:00.000Z"
+milestone: v1.1
+milestone_name: Visual Quality & Press Realism
+status: Milestone v1.1 defined — gotowe do /gsd-plan-phase 7
+last_updated: "2026-05-28T11:15:00.000Z"
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0

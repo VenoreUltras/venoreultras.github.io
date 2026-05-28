@@ -8,11 +8,13 @@ Pełny SOP trener PM-300 wdrożony: 4 scenariusze grywalne (uruchomienie / cykl-
 
 ## Next Milestone Goals
 
-_None defined._ Możliwe kierunki:
-- **v1.1 (polish)** — domknięcie tech debt z audytu: ConfirmModal boundary entry, formalna re-verification odroczonych manual checkpointów (60 FPS, deuteranopia, WebAudio cues), font-size scaling
-- **v2 (Phase 7 frontier)** — DIFF-01..04: ExplodedViewController (klawisz E), randomized fault eventy, supervisor recommendations w PDF, high-contrast theme
+**Active:** v1.1 — Visual Quality & Press Realism (started 2026-05-28)
 
-Uruchom `/gsd-new-milestone <version>` żeby zdefiniować scope następnego milestone.
+Naprawia 2 wizualne bugi z v1.0 (rotacja całego rigu zamiast kół zamachowych, floating elements bez mocowań) i nadaje prasie "feel prasy" — fundament, stół roboczy, wsporniki łożysk, śruby/kable/panele dekoracyjne, PBR materiały. SOP nietknięta — 642 testów v1.0 pozostają zielone.
+
+**Phases:** 7 (Kinematic Fix & Anchoring) → 8 (Press Body Expansion) → 9 (Detail & Material Pass). 18 requirements (KIN/ANCHOR/GEO/DEC/MAT/TEST). Szczegóły w `.planning/REQUIREMENTS.md` i `.planning/ROADMAP.md`.
+
+**Następnie (v2 docking points):** DIFF-01..04 — ExplodedViewController, randomized faults, supervisor recommendations w PDF, font scaling + high-contrast theme.
 
 ## What This Is
 
