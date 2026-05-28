@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Phase 06 in progress (4/8 plans)
-last_updated: "2026-05-28T08:08:00.000Z"
+last_updated: "2026-05-28T06:19:19.600Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 38
-  completed_plans: 36
-  percent: 95
+  completed_plans: 35
+  percent: 83
 ---
 
 # Project State: PM-300 Trener
@@ -33,7 +33,7 @@ progress:
 ## Current Position
 
 Phase: 06 (scenarios-replay-retry-export) — EXECUTING
-Plan: 5 of 8 (06-01, 06-02, 06-03, 06-04 complete)
+Plan: 6 of 8 (06-01, 06-02, 06-03, 06-04 complete)
 Phase 04 — COMPLETE (267 tests green; UAT 5/5 pass; +5 in-session fixes: main-switch repositioning, wrong-click flash + ordering race, spinup animation, completion overlay)
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
 Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
@@ -48,7 +48,7 @@ Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
 
 **Progress:**
 
-[████████░░] 84%
+[█████████░] 92%
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
 Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
 Phase 3: Click-to-State Pipeline             [█████████░] 95%  code complete (5/5 plans, manual checkpoint pending)

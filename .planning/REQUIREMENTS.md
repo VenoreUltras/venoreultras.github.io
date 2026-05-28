@@ -26,7 +26,7 @@ Wymagania dla pierwszego wydania. Każde mapowane na fazę roadmapy.
 - [ ] **SOP-01**: `ProcedureEngine` to czysta funkcja — `validateStep(intent, state, scenario)` zwraca `{ok, reason, effects[]}` bez efektów ubocznych, bez importów THREE/DOM/store
 - [x] **SOP-02**: Scenariusze są deklaratywnymi modułami JSON ze stabilnymi stringowymi `id` (zakaz numerycznych indeksów kroków w logice walidacji)
 - [ ] **SOP-03**: Scenariusz **uruchomienie** zaimplementowany — minimum 6 kroków obejmujących inspekcję wzrokową, sprawdzenie smarowania, zamknięcie osłon, odblokowanie E-stop, włączenie zasilania, sprzęgnięcie po nabraniu obrotów koła zamachowego
-- [ ] **SOP-04**: Scenariusz **cykl pracy** zaimplementowany — wymaga aktywnego oburęcznego sterowania, materiał poza strefą tłocznika, gating przy otwartej osłonie
+- [x] **SOP-04**: Scenariusz **cykl pracy** zaimplementowany — wymaga aktywnego oburęcznego sterowania, materiał poza strefą tłocznika, gating przy otwartej osłonie
 - [ ] **SOP-05**: Scenariusz **zatrzymanie** zaimplementowany — kolejność: rozsprzęgnięcie, hamulec, wyłącznik główny, blokada
 - [ ] **SOP-06**: Scenariusz **awaria** zaimplementowany — przynajmniej 3 zdarzenia awaryjne (np. otwarcie osłony w cyklu, brak ciśnienia oleju, awaryjne zatrzymanie) z poprawną reakcją
 - [x] **SOP-07**: `evaluateFaultRules` weryfikuje invarianty cross-cutting na każdej zmianie stanu (np. "osłona otwarta podczas cyklu = NATYCHMIASTOWE zatrzymanie i błąd procedury")
@@ -82,7 +82,7 @@ Wymagania dla pierwszego wydania. Każde mapowane na fazę roadmapy.
 - [ ] **EDU-02**: Tryby trudności — **Nauka** (z hintami, podświetleniami "co dalej") i **Egzamin** (bez podpowiedzi, bez retry, finalny score)
 - [ ] **EDU-03**: Sygnały audio przez WebAudio — alarm awarii, potwierdzenie sukcesu, szum koła zamachowego (proporcjonalny do RPM), globalny mute (klawisz `M`)
 - [ ] **EDU-04**: Replay/timeline — kursant może odtworzyć przebieg sesji ze scrubbable timeline + slow-mo 0.25×
-- [ ] **EDU-05**: Retry loop — po błędzie kursant może spróbować ponownie krok lub całą procedurę; w trybie Egzamin retry kumuluje karę
+- [x] **EDU-05**: Retry loop — po błędzie kursant może spróbować ponownie krok lub całą procedurę; w trybie Egzamin retry kumuluje karę
 
 ### Scoring & Persistence (SCORE)
 
@@ -164,7 +164,7 @@ Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera 2026-05-05.
 | SOP-01 | Phase 1 | Pending |
 | SOP-02 | Phase 1 | Complete |
 | SOP-03 | Phase 1 | Pending |
-| SOP-04 | Phase 6 | Pending |
+| SOP-04 | Phase 6 | Complete |
 | SOP-05 | Phase 6 | Pending |
 | SOP-06 | Phase 6 | Pending |
 | SOP-07 | Phase 1 | Complete |
@@ -205,7 +205,7 @@ Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera 2026-05-05.
 | EDU-02 | Phase 5 | Pending |
 | EDU-03 | Phase 5 | Pending |
 | EDU-04 | Phase 6 | Pending |
-| EDU-05 | Phase 6 | Pending |
+| EDU-05 | Phase 6 | Complete |
 | SCORE-01 | Phase 1 | Pending |
 | SCORE-02 | Phase 6 | Pending |
 | SCORE-03 | Phase 6 | Pending |
