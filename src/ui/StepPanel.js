@@ -41,6 +41,14 @@ export class StepPanel {
       throw new Error(`StepPanel: brak #${rootElementId} w DOM`);
     }
     this._unsubscribers = [];
+    // Phase 6 Plan 06-05: Map<HTMLButtonElement, Function> dla listener cleanup
+    // (analog Phase 4 attest-button cleanup — replaceChildren w _render usuwa elementy
+    // ale referencje do handlerów nie potrzebują eksplicytnego removeEventListener,
+    // bo GC sprząta wraz z elementem. Map służy do potencjalnego diagnostyk + future-proof).
+    this._retryHandlers = new Map();
+    // Phase 6 Plan 06-05: referencja do .bimanual-hint elementu aktywnego kroku.
+    // Subscriber state.bimanualHintState toggle'uje klasy directly bez full re-render listy.
+    this._bimanualHintEl = null;
     this._wireSubscribers();
     this._render();
   }
@@ -53,7 +61,17 @@ export class StepPanel {
       this._store.subscribe((s) => s.steps,         () => this._render()),
       this._store.subscribe((s) => s.isAnimating,   () => this._render()),
       this._store.subscribe((s) => s.difficulty,    () => this._render()),
+      // Phase 6 Plan 06-05 (D-Phase6-04): subscriber na bimanualHintState
+      // tylko toggle'uje klasy CSS w istniejącym .bimanual-hint elemencie — UNIKAMY
+      // full re-render bo klasy zmieniają się 3-4 razy w 500-1000ms (active→timeout/success→idle).
+      this._store.subscribe((s) => s.bimanualHintState, (v) => this._updateBimanualHintClass(v)),
     );
+  }
+
+  /** Phase 6 Plan 06-05: toggle klas .bimanual-hint--* bez re-render listy. */
+  _updateBimanualHintClass(value) {
+    if (!this._bimanualHintEl) return;
+    this._bimanualHintEl.className = 'bimanual-hint bimanual-hint--' + value;
   }
 
   _render() {
@@ -74,6 +92,10 @@ export class StepPanel {
     const list = document.createElement('ol');
     list.className = 'step-panel__list';
     let activeEl = null;
+    // Phase 6 Plan 06-05: reset cached referencji — _render odbuduje listę,
+    // referencja sprzed re-renderu wskazuje na osierocony DOM.
+    this._bimanualHintEl = null;
+    this._retryHandlers.clear();
 
     scenario.steps.forEach((step, idx) => {
       const li = document.createElement('li');
@@ -97,6 +119,38 @@ export class StepPanel {
         rationale.className = 'step-item__rationale';
         rationale.textContent = step.rationalePL;
         li.appendChild(rationale);
+      }
+
+      // Phase 6 Plan 06-05 (D-Phase6-10, EDU-05): retry button TYLKO w Nauka,
+      // TYLKO dla aktywnego kroku, TYLKO gdy status='error'. Egzamin: branch warunkowy,
+      // element DOM nie tworzony (twardy tryb — D-Phase5-02).
+      if (
+        state.difficulty === 'nauka' &&
+        step.id === state.currentStepId &&
+        status === 'error'
+      ) {
+        const retryBtn = document.createElement('button');
+        retryBtn.type = 'button';
+        retryBtn.className = 'step-item__retry';
+        retryBtn.textContent = pl.overlay.retry;
+        const handler = () => this._store.getState().retry();
+        retryBtn.addEventListener('click', handler);
+        this._retryHandlers.set(retryBtn, handler);
+        li.appendChild(retryBtn);
+      }
+
+      // Phase 6 Plan 06-05 (D-Phase6-04, UI-SPEC §5): bimanual hint progress bar
+      // pod aktywnym krokiem kind='bimanual' z status='pending'. Klasy CSS kontrolowane
+      // przez subscriber na state.bimanualHintState (RaycastController Task 2 toggle).
+      if (
+        step.id === state.currentStepId &&
+        step.kind === 'bimanual' &&
+        status !== 'done'
+      ) {
+        const hint = document.createElement('div');
+        hint.className = 'bimanual-hint bimanual-hint--' + state.bimanualHintState;
+        this._bimanualHintEl = hint;
+        li.appendChild(hint);
       }
 
       // D-Phase4-04: inline visual-attest button TYLKO dla aktywnego kroku visual-attest

@@ -69,6 +69,10 @@ export function createTrainingStore(opts = {}) {
       // do ReplayEngine. SessionOverlay (Plan 06-07) wywoła openReplay(attemptIdx) z button.
       replayOpen: false,
       replayAttemptIdx: 0,
+      // Phase 6 Plan 06-05 (D-Phase6-04): stan progress baru .bimanual-hint w StepPanel.
+      // 'idle' | 'active' | 'timeout' | 'success'. RaycastController (Plan 06-05 Task 2)
+      // toggle'uje wartości; StepPanel subskrybuje i zmienia klasy CSS bez full re-render.
+      bimanualHintState: 'idle',
       _now: now,
       _spinUpTimerHandle: null,
 
@@ -88,6 +92,8 @@ export function createTrainingStore(opts = {}) {
           meshStates: scenario.initialMeshStates ? { ...scenario.initialMeshStates } : {},
           events: [{ type: 'session.start', scenarioId: scenario.id, timestamp: now() }],
           scoring: { score: 100, criticalCount: 0, mediumCount: 0, minorCount: 0 },
+          // Phase 6 Plan 06-05: reset hint na świeży scenariusz.
+          bimanualHintState: 'idle',
         });
         // Phase 6 Plan 06-03 Task 2: ewaluuj faultRules na initial state by initialMeshStates
         // triggujące fault rule (np. awaria) natychmiast ustawiły machineState='awaria-os-otwarta'.
@@ -218,8 +224,18 @@ export function createTrainingStore(opts = {}) {
           meshStates: {},
           events: [{ type: 'session.start', scenarioId: state.session.scenarioId, timestamp: t }],
           scoring: { score: 100, criticalCount: 0, mediumCount: 0, minorCount: 0 },
+          // Phase 6 Plan 06-05: reset hint na nowy attempt.
+          bimanualHintState: 'idle',
         });
       },
+
+      /**
+       * Phase 6 Plan 06-05 (D-Phase6-04): setter dla progress baru .bimanual-hint.
+       * RaycastController (Task 2) woła z 'active' przy pierwszym kliku,
+       * 'timeout' po 500ms, 'success' po drugim kliku w window, 'idle' po fadeout.
+       * @param {'idle'|'active'|'timeout'|'success'} value
+       */
+      setBimanualHintState: (value) => set({ bimanualHintState: value }),
 
       /**
        * D-Phase6-04: bimanual step intent — jednoczesny klik 2 meshy w window.
