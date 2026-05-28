@@ -7,6 +7,7 @@
 //            ORAZ pressModel.rod / pressModel.slider zmieniają position.
 // KIN-02:    rod.rotation.x != 0 dla angle != 0, π; rod.rotation.z === 0; slider Y-only invariant.
 // ANCHOR-02: łożyska (decoration) — conditional skip jeśli Plan 07-02 jeszcze nie scal nął _buildBearings.
+// Phase 8: floor invariant rozszerzony o decoration fundament @ y=-0.8 (test #4 w ANCHOR-01). Interactables NADAL >0 — fundament to pure visual layer.
 //
 // Canvas mock — _buildNameplate woła getContext('2d'). Wzór z tests/PressModel.smoke.test.js linie 9–24.
 
@@ -68,14 +69,28 @@ describe('PressModel — ANCHOR-01: position invariants (no floating interactabl
     }
   });
 
-  it('każdy interactable mesh ma worldPosition.y > 0 (strict — Phase 7 baseline; podstawa @ y=0 w Phase 8)', () => {
+  it('każdy interactable mesh ma worldPosition.y > 0 (Phase 8 baseline: fundament decoration @ y=-0.8..0, ale wszystkie interactables nadal y > 0 — najniższy panel-oburezny @ y=2.0; decoration ≠ interactable)', () => {
     // Najniższy obecnie interactable: panel-oburezny (safetyPanel @ y=2; pulpit local y=0 → świat 2.0).
     // Wszystkie inne >= 2.0. Jeśli ten test failuje to znaczy że ktoś przesunął element pod podstawę.
+    // Phase 8: fundament siedzi @ y in [-0.8, 0] ale to DECORATION (NIE w interactables). Floor
+    // invariant interactables nieaffected by fundament — kontrakt: każdy interactable nadal > 0.
     const interactables = pressModel.getInteractables();
     const v = new THREE.Vector3();
     for (const [id, mesh] of interactables) {
       mesh.getWorldPosition(v);
       expect(v.y, `${id} worldPosition.y=${v.y} nie jest > 0`).toBeGreaterThan(0);
+    }
+  });
+
+  it('Phase 8 decoration meshes nie powodują że jakikolwiek interactable spadł poniżej fundamentu (y_min >= -0.8 - EPSILON)', () => {
+    // Defensywny test: nawet jeśli ktoś w przyszłości przesunąłby któryś interactable poniżej
+    // pulpitu, MUSI zostać powyżej najniższej krawędzi fundamentu (y=-0.8). Inaczej element
+    // wpadłby "do" fundamentu wizualnie. Sanity check separation interactable ↔ decoration layer.
+    const interactables = pressModel.getInteractables();
+    const v = new THREE.Vector3();
+    for (const [id, mesh] of interactables) {
+      mesh.getWorldPosition(v);
+      expect(v.y, `${id} worldPosition.y=${v.y} wpadł poniżej fundamentu (y < -0.8 - EPSILON)`).toBeGreaterThan(-0.8 - EPSILON);
     }
   });
 
