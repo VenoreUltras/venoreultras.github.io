@@ -166,6 +166,7 @@ export class PressModel {
     this._buildFrontGuard();
     this._buildMainSwitch();
     this._buildClutchLever();
+    this._buildBearings();    // Phase 7 ANCHOR-02 — D-Phase7-03
 
     // Inicjalizacja położenia
     this.update(0);
@@ -737,6 +738,42 @@ export class PressModel {
     });
     // Default pose: released → leverGroup.rotation.z = 0 (dźwignia pionowa, domyślne).
     // poses.{released|engaged}.rot.z odnosi się do rotacji leverGroup (pivotTarget: 'parent').
+  }
+
+  /**
+   * ANCHOR-02 / D-Phase7-03: 2 łożyska wału jako decoration meshes.
+   *
+   * Cylinder R=0.6 H=0.8 ułożone osią wzdłuż X (ta sama konwencja co shaft/eccentric/rim).
+   * World positions: lewe (-2.0, shaftY, 0), prawe (2.0, shaftY, 0) — wewnątrz zakładki
+   * pomiędzy kolumną ramy (x=±2) a końcem wału (x=±2.25, shaft long 4.5).
+   *
+   * Boundary:
+   *  - Dzieci `this.group` (NIE `this.shaftAxis`) → rotacyjnie statyczne podczas update(angle).
+   *  - `userData.kind === 'decoration'` (CONTEXT Specifics — minimalny kontrakt).
+   *  - NIE wywołują `_registerInteractable` → poza `getInteractables()` / `getMeshDictionary()`.
+   *  - Brak wpisów w `src/i18n/pl.js parts` (decoration NIE wymaga labelPL — TooltipManager/StepPanel pomijają).
+   *
+   * Materiał: `this.matBody` (industrial grey, wizualnie spójny ze wspornikami ramy).
+   * Phase 9 doprecyzuje PBR. Phase 8 GEO-03 może dodać osłony nad łożyskami.
+   */
+  _buildBearings() {
+    // Współdzielona geometria — 2 meshe mogą reużyć (nie modyfikujemy per-instance).
+    const bearingGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.8, 32);
+    bearingGeo.rotateZ(Math.PI / 2); // oś cylindra wzdłuż X (konwencja shaft/eccentric)
+
+    const bearingLeft = new THREE.Mesh(bearingGeo, this.matBody);
+    bearingLeft.position.set(-2.0, this.shaftY, 0);
+    bearingLeft.castShadow = true;
+    bearingLeft.receiveShadow = true;
+    bearingLeft.userData = { kind: 'decoration' };
+    this.group.add(bearingLeft); // NIE shaftAxis — KIN-01 invariant (statyczne)
+
+    const bearingRight = new THREE.Mesh(bearingGeo, this.matBody);
+    bearingRight.position.set(2.0, this.shaftY, 0);
+    bearingRight.castShadow = true;
+    bearingRight.receiveShadow = true;
+    bearingRight.userData = { kind: 'decoration' };
+    this.group.add(bearingRight);
   }
 
   // === CRIT-6 + CRIT-7 INVARIANT (Phase 1 lock-in, Phase 2 enforcement) ===
