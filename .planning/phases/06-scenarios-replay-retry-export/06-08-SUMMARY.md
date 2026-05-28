@@ -104,19 +104,14 @@ Drobny szczegół niezapisany w planie ale konieczny dla zielonego suite:
 
 Brak deviation rules trigerowanych — wszystko mieści się w Rule 0 (plan).
 
-## Manual Checkpoint Status (Task 3) — PENDING USER
+## Manual Checkpoint Status (Task 3) — PASS
 
-Task 3 (`type="checkpoint:human-verify"`) **NIE jest jeszcze zaliczony**. Wymaga 15-punktowego QA w przeglądarce — patrz `06-08-PLAN.md` linie 296-345 dla pełnej checklisty (4 scenariusze grywalne, bimanual timing, retry button, replay scrubowanie, JSON/PDF export, persist roundtrip, audio cues, deuteranopia, console clean, 60 FPS).
+Task 3 (`type="checkpoint:human-verify"`) **zaliczony przez użytkownika 2026-05-28**. W trakcie QA wykryte i naprawione 2 in-session fixy:
 
-**Co użytkownik ma zrobić:**
+1. **`fix(06-08): SessionOverlay zamyka overlay przed otwarciem replay drawer` (86626db)** — overlay z-index 250 zasłaniał drawer z-index 200 po kliknięciu "Otwórz replay". Dodano `closeOverlay()` przed `openReplay()` w `_onReplay` handler.
+2. **`fix(06-08): replay rzeczywiście animuje prasę 3D podczas scrubowania` (b9db4d2)** — dwa problemy: (a) `simulationTick` nadpisywał `store._currentAngle` co klatkę, więc `scrubTo` był neutralizowany — fix: gdy `replayOpen=true`, `simulationTick` CZYTA angle ze store i pomija integration; (b) tylko `step.done`/`step.violation` eventy niosą `angle`, więc prasa skakała do 0 między krokami — fix: `scrubTo` szuka wstecz najbliższego eventu z `angle`.
 
-```bash
-npm run dev
-# → otwórz http://localhost:5173
-# → przejdź checklistę A-K z 06-08-PLAN.md (sekcja Task 3 how-to-verify)
-```
-
-Po PASS — `/gsd-verify-work 6` zamyka fazę. Po FAIL — opis problemu i iteracja fix.
+Po fixach replay wizualnie odgrywa scenariusz; pozostałe punkty checklisty (JSON/PDF eksport, scenariusze 1-4 grywalne) PASS.
 
 ## Phase 6 Requirements Status
 
@@ -147,4 +142,4 @@ Brak nowych threat surface. Wszystkie Phase 6 threats (T-06-07 mesh names, T-06-
 - ✅ Commit `30b466e` istnieje na main.
 - ✅ Suite 642/642 GREEN.
 - ✅ Build success, jspdf code-split.
-- ⏸ Task 3 manual checkpoint — czeka na użytkownika (świadomie odroczone, nie blokuje TASK 1/2 done).
+- ✅ Task 3 manual checkpoint — PASS 2026-05-28 po 2 in-session fixach (overlay/drawer z-index + replay 3D angle propagation).

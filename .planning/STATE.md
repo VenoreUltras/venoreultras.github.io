@@ -2,11 +2,11 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 06 code complete (8/8 plans wired; Plan 06-08 manual checkpoint pending)
-last_updated: "2026-05-28T08:43:00.000Z"
+status: Phase 06 complete
+last_updated: "2026-05-28T09:23:14.562Z"
 progress:
   total_phases: 6
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 38
   completed_plans: 38
   percent: 100
@@ -32,7 +32,7 @@ progress:
 
 ## Current Position
 
-Phase: 06 (scenarios-replay-retry-export) — CODE COMPLETE (Plan 06-08 manual checkpoint pending)
+Phase: 06 — COMPLETE
 Plan: 8 of 8 (06-01..06-08 wired; 642/642 tests green; jspdf code-split; manual browser QA Task 3 pending user verification)
 Phase 04 — COMPLETE (267 tests green; UAT 5/5 pass; +5 in-session fixes: main-switch repositioning, wrong-click flash + ordering race, spinup animation, completion overlay)
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
