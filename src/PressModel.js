@@ -169,6 +169,8 @@ export class PressModel {
     this._buildBearings();    // Phase 7 ANCHOR-02 — D-Phase7-03
     this._buildFoundation();  // Phase 8 GEO-01 — D-Phase8-01
     this._buildWorktable();   // Phase 8 GEO-02 — D-Phase8-02
+    this._buildBearingBrackets(); // Phase 8 GEO-03 — D-Phase8-03
+    this._buildCrossBrace();      // Phase 8 GEO-04 — D-Phase8-04 (minimal mid-brace)
 
     // Inicjalizacja położenia
     this.update(0);
@@ -890,6 +892,85 @@ export class PressModel {
     worktable.receiveShadow = true;
     worktable.userData = { kind: 'decoration' };
     this.group.add(worktable); // NIE shaftAxis — KIN-01 invariant
+  }
+
+  /**
+   * GEO-03 / D-Phase8-03: wsporniki łożysk — 2 BoxGeometry łączące Phase 7 łożyska wału
+   * z kolumnami ramy. Wizualnie eliminują Z-lukę (bearing @ z=0, kolumna @ z=-1) — łożyska
+   * wyglądają jak naprawdę przykręcone do ramy zamiast "wisieć w powietrzu" obok niej.
+   *
+   * Geometria:
+   *  - BoxGeometry(0.4, 1.0, 1.0): szerokość X=0.4 (cienki bracket, mieści się w szerokości
+   *    kolumny 2 i bearingu R=0.6 → D=1.2), wysokość Y=1.0 (obejmuje bearing H=0.8 z marginem
+   *    0.1 góra/dół), głębokość Z=1.0 (wypełnia od bearing.z=0 do column.face.z=-1).
+   *  - Lewy bracket @ (-2, shaftY, -0.5) — środek między bearing @ z=0 i kolumna @ z=-1.
+   *  - Prawy bracket @ (+2, shaftY, -0.5) — symetryczny.
+   *
+   * Materiał: reuse `this.matBody` (D-Phase8-06) — wizualnie część szkieletu ramy (industrial
+   * grey, ta sama paleta co leftFrame/rightFrame/topFrame). Phase 9 PBR per group.
+   *
+   * Boundary:
+   *  - Dzieci `this.group` (NIE `this.shaftAxis`) → KIN-01 invariant (statyczne pod update).
+   *  - `userData.kind === 'decoration'` (minimalny kontrakt).
+   *  - NIE rejestrowane w `_registerInteractable` (D-Phase8-05) → poza `getInteractables()`
+   *    i `getMeshDictionary()` (oba nadal size===15).
+   *  - Brak wpisu w `src/i18n/pl.js parts` (decoration nie wymaga labelPL).
+   */
+  _buildBearingBrackets() {
+    // Współdzielona geometria — 2 meshe mogą reużyć (BoxGeometry immutable per-instance).
+    const bracketGeo = new THREE.BoxGeometry(0.4, 1.0, 1.0);
+
+    const bracketLeft = new THREE.Mesh(bracketGeo, this.matBody);
+    bracketLeft.position.set(-2, this.shaftY, -0.5);
+    bracketLeft.castShadow = true;
+    bracketLeft.receiveShadow = true;
+    bracketLeft.userData = { kind: 'decoration' };
+    this.group.add(bracketLeft);
+
+    const bracketRight = new THREE.Mesh(bracketGeo, this.matBody);
+    bracketRight.position.set(2, this.shaftY, -0.5);
+    bracketRight.castShadow = true;
+    bracketRight.receiveShadow = true;
+    bracketRight.userData = { kind: 'decoration' };
+    this.group.add(bracketRight);
+  }
+
+  /**
+   * GEO-04 / D-Phase8-04: cross-brace MINIMAL — tylko środkowa belka (mid-brace) między
+   * kolumnami ramy. ŻADNYCH chamfered corners, ŻADNYCH diagonalnych X-cross (per D-Phase8-04
+   * "minimalizm wygra nad detalem"; chamfers/X-cross deferred → CONTEXT Deferred Ideas v1.2+).
+   *
+   * AUDIT D-Phase8-04: `topFrame` (linie 88-93, BoxGeometry(6, 1, 2) @ y=shaftY+1.5=9.5) JUŻ
+   * łączy obie kolumny u góry. Phase 8 dodaje TYLKO mid-brace na średniej wysokości — żadnego
+   * duplikatu topFrame, żadnej dolnej belki (fundament w Phase 8-01 spełnia rolę dolnego
+   * połączenia poziomego u podstawy).
+   *
+   * Geometria:
+   *  - BoxGeometry(4, 0.4, 0.4): szerokość X=4 (łączy x=-2 do x=+2, dokładnie między wewnętrznymi
+   *    ścianami kolumn — kolumny mają x=±2 centrowane z width=2, więc inner face @ x=±1; belka X=4
+   *    nakłada się na kolumny z każdej strony o 1 jednostkę = solid join), wysokość Y=0.4 (cienka,
+   *    nie dominuje wizualnie), głębokość Z=0.4 (cienka, dyskretna).
+   *  - Pozycja: (0, 4, -1) — centrowana w X=0, y=4 (środek robocza między fundamentem y=0 i shaftY=8;
+   *    nad strefą osłon y=4-5 ale dyskretna), z=-1 (zgodnie z kolumnami leftFrame/rightFrame @ z=-1).
+   *
+   * Materiał: reuse `this.matBody` (D-Phase8-06) — wizualnie część szkieletu ramy.
+   *
+   * Boundary:
+   *  - Dziecko `this.group` (NIE `this.shaftAxis`) → KIN-01 invariant.
+   *  - `userData.kind === 'decoration'`.
+   *  - NIE rejestrowane w `_registerInteractable` → size===15 niezmienione.
+   *  - Brak wpisu w `src/i18n/pl.js parts`.
+   */
+  _buildCrossBrace() {
+    // AUDIT D-Phase8-04: topFrame @ linie 88-93 JUŻ łączy kolumny u góry (y=9.5).
+    // Phase 8 dodaje TYLKO mid-brace. NIE chamfers, NIE X-cross (Deferred Ideas v1.2+).
+    const midBraceGeo = new THREE.BoxGeometry(4, 0.4, 0.4);
+    const midBrace = new THREE.Mesh(midBraceGeo, this.matBody);
+    midBrace.position.set(0, 4, -1);
+    midBrace.castShadow = true;
+    midBrace.receiveShadow = true;
+    midBrace.userData = { kind: 'decoration' };
+    this.group.add(midBrace); // NIE shaftAxis — KIN-01 invariant
   }
 
   // === CRIT-6 + CRIT-7 INVARIANT (Phase 1 lock-in, Phase 2 enforcement) ===

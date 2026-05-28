@@ -60,9 +60,13 @@ describe('PressModel — Phase 8-02 GEO-02 stół roboczy (KIN-aware)', () => {
     pressModel = new PressModel(scene);
   });
 
-  it('total decoration meshes === 8 (2 łożyska + 1 fundament + 4 śruby + 1 stół)', () => {
-    const decorations = collectDecorations(pressModel);
-    expect(decorations).toHaveLength(8);
+  // Phase 8-03 Rule 2: count===8 zastąpiony filtrem po geometrii stołu (BoxGeometry 3×0.3×2.5).
+  // Pattern zgodny z foundation.test.js / bearings.test.js — odporny na rozszerzanie poolu
+  // przez kolejne plany Phase 8 (brackets, mid-brace).
+  it('worktable: dokładnie 1 decoration mesh o geometrii (3, 0.3, 2.5)', () => {
+    const tables = getWorktable(pressModel);
+    expect(tables).toHaveLength(1);
+    expect(tables[0].userData.kind).toBe('decoration');
   });
 
   it('stół: dokładnie 1 BoxGeometry(3, 0.3, 2.5)', () => {
