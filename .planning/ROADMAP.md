@@ -10,8 +10,9 @@
 ## Shipped Milestones
 
 - ✅ **[v1.0: SOP Training Layer](milestones/v1.0-ROADMAP.md)** — shipped 2026-05-28 (6 phases, 38 plans, 64/64 requirements, 642/642 tests, 193 commits)
+- ✅ **v1.1: Visual Quality & Press Realism** — shipped 2026-05-28 (3 phases, 13 plans, 18/18 requirements, 777/777 tests, bundle 780.21 KB < 850 KB)
 
-## Active Milestone — v1.1
+## Active Milestone — v1.1 (CLOSED — pending /gsd-audit-milestone + /gsd-complete-milestone)
 
 ### Strategic Shape
 
@@ -19,9 +20,9 @@ Polish + visual realism milestone — naprawia 2 wizualne bugi z v1.0 (rotacja c
 
 ### Phases
 
-- [ ] **Phase 7: Kinematic Fix & Anchoring** — Naprawia bug rotacji (`shaftAxis` tylko, nie cały rig) + audit pozycji + wsporniki wału + nic nie wisi (4-5 plans; KIN-01..03, ANCHOR-01..03)
-- [ ] **Phase 8: Press Body Expansion** — Podstawa/fundament, stół roboczy, osłony łożysk, kolumny bardziej press-like; wszystko `userData.kind='decoration'` (5-6 plans; GEO-01..05)
-- [ ] **Phase 9: Detail & Material Pass** — Śruby/kable/panele dekoracyjne + PBR materiały dla wszystkich grup (rama vs osłony vs podstawa) (4-5 plans; DEC-01..02, MAT-01..04, TEST-06..08)
+- ✅ **Phase 7: Kinematic Fix & Anchoring** — Naprawia bug rotacji (`shaftAxis` tylko, nie cały rig) + audit pozycji + wsporniki wału + nic nie wisi (4-5 plans; KIN-01..03, ANCHOR-01..03)
+- ✅ **Phase 8: Press Body Expansion** — Podstawa/fundament, stół roboczy, osłony łożysk, kolumny bardziej press-like; wszystko `userData.kind='decoration'` (4 plans; GEO-01..05)
+- ✅ **Phase 9: Detail & Material Pass** — Śruby/kable/panele dekoracyjne + PBR materiały dla wszystkich grup (rama vs osłony vs podstawa) (5 plans; DEC-01..02, MAT-01..04, TEST-06..08)
 
 ## Phase Details
 
@@ -74,12 +75,14 @@ Polish + visual realism milestone — naprawia 2 wizualne bugi z v1.0 (rotacja c
 5. `npm test` 642+ tests zielone (brak regresji); nowe testy: position invariants, decorative ignored by raycaster, instancing draw call count
 6. `npm run build` < 850KB main bundle
 7. Manual smoke test: 60 FPS sustained przy włączonych etykietach + hover hysteresis + symulacja działająca
-**Plans**: 5 plans (decomposed via /gsd:plan-phase 9); Status: 0/5 complete
-- [ ] Plan 09-01: PBR materiały per grupa + concrete normalMap (MAT-01..03) [Wave 1]
-- [ ] Plan 09-02: Śruby InstancedMesh (3 groups, 20 instances) + 8 spawów (DEC-01) [Wave 2]
-- [ ] Plan 09-03: Kable pneumatyczny TubeGeometry + E-stop box segments (DEC-02) [Wave 3, sequence po 09-02 — file overlap PressModel.js]
-- [ ] Plan 09-04: EmissiveController pre-flash MaterialState backup (MAT-04) [Wave 2, parallel z 09-02/03 — file disjoint]
-- [ ] Plan 09-05: Integration audit + bundle <850KB + Phase 9 + v1.1 milestone close (TEST-06..08) [Wave 4]
+**Plans**: 5 plans (decomposed via /gsd:plan-phase 9); Status: 5/5 complete — **Phase 9 COMPLETE**
+- ✅ Plan 09-01: PBR materiały per grupa + concrete normalMap (MAT-01..03) [Wave 1]
+- ✅ Plan 09-02: Śruby InstancedMesh (3 groups, 20 instances) + 8 spawów (DEC-01) [Wave 2]
+- ✅ Plan 09-03: Kable pneumatyczny TubeGeometry + E-stop box segments (DEC-02) [Wave 3]
+- ✅ Plan 09-04: EmissiveController pre-flash MaterialState backup (MAT-04) [Wave 2]
+- ✅ Plan 09-05: Integration audit + bundle <850KB + Phase 9 + v1.1 milestone close (TEST-06..08) [Wave 4]
+
+**Phase 9 close metrics:** 777/777 tests PASS · main bundle 780.21 KB (<850 KB hard gate, headroom ~70 KB) · 3 InstancedMesh (20 instances śrub) + 8 spawów + 5 kabli + PBR Grupa A/B/C + concrete normalMap DataTexture + pre-flash MaterialState backup · getInteractables().size===15 preserved · boundary D-Phase7-05 preserved (PressModel 4 imports, EmissiveController 2 imports). Milestone v1.1 ZAMKNIĘTY — 18/18 wymagań DONE (KIN×3 + ANCHOR×3 + GEO×5 + DEC×2 + MAT×4 + TEST×3); manual smoke 60 FPS deferred do user-driven QA session.
 
 ## Phase Ordering Rationale
 

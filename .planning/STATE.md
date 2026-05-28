@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Quality & Press Realism
-status: Milestone v1.1 defined — gotowe do /gsd-plan-phase 7
-last_updated: "2026-05-28T15:20:00.000Z"
+status: Milestone v1.1 COMPLETE — Phase 9 zamknięta, 777/777 tests, bundle 780.21KB; gotowe do /gsd-audit-milestone + /gsd-complete-milestone
+last_updated: "2026-05-28T15:35:00.000Z"
 progress:
   total_phases: 3
-  completed_phases: 0
-  total_plans: 4
-  completed_plans: 3
-  percent: 0
+  completed_phases: 3
+  total_plans: 13
+  completed_plans: 13
+  percent: 100
 ---
 
 # Project State: PM-300 Trener
@@ -55,7 +55,12 @@ Phase 3: Click-to-State Pipeline             [█████████░] 95
 Phase 4: Visual Feedback Layer               [█████████░] 95%  CODE COMPLETE Plan 04-01..04-06 (6/6 plans, manual deuteranopia QA pending)
 Phase 5: Educational Layer                   [          ] 0%   not started
 Phase 6: Scenarios + Replay + Retry + Export [          ] 0%   not started
-Phase 7: (v2) Differentiators                [    v2    ] —    deferred
+Phase 7: (v2) Differentiators                [    v2    ] —    deferred (renumber to Phase 10+)
+
+Milestone v1.1 — Visual Quality & Press Realism (COMPLETE):
+Phase 7: Kinematic Fix & Anchoring            [██████████] 100% complete (4/4 plans)
+Phase 8: Press Body Expansion                 [██████████] 100% complete (4/4 plans)
+Phase 9: Detail & Material Pass               [██████████] 100% complete (5/5 plans)
 
 ```
 
@@ -208,6 +213,7 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [Phase 08]: Plan 08-03 — _buildBearingBrackets() 2x BoxGeometry(0.4,1.0,1.0) @ (±2, 8, -0.5) + _buildCrossBrace() 1x BoxGeometry(4,0.4,0.4) @ (0,4,-1) mid-brace; reuse this.matBody (strukturalne mesh ramy); audit topFrame JUŻ istnieje (linie 88-93) — NIE duplikujemy; chamfers/X-cross deferred do v1.2+; 709/709 tests; +0.56 kB bundle (Plan 08-03)
 - [Phase 08]: Plan 08-04 — integration audit (10 testów: count===11, geometry inventory, size===15 x2, boundary 4 imports fs+regex, KIN-01 dla 11 decoration, forbidden IDs, floor >= -0.8, MeshStandardMaterial wszystkie) + anchoring test #4 defensywny (interactables y > -0.8 - EPSILON); 720/720 tests; bundle 771.91 kB (<800 KB hard limit ✓); Phase 8 CLOSED (Plan 08-04)
 - [Phase 08]: ROADMAP discrepancy note — success criterion mówi "size===13" błędnie (historyczne); faktyczna baseline Phase 2 + Phase 7 audit = 15; testy używają live state (15), rekomendacja update ROADMAP Phase 9 (Plan 08-04)
+- [Phase 09]: Plan 09-05 — Phase 9 + Milestone v1.1 close: 13 integration testów aggregate audit (PBR Grupa A/B/C + 3 InstancedMesh / 20 śrub + 8 spawów + 5 kabli + DataTexture concrete-normal + EmissiveController._preFlashBackups + boundary 4+2 imports + KIN-01 dla Phase 9 decoration + size===15 + forbidden Phase 9 IDs + build budget metadata stub); commit fc9988c; 777/777 tests (764 baseline + 13); bundle 780.21 KB <850 KB; ROADMAP Phase 7/8/9 ✅ + v1.1 entry "Shipped Milestones"; REQUIREMENTS 18/18 v1.1 DONE (KIN-03/ANCHOR-01/03/DEC-01/02/MAT-04/TEST-06/07/08 marked [x]); milestone ZAMKNIĘTY pending /gsd-audit-milestone + /gsd-complete-milestone; Phase 9 SC7 manual smoke 60 FPS deferred do user QA session (Plan 09-05)
 - [Phase 09]: Plan 09-01 — PBR foundation 3 grupy: Grupa A Metalik (6 mat: matBody/Shaft/Eccentric/Slider/Flywheel/BrakeSteel) color 0x4a4a4a metalness 0.8 rough 0.5; Grupa B Plastik (4 mat: matSafetyPanelGray/SwitchBody/GuardOrange BHP 0xC8B400/GuardRearBlack) metalness 0.1 rough 0.85; Grupa C Beton matFoundation promoted to instance field color 0x808080 metalness 0 rough 0.95 + _buildConcreteNormalMap() DataTexture 256x256 RGBA8 deterministic hash noise + normalScale (0.3, 0.3) + trackTexture('concrete-normal'); matRod/matBase/matEStopRed/matSafetyButtonGreen/matReadyLamp/matNameplate/matOilSight/matLightCurtain niezmienione; HighlightManager flash compat preserved (emissive osobny kanał od PBR); 738/738 tests (+18 Phase 9 materials); bundle 772.49 kB (+0.58 kB); boundary 4 imports preserved; MAT-01/02/03 ✓ (Plan 09-01)
 
 ### Blockers
@@ -216,7 +222,25 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 09-01 execution (Wave 1 — Phase 9 PBR foundation; 3 commits: 703ad15 RED tests / f5c57f8 Grupa C / 970f996 Grupa A+B). Files written:
+**Last session ended after:** Plan 09-05 execution (Wave 4 — Phase 9 integration audit + Phase 9 close + Milestone v1.1 close; 1 commit: fc9988c integration test). Files written:
+
+- `.planning/phases/09-detail-material-pass/09-05-SUMMARY.md` (created)
+- `tests/PressModel.phase9.integration.test.js` (created — 13 integration testów aggregate Phase 9: PBR Grupa A/B/C + InstancedMesh + spawy + kable + DataTexture + EmissiveController preflash + boundary + KIN-01 + size===15 + forbidden Phase 9 IDs)
+- `.planning/ROADMAP.md` (modified — Phase 7/8/9 ✅; sekcja "Shipped Milestones" rozszerzona o v1.1 entry; Phase 9 close metrics block)
+- `.planning/REQUIREMENTS.md` (modified — 9 [x] markers: KIN-03 + ANCHOR-01 + ANCHOR-03 + DEC-01 + DEC-02 + MAT-04 + TEST-06 + TEST-07 + TEST-08; 18/18 v1.1 DONE)
+- 777/777 tests green (+13 integration; zero regresji); main bundle 780.21 KB (<850 KB hard gate, headroom ~70 KB); boundary preserved (PressModel 4 imports, EmissiveController 2 imports)
+
+**Milestone v1.1 ZAMKNIĘTY** od strony executora — 18/18 wymagań DONE (KIN×3 + ANCHOR×3 + GEO×5 + DEC×2 + MAT×4 + TEST×3); 3 Phases (7/8/9); 13 Plans; 777/777 PASS.
+
+**Next session should:** `/gsd-audit-milestone v1.1` → `/gsd-complete-milestone v1.1`. Optional przed audit: manual smoke session w `npm run dev` dla Phase 9 SC7 (60 FPS check). Po complete-milestone: `/gsd-new-milestone v2` (DIFF-01..04 frontier).
+
+**Earlier:** Plan 09-04 execution (Wave 2 parallel — Phase 9 MAT-04 EmissiveController pre-flash backup; 2 commits: a34f958 RED / bdbe4db GREEN). 8 testów PF1-PF8 + extension of `_savePreFlash`/`_restorePreFlash`/`_preFlashBackups` Map.
+
+**Earlier:** Plan 09-03 execution (Wave 3 — DEC-02 kable; 2 commits: a737641 RED+matCable / f9d6b03 GREEN). TubeGeometry + 4 Box segmenty E-stop arc; 764/764 tests; bundle 780.21 KB.
+
+**Earlier:** Plan 09-02 execution (Wave 2 — DEC-01 śruby InstancedMesh + spawy; 3 commits: 9b74c37 RED / 7cdef34 GREEN / a72c588 bundle). 3 InstancedMesh / 20 instances + 8 spawów R=0.05; 756/756 tests; bundle 778.16 KB.
+
+**Earlier:** Plan 09-01 execution (Wave 1 — Phase 9 PBR foundation; 3 commits: 703ad15 RED tests / f5c57f8 Grupa C / 970f996 Grupa A+B). Files written:
 
 - `.planning/phases/09-detail-material-pass/09-01-SUMMARY.md` (created)
 - `tests/PressModel.materials.phase9.test.js` (created — 18 testów PBR per-grupa + concrete normalMap + Wong regression + dispose path)
