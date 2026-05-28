@@ -101,6 +101,7 @@ export class SessionOverlay {
       const s = this._store.getState();
       // Ostatni attempt — finishSession już push'uje current do attempts[]
       const idx = Math.max(0, (s.session.attempts.length ?? 1) - 1);
+      s.closeOverlay();
       s.openReplay(idx);
     };
     this._replayBtn.addEventListener('click', this._onReplay);
