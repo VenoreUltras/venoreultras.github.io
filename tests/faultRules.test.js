@@ -85,3 +85,55 @@ describe('evaluateFaultRulesData — guard-open-during-cycle (SOP-07)', () => {
     expect(() => evaluateFaultRulesData({ machineState: 'oczekiwanie-na-inspekcje' })).not.toThrow();
   });
 });
+
+// Phase 6 Plan 06-01 Task 2 (D-Phase6-03): nowe reguły faultRules.
+describe('Phase 6 — nowe reguły', () => {
+  it('faultRules zawiera dokładnie 3 reguły (oslona + brak-cisnienia-oleju + awaryjne-zatrzymanie)', () => {
+    expect(faultRules).toHaveLength(3);
+    const ids = faultRules.map(r => r.id);
+    expect(ids).toContain('brak-cisnienia-oleju');
+    expect(ids).toContain('awaryjne-zatrzymanie');
+  });
+
+  it('brak-cisnienia-oleju FIRES gdy wziernik-smarowania=pusty + machineState=w-cyklu', () => {
+    const state = {
+      machineState: 'w-cyklu',
+      meshStates: { 'wziernik-smarowania': 'pusty' },
+    };
+    const effects = evaluateFaultRulesData(state);
+    const fault = effects.find(e => e.type === 'appendEvent' && e.event?.faultId === 'brak-cisnienia-oleju');
+    expect(fault).toBeDefined();
+    expect(fault.event.severity).toBe('critical');
+    expect(effects.some(e => e.type === 'setMachineState' && e.value === 'awaria-brak-oleju')).toBe(true);
+  });
+
+  it('brak-cisnienia-oleju NIE FIRES gdy machineState=oczekiwanie-na-inspekcje (inspekcja w toku)', () => {
+    const state = {
+      machineState: 'oczekiwanie-na-inspekcje',
+      meshStates: { 'wziernik-smarowania': 'pusty' },
+    };
+    const effects = evaluateFaultRulesData(state);
+    expect(effects.some(e => e.event?.faultId === 'brak-cisnienia-oleju')).toBe(false);
+  });
+
+  it('awaryjne-zatrzymanie FIRES gdy estop=pressed + machineState=w-cyklu', () => {
+    const state = {
+      machineState: 'w-cyklu',
+      meshStates: { estop: 'pressed', 'oslona-przednia': 'closed' },
+    };
+    const effects = evaluateFaultRulesData(state);
+    const fault = effects.find(e => e.type === 'appendEvent' && e.event?.faultId === 'awaryjne-zatrzymanie');
+    expect(fault).toBeDefined();
+    expect(fault.event.severity).toBe('critical');
+    expect(effects.some(e => e.type === 'setMachineState' && e.value === 'awaria')).toBe(true);
+  });
+
+  it('awaryjne-zatrzymanie NIE FIRES gdy estop=pressed + machineState=gotowa-do-pracy', () => {
+    const state = {
+      machineState: 'gotowa-do-pracy',
+      meshStates: { estop: 'pressed' },
+    };
+    const effects = evaluateFaultRulesData(state);
+    expect(effects.some(e => e.event?.faultId === 'awaryjne-zatrzymanie')).toBe(false);
+  });
+});

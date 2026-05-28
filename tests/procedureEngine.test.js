@@ -271,6 +271,171 @@ describe('ProcedureEngine.evaluateFaultRules — re-export from faultRules.js', 
   });
 });
 
+// Phase 6 Plan 06-01 Task 2 (D-Phase6-04): bimanual step branch.
+describe('Phase 6 — bimanual', () => {
+  const bimanualScenario = {
+    id: 'bimanual-test',
+    steps: [
+      {
+        id: 'oburecznie',
+        kind: 'bimanual',
+        targetMeshIds: ['przycisk-start-lewy', 'przycisk-start-prawy'],
+        // domyślne windowMs=500
+        labelPL: 'l', descriptionPL: 'd', rationalePL: 'r',
+        effectsOnSuccess: [{ type: 'setMachineState', value: 'rozpedzanie' }],
+        effectsOnError: [],
+      },
+    ],
+  };
+
+  function baseState(extra = {}) {
+    return {
+      currentStepId: 'oburecznie',
+      steps: { oburecznie: { status: 'active' } },
+      machineState: 'gotowa-do-pracy',
+      meshStates: {},
+      events: [],
+      _now: () => 5000,
+      ...extra,
+    };
+  }
+
+  it('happy path: oba meshe i window OK → success z effectsOnSuccess + advanceStep', () => {
+    const intent = {
+      kind: 'bimanual',
+      firstMeshId: 'przycisk-start-lewy',
+      firstTimestamp: 1000,
+      secondMeshId: 'przycisk-start-prawy',
+      secondTimestamp: 1300,
+    };
+    const r = validateStep(intent, baseState(), bimanualScenario);
+    expect(r.ok).toBe(true);
+    expect(r.effects.some(e => e.type === 'advanceStep')).toBe(true);
+    expect(r.effects.some(e => e.type === 'appendEvent' && e.event.type === 'step.done')).toBe(true);
+    expect(r.effects.some(e => e.type === 'setMachineState' && e.value === 'rozpedzanie')).toBe(true);
+  });
+
+  it('timeout: window > 500ms → step.violation z E-BIMANUAL-TIMEOUT severity=medium', () => {
+    const intent = {
+      kind: 'bimanual',
+      firstMeshId: 'przycisk-start-lewy',
+      firstTimestamp: 1000,
+      secondMeshId: 'przycisk-start-prawy',
+      secondTimestamp: 1700,
+    };
+    const r = validateStep(intent, baseState(), bimanualScenario);
+    expect(r.ok).toBe(false);
+    const v = r.effects.find(e => e.event?.type === 'step.violation');
+    expect(v).toBeDefined();
+    expect(v.event.errorCode).toBe('E-BIMANUAL-TIMEOUT');
+    expect(v.event.severity).toBe('medium');
+    expect(r.effects.some(e => e.type === 'setStepStatus' && e.status === 'error')).toBe(true);
+  });
+
+  it('wrong target: niepoprawny mesh → step.violation z E-BIMANUAL-WRONG-TARGET', () => {
+    const intent = {
+      kind: 'bimanual',
+      firstMeshId: 'estop',
+      firstTimestamp: 1000,
+      secondMeshId: 'przycisk-start-prawy',
+      secondTimestamp: 1200,
+    };
+    const r = validateStep(intent, baseState(), bimanualScenario);
+    expect(r.ok).toBe(false);
+    const v = r.effects.find(e => e.event?.type === 'step.violation');
+    expect(v.event.errorCode).toBe('E-BIMANUAL-WRONG-TARGET');
+    expect(v.event.severity).toBe('medium');
+  });
+
+  it('wrong target: ten sam mesh dwa razy → E-BIMANUAL-WRONG-TARGET (distinct check)', () => {
+    const intent = {
+      kind: 'bimanual',
+      firstMeshId: 'przycisk-start-lewy',
+      firstTimestamp: 1000,
+      secondMeshId: 'przycisk-start-lewy',
+      secondTimestamp: 1100,
+    };
+    const r = validateStep(intent, baseState(), bimanualScenario);
+    expect(r.ok).toBe(false);
+    expect(r.effects.find(e => e.event?.type === 'step.violation').event.errorCode).toBe('E-BIMANUAL-WRONG-TARGET');
+  });
+
+  it('custom windowMs respektowane (300ms): 250 OK, 350 timeout', () => {
+    const scenario = {
+      ...bimanualScenario,
+      steps: [{ ...bimanualScenario.steps[0], windowMs: 300 }],
+    };
+    const ok = validateStep({
+      kind: 'bimanual',
+      firstMeshId: 'przycisk-start-lewy', firstTimestamp: 0,
+      secondMeshId: 'przycisk-start-prawy', secondTimestamp: 250,
+    }, baseState(), scenario);
+    expect(ok.ok).toBe(true);
+
+    const timeout = validateStep({
+      kind: 'bimanual',
+      firstMeshId: 'przycisk-start-lewy', firstTimestamp: 0,
+      secondMeshId: 'przycisk-start-prawy', secondTimestamp: 350,
+    }, baseState(), scenario);
+    expect(timeout.ok).toBe(false);
+    expect(timeout.effects.find(e => e.event?.type === 'step.violation').event.errorCode).toBe('E-BIMANUAL-TIMEOUT');
+  });
+});
+
+// Phase 6 Plan 06-01 Task 2 (D-Phase6-05): machineStateAttest branch.
+describe('Phase 6 — machineStateAttest', () => {
+  const attestScenario = {
+    id: 'attest-test',
+    steps: [
+      {
+        id: 'czekaj',
+        kind: 'machineStateAttest',
+        targetMachineState: 'cykl-zakonczony',
+        labelPL: 'l', descriptionPL: 'd', rationalePL: 'r',
+        effectsOnSuccess: [],
+        effectsOnError: [],
+      },
+    ],
+  };
+
+  function makeState(machineState) {
+    return {
+      currentStepId: 'czekaj',
+      steps: { czekaj: { status: 'active' } },
+      machineState,
+      meshStates: {},
+      events: [],
+      _now: () => 2000,
+    };
+  }
+
+  it('happy: machineState=target → success + advanceStep', () => {
+    const r = validateStep({ kind: 'machineStateCheck' }, makeState('cykl-zakonczony'), attestScenario);
+    expect(r.ok).toBe(true);
+    expect(r.effects.some(e => e.type === 'advanceStep')).toBe(true);
+    expect(r.effects.some(e => e.type === 'appendEvent' && e.event.type === 'step.done')).toBe(true);
+  });
+
+  it('waiting: machineState!=target → {ok:false, reason:"machine-state-not-matching", effects:[]} (no-op)', () => {
+    const r = validateStep({ kind: 'machineStateCheck' }, makeState('w-cyklu'), attestScenario);
+    expect(r.ok).toBe(false);
+    expect(r.reason).toBe('machine-state-not-matching');
+    expect(r.effects).toEqual([]);
+  });
+
+  it('po effect setMachineState=target subsequent check → success', () => {
+    // Symuluje cykl: pierw waiting, potem target reached.
+    const state = makeState('w-cyklu');
+    const r1 = validateStep({ kind: 'machineStateCheck' }, state, attestScenario);
+    expect(r1.ok).toBe(false);
+    expect(r1.reason).toBe('machine-state-not-matching');
+
+    const state2 = { ...state, machineState: 'cykl-zakonczony' };
+    const r2 = validateStep({ kind: 'machineStateCheck' }, state2, attestScenario);
+    expect(r2.ok).toBe(true);
+  });
+});
+
 describe('ProcedureEngine — boundary check (SOP-01 pre-flight)', () => {
   it('source pliku NIE importuje three, gsap, ../state/, DOM globals', () => {
     const url = new URL('../src/training/ProcedureEngine.js', import.meta.url);
