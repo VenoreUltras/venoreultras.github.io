@@ -67,6 +67,11 @@ export const pl = {
     'zatrzymana': 'Zatrzymana',
     'awaria': 'Awaria — błąd procedury',
     'tryb-wolny': 'Tryb wolny',
+    // Phase 6 Plan 06-01 (D-Phase6-05): 4 nowe stany dla scenariuszy cykl-pracy / zatrzymanie / awaria.
+    'cykl-zakonczony': 'Cykl zakończony',
+    'awaria-os-otwarta': 'Awaria — osłona otwarta',
+    'awaria-brak-oleju': 'Awaria — brak oleju',
+    'lockout': 'Lockout / LOTO',
   },
 
   // Phase 4 — Plan 04-01 (D-Phase4-05): emoji ikony 7 stanów maszyny.
@@ -79,6 +84,11 @@ export const pl = {
     'zatrzymana': '⏸️',
     'awaria': '⚠️',
     'tryb-wolny': '🆓',
+    // Phase 6 Plan 06-01 (D-Phase6-05): 4 nowe ikony 1:1 z pl.machineState.
+    'cykl-zakonczony': '✔️',
+    'awaria-os-otwarta': '🚨',
+    'awaria-brak-oleju': '⛽',
+    'lockout': '🔒',
   },
 
   // Phase 4 — Plan 04-01 (D-Phase4-04/05): etykiety statusów kroku procedury.
@@ -224,4 +234,82 @@ export const pl = {
       description: 'Tabliczka identyfikacyjna prasy — model, numer seryjny i dane producenta wymagane przez Dyrektywę Maszynową.',
     },
   },
+
+  // Phase 6 Plan 06-01 (UI-SPEC §Copywriting Contract): tytuły 4 scenariuszy SOP.
+  scenarios: {
+    'uruchomienie': { title: 'Uruchomienie' },
+    'cykl-pracy':   { title: 'Cykl pracy' },
+    'zatrzymanie':  { title: 'Zatrzymanie' },
+    'awaria':       { title: 'Awaria' },
+  },
+
+  // Phase 6 Plan 06-01 (D-Phase6-18, SCORE-06): formy liczby mnogiej dla pluralPL.
+  plurals: {
+    blad:  { one: 'błąd',  few: 'błędy', many: 'błędów' },
+    proba: { one: 'próba', few: 'próby', many: 'prób' },
+  },
+
+  // Phase 6 Plan 06-01 (UI-SPEC §Copywriting Contract): session-complete overlay.
+  // Funkcje (metricErrors/metricTime/metricAttempts) używają pluralPL przez closure
+  // do `pl.plurals` — działa, bo `pl` jest module-scoped (referencja po pełnej inicjalizacji).
+  overlay: {
+    sessionComplete:     'Sesja zakończona',
+    scoreLabel:          'Wynik końcowy',
+    openReplay:          'Otwórz replay',
+    retry:               'Spróbuj ponownie',
+    exportJson:          'Eksportuj JSON',
+    exportPdf:           'Eksportuj PDF',
+    closeAria:           'Zamknij podsumowanie',
+    errorsSectionTitle:  'Lista błędów',
+    noErrors:            'Brak błędów — doskonały wynik!',
+    viewLastSession:     'Wyświetl ostatnią sesję',
+    metricErrors:   (n) => `${n} ${pluralPL(n, pl.plurals.blad)} w tej próbie`,
+    metricTime:     (mm, ss) => `Czas: ${mm}:${ss}`,
+    metricAttempts: (n) => `${n} ${pluralPL(n, pl.plurals.proba)}`,
+  },
+
+  // Phase 6 Plan 06-01 (UI-SPEC §Copywriting Contract): replay drawer.
+  replay: {
+    drawerLabel: 'Replay sesji',
+    playAria:    'Odtwarzaj',
+    pauseAria:   'Pauza',
+    speedNormal: '1×',
+    speedSlow:   '0.25×',
+    closeAria:   'Zamknij replay',
+    infoFormat:  (title, idx, total) => `${title} · Próba ${idx} z ${total}`,
+  },
+
+  // Phase 6 Plan 06-01 (UI-SPEC §Copywriting Contract): PDF report.
+  // CRIT-1 lock: `reportTitle` literał "RAPORT SESJI SZKOLENIOWEJ" — NIGDY "Certyfikat".
+  pdf: {
+    reportTitle:        'RAPORT SESJI SZKOLENIOWEJ',
+    scenarioLabel:      'Scenariusz:',
+    sectionSummary:     'Podsumowanie',
+    sectionErrors:      'Lista błędów',
+    sectionMissed:      'Pominięte kroki i naruszenia kolejności',
+    sectionAttempts:    'Historia prób',
+    colNum:             '#',
+    colTime:            'Czas',
+    colStep:            'Krok',
+    colSeverity:        'Powaga',
+    severityCritical:   'Krytyczny',
+    severityMedium:     'Sredni',
+    severityMinor:      'Drobny',
+    pageLabel:          (cur, total) => `Strona ${cur} z ${total}`,
+    appVersion:         'pm300-trener v1.0',
+  },
 };
+
+// Phase 6 Plan 06-01 (D-Phase6-18, SCORE-06): wrapper na Intl.PluralRules('pl-PL').
+// Cache jednej instancji na module-level — `new Intl.PluralRules` jest kosztowne (V8 ~50µs).
+const _pluralRules = new Intl.PluralRules('pl-PL');
+
+/**
+ * Zwraca formę polską licznika n.
+ * @param {number} n - licznik
+ * @param {{one:string, few:string, many:string}} forms - mapa form (z pl.plurals.*)
+ * @returns {string}
+ */
+export function pluralPL(n, forms) {
+  return forms[_pluralRules.select(n)] ?? forms.many;
+}

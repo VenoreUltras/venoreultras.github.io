@@ -184,13 +184,14 @@ describe('HelpModal — legenda ikon (Test 7)', () => {
     document.body.innerHTML = '';
   });
 
-  it('icon-legend zawiera wpisy dla stepStates (4) + machineStates (7) + difficulty (2)', () => {
+  it('icon-legend zawiera wpisy dla stepStates (4) + machineStates (11) + difficulty (2)', () => {
     const body = document.querySelector('.modal-card__body');
     const legend = body.querySelector('.icon-legend');
     expect(legend).not.toBeNull();
     const items = legend.querySelectorAll('li');
-    // 4 stepStates + 7 machineStates + 2 difficulty = 13
-    expect(items.length).toBe(13);
+    // Phase 6 Plan 06-01 (D-Phase6-05): machineStates wzrosły z 7 do 11 (cykl-zakonczony /
+    // awaria-os-otwarta / awaria-brak-oleju / lockout). 4 stepStates + 11 machineStates + 2 difficulty = 17.
+    expect(items.length).toBe(17);
   });
 });
 
