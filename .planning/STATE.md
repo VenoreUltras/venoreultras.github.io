@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Phase 05 complete
-last_updated: "2026-05-27T11:13:02.448Z"
+last_updated: "2026-05-28T05:38:50.831Z"
 progress:
   total_phases: 6
   completed_phases: 5
-  total_plans: 30
-  completed_plans: 30
-  percent: 83
+  total_plans: 38
+  completed_plans: 31
+  percent: 82
 ---
 
 # Project State: PM-300 Trener
@@ -28,12 +28,12 @@ progress:
 - `.planning/research/SUMMARY.md` — synthesis of stack/features/architecture/pitfalls research
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 05 — educational-layer
+**Current focus:** Phase 06 — scenarios-replay-retry-export
 
 ## Current Position
 
-Phase: 05 — COMPLETE
-Plan: 1 of 8
+Phase: 06 (scenarios-replay-retry-export) — EXECUTING
+Plan: 2 of 8
 Phase 04 — COMPLETE (267 tests green; UAT 5/5 pass; +5 in-session fixes: main-switch repositioning, wrong-click flash + ordering race, spinup animation, completion overlay)
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
 Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
@@ -48,7 +48,7 @@ Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
 
 **Progress:**
 
-```
+[████████░░] 82%
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
 Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
 Phase 3: Click-to-State Pipeline             [█████████░] 95%  code complete (5/5 plans, manual checkpoint pending)
@@ -56,6 +56,7 @@ Phase 4: Visual Feedback Layer               [█████████░] 95
 Phase 5: Educational Layer                   [          ] 0%   not started
 Phase 6: Scenarios + Replay + Retry + Export [          ] 0%   not started
 Phase 7: (v2) Differentiators                [    v2    ] —    deferred
+
 ```
 
 ## Performance Metrics
@@ -67,6 +68,7 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 | Phases complete | 6/6 | 0/6 |
 | ProcedureEngine test coverage | ≥95% | n/a (Phase 1) |
 | FPS target on integrated graphics | 60 | n/a (existing demo holds it; new layers must preserve it) |
+| Phase 06 P01 | 10min | 3 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -175,6 +177,9 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - EmissiveController._applyTopLayer + dispose: graceful skip dla materiałów bez `emissive` field (MeshBasicMaterial — tabliczka znamionowa Phase 2 D-Phase2-08); HighlightManager iteruje po wszystkich krokach scenariusza w tym sprawdz-tabliczke. Bug ujawnił się w integration; Rule 1 fix w Plan 04-06 (testy jednostkowe Plan 04-02 używały tylko MeshStandardMaterial)
 - src/UI.js: updateStatus() projekcja isRunning → #status-text USUNIĘTE (D-Phase4-17); btn-toggle nadal flipuje this.isRunning (slider RPM tor zachowany — ortogonalny kanał kontroli wału, niezależny od machineState w storze) (Plan 04-06)
 - tests/application.test.js Phase 3 wiring describe wycofany — placeholder DOM nodes (#phase3-step-readout/#phase3-attest-container) usunięte z index.html w Plan 04-05; zastąpione Phase 4 wiring describe z 9 assercjami w tym dispose order spy via `mock.invocationCallOrder` (Plan 04-06)
+- [Phase ?]: Bimanual+machineStateAttest helpery PRZED Branch 3 (Plan 06-01) — early-return zachowuje 4-branchową hierarchię ProcedureEngine bez zagnieżdżenia
+- [Phase ?]: machineStateAttest brak-match zwraca no-op (Plan 06-01) — store w Plan 06-02 dorzuci subscriber (s)=>s.machineState który wywoła attemptMachineStateAttest
+- [Phase ?]: pluralPL używa cached Intl.PluralRules('pl-PL') na module-level (Plan 06-01, D-Phase6-18); pl.overlay.metricErrors itp. arrow-fields wywołują pluralPL lazy bez TDZ
 
 ### Blockers
 
