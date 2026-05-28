@@ -54,11 +54,13 @@ Polish + visual realism milestone — naprawia 2 wizualne bugi z v1.0 (rotacja c
 4. Kolumny ramy z subtelnymi detalami (przekątne wsporniki LUB pofazowane krawędzie LUB cross-bracing) — minimalistyczna estetyka zachowana
 5. `getInteractables().size === 15` po fazie (bez zmian — nowe meshy decorative; Phase 7-03 audit ustalił faktyczną baseline 15, nie 13 — korekta vs poprzedni roadmap snapshot); RaycastController nie reaguje na nowe meshy
 6. Testy boundary: `pressModel.js` nadal nie importuje DOM/store
-**Plans**: 4 plans (decomposed via /gsd:plan-phase 8); Status: 2/4 complete
+**Plans**: 4 plans (decomposed via /gsd:plan-phase 8); Status: 4/4 complete — **Phase 8 COMPLETE**
 - ✅ Plan 08-01: Fundament + 4 śruby kotwowe (GEO-01) [Wave 1]
 - ✅ Plan 08-02: Stół roboczy KIN-aware z PhysicsEngine derywacją (GEO-02) [Wave 2]
-- ⏳ Plan 08-03: Wsporniki łożysk + mid-brace (GEO-03, GEO-04) [Wave 2]
-- ⏳ Plan 08-04: Integration audit + floor invariant update (TEST-06/08 partial) [Wave 3]
+- ✅ Plan 08-03: Wsporniki łożysk + mid-brace (GEO-03, GEO-04) [Wave 2]
+- ✅ Plan 08-04: Integration audit (11 decoration meshes count, boundary, KIN-01) + floor invariant defensywny (TEST-06/08 partial) [Wave 3]
+
+**Phase 8 close metrics:** 720/720 tests PASS · main bundle 771.91 kB (<800 KB hard limit, 78 kB headroom do Phase 9 850 KB final budget) · 11 decoration meshes (2 łożyska Phase 7 + 1 fundament + 4 śruby + 1 stół + 2 brackets + 1 mid-brace) · getInteractables().size===15 preserved · D-Phase7-05 boundary preserved (4 imports). Phase 9 readiness: wszystkie 11 decoration używają MeshStandardMaterial → PBR upgrade bez zmian geometrii.
 
 ### Phase 9: Detail & Material Pass
 **Goal:** Industrial feel przez drobne dekoracje (śruby, kable, panele) i PBR materiały różnicujące rolę elementów (metal frame vs plastik osłony vs beton podstawa). Funkcjonalność nietknięta, performance 60 FPS sustained.

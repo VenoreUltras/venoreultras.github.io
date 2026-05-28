@@ -25,9 +25,9 @@ Wymagania dla wizualnego polish + bugfix milestone. Każde mapowane na fazę v1.
 
 - [x] **GEO-01**: Podstawa/fundament prasy — solidny blok z 4 śrubami kotwowymi do podłoża (`userData.kind='decoration'`, nie klikalna) (Phase 8-01)
 - [x] **GEO-02**: Stół roboczy pod suwakiem — powierzchnia na której teoretycznie ląduje sztanca tłocząca; pozycja zgodna z dolną martwą strefą suwaka (Phase 8-02 — KIN-aware derywacja z PhysicsEngine; tableCenterY=2.10 dla LIVE r=0.8/l=4.0/shaftY=8.0)
-- [ ] **GEO-03**: Osłony łożysk + wsporniki wału — wizualne mocowanie wału do kolumn (eliminuje ANCHOR-02 floating)
-- [ ] **GEO-04**: Kolumny ramy bardziej press-like — opcjonalne frezowanie / pofazowania / cross-bracing, zachowując minimalizm (boxy proportions OK, drobne detale dla feel)
-- [ ] **GEO-05**: Wszystkie nowe meshy `userData.kind='decoration'` — nie pojawiają się w `getInteractables()` ani `getMeshDictionary()`, RaycastController je ignoruje (partial — fundament+śruby Phase 8-01, stół Phase 8-02; pozostałe meshe Phase 8-03/04)
+- [x] **GEO-03**: Osłony łożysk + wsporniki wału — wizualne mocowanie wału do kolumn (eliminuje ANCHOR-02 floating) (Phase 8-03 — 2 brackets BoxGeometry(0.4,1.0,1.0) @ (±2, 8, -0.5) między łożyskami a kolumnami)
+- [x] **GEO-04**: Kolumny ramy bardziej press-like — opcjonalne frezowanie / pofazowania / cross-bracing, zachowując minimalizm (Phase 8-03 — mid-brace BoxGeometry(4,0.4,0.4) @ (0,4,-1); topFrame Phase 1 JUŻ łączy kolumny u góry; chamfers/X-cross deferred do v1.2+)
+- [x] **GEO-05**: Wszystkie nowe meshy `userData.kind='decoration'` — nie pojawiają się w `getInteractables()` ani `getMeshDictionary()`, RaycastController je ignoruje (Phase 8-04 audit — 11 decoration meshes weryfikowane w PressModel.phase8.integration.test.js #1, #3, #4, #7)
 
 ### Industrial Detail Pass (DEC)
 
@@ -43,7 +43,7 @@ Wymagania dla wizualnego polish + bugfix milestone. Każde mapowane na fazę v1.
 
 ### Testing & Regression (TEST)
 
-- [ ] **TEST-06**: `npm test` — wszystkie 642 testy v1.0 pozostają zielone (brak funkcjonalnej regresji)
+- [ ] **TEST-06**: `npm test` — wszystkie 642 testy v1.0 pozostają zielone (brak funkcjonalnej regresji) (Phase 8-04 partial — 720/720 PASS, 642 v1 baseline + 78 Phase 7+8 nowych; full close po Phase 9 verify)
 - [ ] **TEST-07**: Nowe testy: PressModel position invariants (każdy `getInteractables()` mesh ma `worldPosition.y >= podstawaY`), decorative meshes nie pojawiają się w `getInteractables()`, rotacja-tick unit test
 - [ ] **TEST-08**: `npm run build` < 850KB main bundle (obecny 770KB + dopuszczalne ~80KB na geometry + materiały)
 

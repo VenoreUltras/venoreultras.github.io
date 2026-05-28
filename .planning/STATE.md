@@ -3,7 +3,7 @@ gsd_state_version: 1.0
 milestone: v1.1
 milestone_name: Visual Quality & Press Realism
 status: Milestone v1.1 defined — gotowe do /gsd-plan-phase 7
-last_updated: "2026-05-28T14:45:00.000Z"
+last_updated: "2026-05-28T14:55:00.000Z"
 progress:
   total_phases: 3
   completed_phases: 0
@@ -205,6 +205,9 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [Phase ?]: [Phase 07]: ANCHOR-03 outstanding — panel-oburezny + estop + wylacznik-glowny wymagają widocznych wsporników/kabli (deferred do Phase 8 GEO-02/04 + Phase 9 DEC-02) (Plan 07-03)
 - [Phase 08]: Plan 08-01 — _buildFoundation() decoration mesh: fundament BoxGeometry(6, 0.8, 4) @ y∈[-0.8, 0] + 4 śruby kotwowe CylinderGeometry(0.1, 0.1, 0.3) w narożnikach (±2.8, -0.15, ±1.8); placeholder kolory 0x3a3a3a / 0x1a1a1a; 691/691 tests; +0.46 kB bundle (Plan 08-01)
 - [Phase 08]: Plan 08-02 — _buildWorktable() decoration mesh KIN-aware: BoxGeometry(3, 0.3, 2.5) @ y=2.10 derywowane z PhysicsEngine (shaftY - (r+l) - sliderHalfH - clearance - tableHalfH); auto-fit gdy user zmieni r/l/shaftY; 16-kątowy clearance test; pattern filtru po geometrii w foundation.test.js Rule 2; 700/700 tests; +0.27 kB bundle (Plan 08-02)
+- [Phase 08]: Plan 08-03 — _buildBearingBrackets() 2x BoxGeometry(0.4,1.0,1.0) @ (±2, 8, -0.5) + _buildCrossBrace() 1x BoxGeometry(4,0.4,0.4) @ (0,4,-1) mid-brace; reuse this.matBody (strukturalne mesh ramy); audit topFrame JUŻ istnieje (linie 88-93) — NIE duplikujemy; chamfers/X-cross deferred do v1.2+; 709/709 tests; +0.56 kB bundle (Plan 08-03)
+- [Phase 08]: Plan 08-04 — integration audit (10 testów: count===11, geometry inventory, size===15 x2, boundary 4 imports fs+regex, KIN-01 dla 11 decoration, forbidden IDs, floor >= -0.8, MeshStandardMaterial wszystkie) + anchoring test #4 defensywny (interactables y > -0.8 - EPSILON); 720/720 tests; bundle 771.91 kB (<800 KB hard limit ✓); Phase 8 CLOSED (Plan 08-04)
+- [Phase 08]: ROADMAP discrepancy note — success criterion mówi "size===13" błędnie (historyczne); faktyczna baseline Phase 2 + Phase 7 audit = 15; testy używają live state (15), rekomendacja update ROADMAP Phase 9 (Plan 08-04)
 
 ### Blockers
 
@@ -212,7 +215,17 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Plan 04-06 execution (Wave 5 — Application wiring + UI.updateStatus removal + boundaries +5 + integration FEEDBACK-04; 4 commits: 3390ba2 task1 / cd16546 task2 / fb363ec task3 / 092114c task4). Files written:
+**Last session ended after:** Plan 08-04 execution (Wave 3 — Phase 8 closing integration audit + floor invariant extension; 2 commits: ced6773 task1 / 0dae02b task2). Files written:
+
+- `.planning/phases/08-press-body-expansion/08-04-SUMMARY.md` (created)
+- `tests/PressModel.phase8.integration.test.js` (created — 10 testów aggregate Phase 8 audit)
+- `tests/PressModel.anchoring.test.js` (modified — header note + komentarz test #3 zaktualizowany + NEW test #4 defensywny interactables y > -0.8 - EPSILON)
+- 720/720 tests green; main bundle 771.91 kB (<800 KB hard limit, 28.09 kB headroom do Phase 9 850 KB final budget)
+- Phase 8 ZAMKNIĘTA — 11 decoration meshes, 15 interactables preserved, boundary D-Phase7-05 preserved (4 imports), wszystkie decoration MeshStandardMaterial (Phase 9 PBR ready)
+
+**Next session should:** `/gsd-verify-work 8` (formal verification Phase 8 — recommend manual smoke 5 min: npm run dev + visual confirm fundament/śruby/stół/wsporniki/mid-brace bez kolizji ze suwakiem) → `/gsd-discuss-phase 9` (materials PBR + decorative details DEC-01/02).
+
+**Earlier:** Plan 04-06 execution (Wave 5 — Application wiring + UI.updateStatus removal + boundaries +5 + integration FEEDBACK-04; 4 commits: 3390ba2 task1 / cd16546 task2 / fb363ec task3 / 092114c task4). Files written:
 
 - `.planning/phases/04-visual-feedback-layer/04-06-SUMMARY.md` (created)
 - `src/main.js` (modified — Application z 5 nowymi controllerami; bootstrap localStorage 'pm300:hc-outline:v1' PRZED startScenario; dispose chain T-04-14 — RaycastController PRZED EmissiveController; usunięte _wireStoreSubscribers/_renderStatusText/_renderStepAndAttest)
