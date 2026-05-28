@@ -292,6 +292,19 @@ export function createTrainingStore(opts = {}) {
   store.subscribe((s) => s.machineState, _tryAttest);
   store.subscribe((s) => s.currentStepId, _tryAttest);
 
+  // D-Phase6-09: finishSession auto-trigger gdy currentStepId staje się null
+  // (advanceStep przeszedł poza ostatni krok). Idempotency: nie nadpisuj finishedAt
+  // jeśli już ustawione (chroni przed ponownym set'em np. retry → 1-step scenario edge).
+  store.subscribe(
+    (s) => s.currentStepId,
+    (currentStepId, prevStepId) => {
+      const s = store.getState();
+      if (currentStepId === null && prevStepId !== null && s.session.finishedAt === null) {
+        s.finishSession();
+      }
+    }
+  );
+
   return store;
 }
 
