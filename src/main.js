@@ -13,12 +13,30 @@ import { EdgeOutlineController } from './highlight/EdgeOutlineController.js';
 import { StatusPanel } from './ui/StatusPanel.js';
 import { StepPanel } from './ui/StepPanel.js';
 import uruchomienie from './training/scenarios/uruchomienie.js';
+import { scenarios as allScenarios } from './training/scenarios/index.js';
 import { TooltipManager } from './education/TooltipManager.js';
 import { AudioController } from './education/AudioController.js';
 import { KeyboardController } from './education/KeyboardController.js';
 import { LabelOverlay } from './education/LabelOverlay.js';
 import { HelpModal } from './ui/HelpModal.js';
 import { ConfirmModal } from './ui/ConfirmModal.js';
+// Phase 6 Plan 06-08 — replay + session overlay + persistence + export wrappers.
+import { ReplayEngine } from './replay/ReplayEngine.js';
+import { ReplayDrawer } from './ui/ReplayDrawer.js';
+import { SessionOverlay } from './ui/SessionOverlay.js';
+import { computeMetrics } from './training/ScoringService.js';
+import {
+  buildJsonPayload,
+  downloadJson,
+  generateFilename as jsonFilename,
+} from './export/JsonExporter.js';
+import { downloadPdf, generateFilename as pdfFilename } from './export/PdfExporter.js';
+import {
+  loadPersistedSession,
+  savePersistedSession,
+  SESSION_KEY,
+} from './persistence/sessionPersistence.js';
+import { pl } from './i18n/pl.js';
 
 const HC_STORAGE_KEY = 'pm300:hc-outline:v1'; // D-Phase4-09
 const DIFFICULTY_KEY = 'pm300:difficulty:v1';  // D-Phase5-04
@@ -80,8 +98,81 @@ export class Application {
       }),
     );
 
-    // D-Phase3-01: auto-start scenariusza uruchomienie (Phase 6 doda dropdown wyboru).
+    // Phase 6 Plan 06-08 — bootstrap persisted session (ostatnia sesja, exposable via SessionOverlay
+    // history button). NIE wpływa na initial state — startScenario poniżej resetuje stan.
+    this._persistedSession = loadPersistedSession(SESSION_KEY);
+
+    // D-Phase3-01: auto-start scenariusza uruchomienie (Phase 6 dorzuca ScenarioSelector + klawisze 1-4).
     this.store.getState().startScenario(uruchomienie);
+
+    // Phase 6 Plan 06-08 — machineStateAttest initial-state edge case (Plan 06-02 Task 2).
+    // Subscriber widzi tylko zmiany; gdy pierwszy step już matchuje initialMachineState — attempt ręcznie.
+    {
+      const initialState = this.store.getState();
+      const initialStep = initialState.activeScenario?.steps?.find(s => s.id === initialState.currentStepId);
+      if (initialStep?.kind === 'machineStateAttest') {
+        initialState.attemptMachineStateAttest?.();
+      }
+    }
+
+    // Phase 6 Plan 06-08 — diagnostic mesh sanity check (T-06-07 mitigation).
+    // Po każdym starcie scenariusza weryfikuje że wszystkie targetMeshIds istnieją w pressModel.
+    this._unsubscribers.push(this.store.subscribe(
+      (s) => s.session?.scenarioId,
+      (scenarioId) => {
+        if (!scenarioId || !allScenarios[scenarioId]) return;
+        const interactableIds = new Set(this.pressModel.getInteractables().keys());
+        for (const step of allScenarios[scenarioId].steps ?? []) {
+          const meshIds = step.targetMeshIds ?? (step.targetMeshId ? [step.targetMeshId] : []);
+          for (const m of meshIds) {
+            if (!interactableIds.has(m)) {
+              console.warn(`[Application] Scenariusz ${scenarioId}: mesh "${m}" w kroku "${step.id}" nie istnieje w pressModel.`);
+            }
+          }
+        }
+      },
+      { fireImmediately: true },
+    ));
+
+    // Phase 6 Plan 06-08 — cycle-end timer (T-06-21 mitigation: clearTimeout na każdą zmianę
+    // machineState !== 'w-cyklu', defensive check przed setMachineState='cykl-zakonczony').
+    this._cycleEndHandle = null;
+    this._unsubscribers.push(this.store.subscribe(
+      (s) => s.machineState,
+      (cur, prev) => {
+        if (cur === 'w-cyklu' && prev !== 'w-cyklu') {
+          clearTimeout(this._cycleEndHandle);
+          this._cycleEndHandle = setTimeout(() => {
+            if (this.store.getState().machineState === 'w-cyklu') {
+              this.store.setState({ machineState: 'cykl-zakonczony' });
+            }
+          }, 3000); // 3s cycle duration (matches Phase 1 spin-up timer)
+        }
+        if (cur !== 'w-cyklu') {
+          clearTimeout(this._cycleEndHandle);
+          this._cycleEndHandle = null;
+        }
+      },
+    ));
+
+    // Phase 6 Plan 06-08 — persist subscriber: na finishedAt !== null zapisz snapshot do localStorage.
+    this._unsubscribers.push(this.store.subscribe(
+      (s) => s.session.finishedAt,
+      (finishedAt) => {
+        if (finishedAt === null) return;
+        const state = this.store.getState();
+        const snapshot = {
+          version: 'v1',
+          session: state.session,
+          metadata: {
+            exportedAt: Date.now(),
+            appVersion: 'pm300-trener v1.0',
+            scenarioTitlePL: pl.scenarios[state.session.scenarioId]?.title,
+          },
+        };
+        savePersistedSession(snapshot, SESSION_KEY);
+      },
+    ));
 
     // D-Phase4-14: EmissiveController PRZED RaycastController (RaycastController potrzebuje go w DI dla warstwy 'hover').
     this.emissiveController = new EmissiveController({
@@ -122,10 +213,10 @@ export class Application {
     // (a) AudioController (boundary-clean, store-only — niezależny)
     this.audioController = new AudioController({ store: this.store });
 
-    // (b) KeyboardController (window listener)
+    // (b) KeyboardController (window listener) — Phase 6 Plan 06-08: wszystkie 4 scenariusze.
     this.keyboardController = new KeyboardController({
       store: this.store,
-      scenarios: { uruchomienie },
+      scenarios: allScenarios,
     });
 
     // (c) LabelOverlay (per-frame tickable)
@@ -142,9 +233,10 @@ export class Application {
     this.helpModal = new HelpModal({ store: this.store });
 
     // (d.2) ConfirmModal — modal dla potwierdzenia zmiany scenariusza mid-run (D-Phase5-07).
+    // Phase 6 Plan 06-08: wszystkie 4 scenariusze dostępne dla mid-run switch.
     this.confirmModal = new ConfirmModal({
       store: this.store,
-      scenarios: { uruchomienie },
+      scenarios: allScenarios,
     });
 
     // (e) TooltipManager — PO RaycastController, by wpiąć onHoverChange callback po-hoc
@@ -159,6 +251,19 @@ export class Application {
       // LabelOverlay tryb hover-only — śledzi bieżący hovered mesh.
       this.labelOverlay.onHoverChange(id, mesh);
     };
+
+    // Phase 6 Plan 06-08 wiring — ReplayEngine + ReplayDrawer + SessionOverlay z DI export wrapperów.
+    // Kolejność: ReplayEngine (gsap.ticker, attach) → ReplayDrawer (DI replayEngine) → SessionOverlay.
+    this.replayEngine = new ReplayEngine({ liveStore: this.store, gsapTicker: gsap.ticker });
+    this.replayEngine.attach();
+    this.replayDrawer = new ReplayDrawer({ store: this.store, replayEngine: this.replayEngine });
+    this.sessionOverlay = new SessionOverlay({
+      store: this.store,
+      scenarios: allScenarios,
+      computeMetrics,
+      jsonExporter: { build: buildJsonPayload, download: downloadJson, generateFilename: jsonFilename },
+      pdfExporter: { download: downloadPdf, generateFilename: pdfFilename },
+    });
 
     // Dev-only: expose Application na window dla manualnego QA (D-Phase5-Discretion).
     if (import.meta.env?.DEV) {
@@ -195,6 +300,10 @@ export class Application {
       this.currentAngle = (this.currentAngle + this._omega * dtSeconds) % (Math.PI * 2);
     }
 
+    // Phase 6 Plan 06-08 Pitfall 1 — events potrzebują angle do deterministic replay 3D pose.
+    // _currentAngle to pole "private" (underscore prefix); brak selektywnych subscriberów → T-06-22 OK.
+    state.setCurrentAngle?.(this.currentAngle);
+
     // Aktualizujemy pozycję elementów modelu prasy
     this.pressModel.update(this.currentAngle);
 
@@ -225,6 +334,15 @@ export class Application {
     gsap.ticker.remove(this._tickerCallback);
     for (const unsub of this._unsubscribers) unsub();
     this._unsubscribers = [];
+    // Phase 6 Plan 06-08 — cycle-end timer cleanup PRZED komponentami (defensive).
+    if (this._cycleEndHandle) {
+      clearTimeout(this._cycleEndHandle);
+      this._cycleEndHandle = null;
+    }
+    // Phase 6 — odwrotna kolejność tworzenia: SessionOverlay → ReplayDrawer → ReplayEngine.
+    if (this.sessionOverlay) this.sessionOverlay.dispose();
+    if (this.replayDrawer) this.replayDrawer.dispose();
+    if (this.replayEngine) this.replayEngine.dispose();
     if (this.disclaimerBanner) this.disclaimerBanner.dispose();
     // Phase 4
     if (this.stepPanel) this.stepPanel.dispose();

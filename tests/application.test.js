@@ -194,6 +194,8 @@ describe('Application — Phase 4 wiring (Plan 04-06)', () => {
       <aside id="step-panel"></aside>
       <div id="modal-container"></div>
       <div id="label-overlay-container"></div>
+      <div id="session-overlay" style="display:none;"></div>
+      <div id="replay-drawer" style="display:none;"></div>
       <span id="status-dot" class="dot"></span>
       <span id="status-text"></span>
       <input type="range" id="speed-slider" min="10" max="120" value="30">
@@ -326,6 +328,8 @@ describe('Application — Phase 5 wiring (Plan 05-07)', () => {
       <aside id="step-panel"></aside>
       <div id="modal-container"></div>
       <div id="label-overlay-container"></div>
+      <div id="session-overlay" style="display:none;"></div>
+      <div id="replay-drawer" style="display:none;"></div>
       <span id="status-dot" class="dot"></span>
       <span id="status-text"></span>
       <input type="range" id="speed-slider" min="10" max="120" value="30">
@@ -508,5 +512,171 @@ describe('Application — Phase 5 wiring (Plan 05-07)', () => {
     const src = readFileSync('src/main.js', 'utf-8');
     expect(src).toMatch(/import\.meta\.env\?\.DEV/);
     expect(src).toMatch(/globalThis\.__app__/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 6 wiring (Plan 06-08) — ReplayEngine + ReplayDrawer + SessionOverlay
+// + persist subscriber + cycle-end timer + setCurrentAngle injection + dispose chain
+// ---------------------------------------------------------------------------
+describe('Application — Phase 6 wiring (Plan 06-08)', () => {
+  let app;
+  let Application;
+
+  beforeEach(async () => {
+    document.body.innerHTML = `
+      <div id="three-canvas"></div>
+      <div id="status-panel"></div>
+      <aside id="step-panel"></aside>
+      <div id="modal-container"></div>
+      <div id="label-overlay-container"></div>
+      <div id="session-overlay" style="display:none;"></div>
+      <div id="replay-drawer" style="display:none;"></div>
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text"></span>
+      <input type="range" id="speed-slider" min="10" max="120" value="30">
+      <span id="speed-value">30</span>
+      <button id="btn-toggle">Start/Stop</button>
+      <span id="val-angle">0</span>
+      <span id="val-displacement">0</span>
+    `;
+    try {
+      localStorage.removeItem('pm300:hc-outline:v1');
+      localStorage.removeItem('pm300:difficulty:v1');
+      localStorage.removeItem('pm300:audio-mute:v1');
+      localStorage.removeItem('pm300:session:v1');
+    } catch { /* noop */ }
+    vi.stubGlobal('AudioContext', MockAudioContext);
+    vi.resetModules();
+    const mod = await import('../src/main.js');
+    Application = mod.Application;
+    app = new Application();
+  });
+
+  afterEach(() => {
+    if (app) {
+      try { app.dispose(); } catch { /* już zdisposed */ }
+    }
+    app = null;
+    document.body.innerHTML = '';
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  // P1: instancjacja trzech nowych klas
+  it('P1: Application instancjuje ReplayEngine, ReplayDrawer, SessionOverlay', () => {
+    expect(app.replayEngine?.constructor?.name).toBe('ReplayEngine');
+    expect(app.replayDrawer?.constructor?.name).toBe('ReplayDrawer');
+    expect(app.sessionOverlay?.constructor?.name).toBe('SessionOverlay');
+  });
+
+  // P2: setCurrentAngle wywoływane w simulationTick z bieżącym currentAngle
+  it('P2: simulationTick wywołuje store.setCurrentAngle z this.currentAngle', () => {
+    const spy = vi.spyOn(app.store.getState(), 'setCurrentAngle');
+    app._omega = 1;
+    app.store.setState({ activeModal: null });
+    app.simulationTick(50);
+    expect(spy).toHaveBeenCalled();
+    const lastCall = spy.mock.calls[spy.mock.calls.length - 1];
+    expect(lastCall[0]).toBeCloseTo(app.currentAngle, 6);
+  });
+
+  // P3: cycle-end timer — w-cyklu → po 3s cykl-zakonczony
+  it('P3: machineState w-cyklu → setTimeout 3s → cykl-zakonczony', () => {
+    vi.useFakeTimers();
+    try {
+      app.store.setState({ machineState: 'w-cyklu' });
+      expect(app._cycleEndHandle).not.toBeNull();
+      vi.advanceTimersByTime(3000);
+      expect(app.store.getState().machineState).toBe('cykl-zakonczony');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // P4: cycle-end timer anulowany gdy machineState zmieni się na awaria przed 3s
+  it('P4: awaria PRZED 3s anuluje cycle-end timer — machineState NIE staje się cykl-zakonczony', () => {
+    vi.useFakeTimers();
+    try {
+      app.store.setState({ machineState: 'w-cyklu' });
+      vi.advanceTimersByTime(1000);
+      app.store.setState({ machineState: 'awaria' });
+      vi.advanceTimersByTime(5000);
+      expect(app.store.getState().machineState).toBe('awaria');
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  // P5: persist subscriber — finishSession() → savePersistedSession → localStorage zapisuje snapshot v1
+  it('P5: finishSession → localStorage.setItem(pm300:session:v1, snapshot z version:v1)', () => {
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+    // Symulacja zakończonej sesji: finishedAt !== null
+    app.store.getState().finishSession();
+    const sessionWrites = setItemSpy.mock.calls.filter(c => c[0] === 'pm300:session:v1');
+    expect(sessionWrites.length).toBeGreaterThanOrEqual(1);
+    const lastWrite = sessionWrites[sessionWrites.length - 1];
+    const parsed = JSON.parse(lastWrite[1]);
+    expect(parsed.version).toBe('v1');
+    expect(parsed.session).toBeDefined();
+    expect(parsed.metadata?.appVersion).toBe('pm300-trener v1.0');
+  });
+
+  // P6: bootstrap loadPersistedSession — pole _persistedSession dostępne na Application
+  it('P6: konstruktor czyta localStorage i ustawia _persistedSession (null gdy brak)', () => {
+    // Czyste localStorage → null
+    expect(app._persistedSession).toBeNull();
+  });
+
+  // P7: bootstrap loadPersistedSession z prawidłowym snapshotem
+  it('P7: gdy localStorage ma valid snapshot, _persistedSession jest ustawiony', async () => {
+    const valid = {
+      version: 'v1',
+      session: { scenarioId: 'uruchomienie', attempts: [] },
+      metadata: { exportedAt: Date.now(), appVersion: 'pm300-trener v1.0' },
+    };
+    localStorage.setItem('pm300:session:v1', JSON.stringify(valid));
+    vi.resetModules();
+    const mod = await import('../src/main.js');
+    const app2 = new mod.Application();
+    expect(app2._persistedSession).not.toBeNull();
+    expect(app2._persistedSession.session.scenarioId).toBe('uruchomienie');
+    app2.dispose();
+  });
+
+  // P8: KeyboardController odbiera wszystkie 4 scenariusze
+  it('P8: KeyboardController otrzymuje 4 scenariusze (uruchomienie, cykl-pracy, zatrzymanie, awaria)', () => {
+    const scs = app.keyboardController._scenarios;
+    expect(Object.keys(scs).sort()).toEqual(['awaria', 'cykl-pracy', 'uruchomienie', 'zatrzymanie']);
+  });
+
+  // P9: dispose order — Phase 6 dispose'y PRZED Phase 5/4
+  it('P9: dispose order: sessionOverlay → replayDrawer → replayEngine → keyboardController → raycast', () => {
+    const soSpy = vi.spyOn(app.sessionOverlay, 'dispose');
+    const rdSpy = vi.spyOn(app.replayDrawer, 'dispose');
+    const reSpy = vi.spyOn(app.replayEngine, 'dispose');
+    const keySpy = vi.spyOn(app.keyboardController, 'dispose');
+    const raycastSpy = vi.spyOn(app.raycastController, 'dispose');
+
+    app.dispose();
+
+    const order = (s) => s.mock.invocationCallOrder[0];
+    expect(order(soSpy)).toBeLessThan(order(rdSpy));
+    expect(order(rdSpy)).toBeLessThan(order(reSpy));
+    expect(order(reSpy)).toBeLessThan(order(keySpy));
+    expect(order(keySpy)).toBeLessThan(order(raycastSpy));
+    expect(app._cycleEndHandle).toBeNull();
+
+    app = null;
+  });
+
+  // P10: source-level grep — src/main.js zawiera kluczowe wzorce Phase 6
+  it('P10: src/main.js zawiera ReplayEngine, SessionOverlay, loadPersistedSession, setCurrentAngle, cycle-end', () => {
+    const src = readFileSync('src/main.js', 'utf-8');
+    expect(src).toMatch(/ReplayEngine/);
+    expect(src).toMatch(/SessionOverlay/);
+    expect(src).toMatch(/loadPersistedSession/);
+    expect(src).toMatch(/setCurrentAngle/);
+    expect(src).toMatch(/cycle-end/);
   });
 });

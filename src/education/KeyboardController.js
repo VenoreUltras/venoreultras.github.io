@@ -64,9 +64,9 @@ export class KeyboardController {
       r: () => state.resetScenario(),
       t: () => state.toggleFreeRoam(),
       '1': () => this._loadScenario('uruchomienie'),
-      '2': () => console.warn('[KeyboardController] scenariusz 2 — Phase 6 (placeholder, brak danych)'),
-      '3': () => console.warn('[KeyboardController] scenariusz 3 — Phase 6 (placeholder, brak danych)'),
-      '4': () => console.warn('[KeyboardController] scenariusz 4 — Phase 6 (placeholder, brak danych)'),
+      '2': () => this._loadScenario('cykl-pracy'),
+      '3': () => this._loadScenario('zatrzymanie'),
+      '4': () => this._loadScenario('awaria'),
       space: () => state.toggleSimulation?.(),
       l: () => {
         if (state.difficulty !== 'egzamin') state.toggleLabels();
