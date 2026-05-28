@@ -45,6 +45,16 @@ export function validateStep(intent, state, scenario) {
     };
   }
 
+  // Phase 6 Plan 06-01 Task 2 (D-Phase6-04): bimanual step.
+  if (expectedStep.kind === 'bimanual') {
+    return validateBimanual(intent, expectedStep, now);
+  }
+
+  // Phase 6 Plan 06-01 Task 2 (D-Phase6-05): machineStateAttest step.
+  if (expectedStep.kind === 'machineStateAttest') {
+    return validateMachineStateAttest(expectedStep, state, now);
+  }
+
   // Branch 3: kind matching (D-05)
   const intentMatchesStep =
     (expectedStep.kind === 'manipulation' || expectedStep.kind === 'visual-target')
@@ -71,6 +81,83 @@ export function validateStep(intent, state, scenario) {
   }
 
   // Branch 4: success — D-02 effectsOnSuccess verbatim + advance
+  return {
+    ok: true,
+    reason: null,
+    effects: [
+      { type: 'appendEvent', event: {
+          type: 'step.done',
+          stepId: expectedStep.id,
+          timestamp: now,
+      }},
+      ...(expectedStep.effectsOnSuccess ?? []),
+      { type: 'advanceStep' },
+    ],
+  };
+}
+
+/**
+ * Phase 6 Plan 06-01 Task 2 (D-Phase6-04). Waliduje bimanual click intent.
+ * Intent kształt: {kind:'bimanual', firstMeshId, firstTimestamp, secondMeshId, secondTimestamp}.
+ *
+ * @param {object} intent
+ * @param {object} expectedStep - krok scenariusza kind='bimanual'
+ * @param {number} now - timestamp dla appendEvent
+ * @returns {{ok:boolean, reason:string|null, effects:Array<object>}}
+ */
+function validateBimanual(intent, expectedStep, now) {
+  const { firstMeshId, firstTimestamp, secondMeshId, secondTimestamp } = intent;
+  const bothInTarget =
+    expectedStep.targetMeshIds.includes(firstMeshId) &&
+    expectedStep.targetMeshIds.includes(secondMeshId);
+  const distinct = firstMeshId !== secondMeshId;
+  const windowMs = expectedStep.windowMs ?? 500;
+  const windowOk = Math.abs(secondTimestamp - firstTimestamp) <= windowMs;
+
+  if (!bothInTarget || !distinct) {
+    return _bimanualError(expectedStep, 'E-BIMANUAL-WRONG-TARGET', now);
+  }
+  if (!windowOk) {
+    return _bimanualError(expectedStep, 'E-BIMANUAL-TIMEOUT', now);
+  }
+  return _stepSuccess(expectedStep, now);
+}
+
+function _bimanualError(expectedStep, errorCode, now) {
+  return {
+    ok: false,
+    reason: 'wrong-target',
+    effects: [
+      { type: 'setStepStatus', stepId: expectedStep.id, status: 'error' },
+      ...(expectedStep.effectsOnError ?? []),
+      { type: 'appendEvent', event: {
+          type: 'step.violation',
+          stepId: expectedStep.id,
+          errorCode,
+          severity: 'medium',
+          timestamp: now,
+      }},
+    ],
+  };
+}
+
+/**
+ * Phase 6 Plan 06-01 Task 2 (D-Phase6-05). Waliduje machineStateAttest.
+ * Brak match — NIE error: zwraca no-op {ok:false, reason:'machine-state-not-matching', effects:[]}.
+ *
+ * @param {object} expectedStep
+ * @param {object} state
+ * @param {number} now
+ * @returns {{ok:boolean, reason:string|null, effects:Array<object>}}
+ */
+function validateMachineStateAttest(expectedStep, state, now) {
+  if (state.machineState !== expectedStep.targetMachineState) {
+    return { ok: false, reason: 'machine-state-not-matching', effects: [] };
+  }
+  return _stepSuccess(expectedStep, now);
+}
+
+function _stepSuccess(expectedStep, now) {
   return {
     ok: true,
     reason: null,

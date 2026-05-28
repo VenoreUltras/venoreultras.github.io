@@ -30,6 +30,32 @@ export const faultRules = Object.freeze([
     },
     severity: 'critical',
   },
+  // Phase 6 Plan 06-01 Task 2 (D-Phase6-03): pusty wziernik smarowania w czasie pracy → awaria.
+  // Wyłączony podczas oczekiwania na inspekcję żeby kursant mógł sprawdzić poziom bez fault-triggera.
+  {
+    id: 'brak-cisnienia-oleju',
+    when: (state) => state.meshStates?.['wziernik-smarowania'] === 'pusty' && state.machineState !== 'oczekiwanie-na-inspekcje',
+    then: {
+      effects: [
+        { type: 'appendEvent', event: { type: 'fault.triggered', faultId: 'brak-cisnienia-oleju', severity: 'critical' } },
+        { type: 'setMachineState', value: 'awaria-brak-oleju' },
+      ],
+    },
+    severity: 'critical',
+  },
+  // Phase 6 Plan 06-01 Task 2 (D-Phase6-03): E-stop wciśnięty w cyklu → awaria.
+  // Reguła deduplikowana z 'oslona-otwarta-w-cyklu' — różne źródła awarii, różne wartości machineState.
+  {
+    id: 'awaryjne-zatrzymanie',
+    when: (state) => state.meshStates?.['estop'] === 'pressed' && state.machineState === 'w-cyklu',
+    then: {
+      effects: [
+        { type: 'appendEvent', event: { type: 'fault.triggered', faultId: 'awaryjne-zatrzymanie', severity: 'critical' } },
+        { type: 'setMachineState', value: 'awaria' },
+      ],
+    },
+    severity: 'critical',
+  },
 ]);
 
 /**
