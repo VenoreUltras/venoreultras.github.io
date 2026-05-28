@@ -252,6 +252,7 @@ export class PressModel {
     this._buildBearingBrackets(); // Phase 8 GEO-03 — D-Phase8-03
     this._buildCrossBrace();      // Phase 8 GEO-04 — D-Phase8-04 (minimal mid-brace)
     this._buildBoltsAndWelds();   // Phase 9 DEC-01 — D-Phase9-02 (3 InstancedMesh + 8 welds)
+    this._buildCables();          // Phase 9 DEC-02 — D-Phase9-03 (TubeGeometry + Box segments)
 
     // Inicjalizacja położenia
     this.update(0);
@@ -1203,6 +1204,73 @@ export class PressModel {
       weld.castShadow = true;
       weld.userData = { id: `spaw-${i}`, kind: 'decoration' };
       this.group.add(weld);
+    }
+  }
+
+  /**
+   * DEC-02 / D-Phase9-03: kable industrial — sugestia okablowania pneumatycznego i sygnałowego.
+   *
+   * Per D-Phase9-03 mix per ważność wizualna:
+   *  - Kabel pneumatyczny (panel oburezny → rama): TubeGeometry z CatmullRomCurve3,
+   *    tubularSegments=32, radius=0.05, radialSegments=8. Gruby, wizualnie ważny.
+   *  - Kabel E-stop (E-stop → rama): 4 Box segmenty w łuku, cienki sygnałowy.
+   *    Box(0.04 × 0.04 × segLen) — performance saver (mniej vertex niż TubeGeometry).
+   *
+   * Materiał: shared `this.matCable` (MeshBasicMaterial 0x0a0a0a) — kable matowy czarny,
+   * brak shading niepotrzebny (D-Phase9-03 explicit: NIE PBR).
+   *
+   * Endpoints (świat coords):
+   *  - Panel oburezny tył: safetyPanel @ (0, 2, 2.5), pulpit Box(1.6, 0.1, 0.7), back face z=2.15.
+   *    Start kabla pneumatycznego: (-0.5, 2.05, 2.15) — lewa-tylna część pulpitu.
+   *  - E-stop u podstawy: head world ≈ (0, 2.32, 2.5); start kabla od dołu estopGroup @ (0, 2.05, 2.5).
+   *  - Rama lewa kolumna front face: leftFrame @ (-2, 5, -1) Box(2, 10, 2) → front face z=0.
+   *    Mount target dla obu kabli: (-2, 2, 0) (kabel pneum.) i (-1.5, 2.5, 0) (kabel estop).
+   *
+   * Boundary:
+   *  - Wszystkie meshy dzieci `this.group` (NIE shaftAxis) → KIN-01 static.
+   *  - userData.kind === 'decoration', userData.id startuje od 'kabel-' (filter helper).
+   *  - NIE wywołują `_registerInteractable` → poza interactables/meshDictionary (oba nadal size===15).
+   *  - Brak importu nowych modułów — THREE wystarcza (CatmullRomCurve3, TubeGeometry, BoxGeometry).
+   */
+  _buildCables() {
+    // === Kabel pneumatyczny: panel oburezny → rama lewa ===
+    // CatmullRomCurve3 z 4 control points formującymi łuk z saggiem (grawitacja-like).
+    // Start: tył-lewa pulpitu; End: lewa kolumna front face na niskiej wysokości.
+    const pneumaticPoints = [
+      new THREE.Vector3(-0.5, 2.05, 2.15),  // start: tył pulpitu (panel-oburezny back face)
+      new THREE.Vector3(-1.2, 1.50, 1.50),  // sag intermediate (lekko opadający łuk)
+      new THREE.Vector3(-1.8, 1.70, 0.50),  // approach frame
+      new THREE.Vector3(-2.0, 2.00, 0.00),  // end: rama lewa front face mount
+    ];
+    const pneumaticCurve = new THREE.CatmullRomCurve3(pneumaticPoints);
+    const pneumaticGeo = new THREE.TubeGeometry(pneumaticCurve, 32, 0.05, 8, false);
+    const pneumaticCable = new THREE.Mesh(pneumaticGeo, this.matCable);
+    pneumaticCable.userData = { id: 'kabel-pneumatyczny', kind: 'decoration' };
+    this.group.add(pneumaticCable);
+
+    // === Kabel E-stop: E-stop → rama lewa (4 Box segmenty w łuku) ===
+    // 5 punktów = 4 segmenty. Łuk od podstawy estop do ramy lewej, wyżej niż kabel pneumatyczny.
+    const estopPoints = [
+      new THREE.Vector3( 0.05, 2.10, 2.45),  // start: u podstawy estopGroup (lekkie offset by NIE collide z pulpitem)
+      new THREE.Vector3(-0.5,  2.40, 2.10),  // wyjście łukiem do góry
+      new THREE.Vector3(-1.2,  2.60, 1.40),  // szczyt łuku
+      new THREE.Vector3(-1.7,  2.50, 0.50),  // approach frame
+      new THREE.Vector3(-1.95, 2.50, 0.05),  // end: rama lewa front face mount (wyżej niż pneum.)
+    ];
+    const segThickness = 0.04;
+    for (let i = 0; i < estopPoints.length - 1; i++) {
+      const start = estopPoints[i];
+      const end = estopPoints[i + 1];
+      const mid = start.clone().add(end).multiplyScalar(0.5);
+      const dir = end.clone().sub(start);
+      const segLen = dir.length();
+      const segGeo = new THREE.BoxGeometry(segThickness, segThickness, segLen);
+      const seg = new THREE.Mesh(segGeo, this.matCable);
+      seg.position.copy(mid);
+      // Box default oś Z (depth); skierowanie wzdłuż dir przez lookAt.
+      seg.lookAt(end);
+      seg.userData = { id: `kabel-estop-segment-${i}`, kind: 'decoration' };
+      this.group.add(seg);
     }
   }
 

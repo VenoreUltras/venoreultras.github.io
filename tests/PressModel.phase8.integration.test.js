@@ -39,20 +39,26 @@ const STATIC_DRIFT_TOL = 1e-6;
 
 // Helpery — filtry per-geometry-signature (DRY across testów Phase 8).
 // Phase 9 Plan 02 (DEC-01) dodaje InstancedMesh (śruby) + 8 spawów (Cylinder R=0.05 H=0.3).
-// Te NIE są częścią Phase 8 inventory — wykluczamy je z tego audytu (test count===11
-// reflektuje TYLKO regular Mesh decoration z Phase 7+8 signatures). Phase 9 ma własny
-// audit test #1 w tests/PressModel.bolts-welds.phase9.test.js liczący InstancedMesh osobno.
+// Phase 9 Plan 03 (DEC-02) dodaje kable (TubeGeometry + Box segmenty) z userData.id startujące 'kabel-'.
+// Wszystkie NIE są częścią Phase 8 inventory — wykluczamy z tego audytu (test count===11
+// reflektuje TYLKO regular Mesh decoration z Phase 7+8 signatures). Phase 9 ma własne audit
+// tests w tests/PressModel.bolts-welds.phase9.test.js + tests/PressModel.cables.phase9.test.js.
 function isPhase9Weld(mesh) {
   const g = mesh.geometry;
   if (!g || g.type !== 'CylinderGeometry') return false;
   const p = g.parameters;
   return Math.abs(p.radiusTop - 0.05) < 1e-6 && Math.abs(p.height - 0.3) < 1e-6;
 }
+function isPhase9Cable(mesh) {
+  const id = mesh.userData?.id;
+  return typeof id === 'string' && id.startsWith('kabel-');
+}
 function getDecorations(pm) {
   return pm.group.children.filter(c =>
     c.userData?.kind === 'decoration'
     && !c.isInstancedMesh           // Phase 9 śruby — wykluczone z Phase 8 inventory
     && !isPhase9Weld(c)             // Phase 9 spawy R=0.05 H=0.3 — wykluczone
+    && !isPhase9Cable(c)            // Phase 9 kable (TubeGeometry + Box segmenty) — wykluczone
   );
 }
 function isBox(mesh, w, h, d) {
