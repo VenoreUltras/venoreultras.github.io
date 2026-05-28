@@ -18,7 +18,7 @@ Wymagania dla wizualnego polish + bugfix milestone. Każde mapowane na fazę v1.
 ### Anchoring — No Floating Elements (ANCHOR)
 
 - [ ] **ANCHOR-01**: Każdy mesh w `pressModel.getInteractables()` ma wizualne mocowanie do ramy/podstawy — żaden element nie wisi w powietrzu (audit positions vs hierarchy)
-- [ ] **ANCHOR-02**: Wał wsparty przez 2 widoczne łożyska/wsporniki przymocowane do kolumn ramy
+- [x] **ANCHOR-02**: Wał wsparty przez 2 widoczne łożyska/wsporniki przymocowane do kolumn ramy
 - [ ] **ANCHOR-03**: E-stop / panel oburęczny / wyłącznik główny mają widoczne mocowania (kable, wsporniki, ramki) — nie unoszą się jako pływające primitywy
 
 ### Press Body Expansion (GEO)
