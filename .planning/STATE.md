@@ -2,14 +2,14 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: Phase 06 in progress (3/8 plans)
-last_updated: "2026-05-28T07:58:00.000Z"
+status: Phase 06 in progress (4/8 plans)
+last_updated: "2026-05-28T08:08:00.000Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 38
-  completed_plans: 35
-  percent: 92
+  completed_plans: 36
+  percent: 95
 ---
 
 # Project State: PM-300 Trener
@@ -33,7 +33,7 @@ progress:
 ## Current Position
 
 Phase: 06 (scenarios-replay-retry-export) — EXECUTING
-Plan: 4 of 8 (06-01, 06-02, 06-03 complete)
+Plan: 5 of 8 (06-01, 06-02, 06-03, 06-04 complete)
 Phase 04 — COMPLETE (267 tests green; UAT 5/5 pass; +5 in-session fixes: main-switch repositioning, wrong-click flash + ordering race, spinup animation, completion overlay)
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
 Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
@@ -71,6 +71,7 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 | Phase 06 P01 | 10min | 3 tasks | 9 files |
 | Phase 06 P02 | 5min | 2 tasks | 2 files |
 | Phase 06 P03 | 15min | 3 tasks | 14 files (517/517 tests green) |
+| Phase 06 P04 | ~15min | 2 tasks | 9 files (542/542 tests green; EDU-04 done) |
 
 ## Accumulated Context
 
@@ -186,6 +187,9 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [Phase 06]: scenario.initialMeshStates: {meshId: string} jako optional pretext faultRule trigger — store.startScenario aplikuje + ewaluuje faultRules na initial state (Plan 06-03 cross-plan brownfield Plan 06-01/06-02)
 - [Phase 06]: cykl-pracy krok 5 effectsOnSuccess: tylko setMachineState 'w-cyklu' (BEZ wbudowanego timera) — cycle-end (3s → 'cykl-zakonczony') dostarczy Application subscriber w Plan 06-08 (Plan 06-03 Opcja B z planu)
 - [Phase 06]: awaria krok 1 effects NIE ustawia estop='pressed' — to triggerowałoby faultRule 'awaryjne-zatrzymanie' (estop+w-cyklu→'awaria') nadpisując pożądane 'awaria-brak-oleju' z brak-cisnienia-oleju (Plan 06-03 Rule 1 auto-fix)
+- [Phase 06]: ReplayEngine deterministic re-execution przez fresh-store snapshot + slice copy (steps/currentStepId/machineState/meshStates/scoring/_currentAngle) do liveStore; declarative re-execution per event type sięga do scenario.steps[id].effectsOnSuccess (Plan 06-04)
+- [Phase 06]: ReplayDrawer.dispose() woła replayEngine.dispose() — drawer właścicielem lifecycle engine; Plan 06-08 może override w Application gdy potrzebne (Plan 06-04)
+- [Phase 06]: scrubTo clamp idx do [0, events.length-1] (T-06-11 spoofed scrubber mitigation); setSpeed throw English message dla nieobsługiwanych wartości (boundary-clean wobec UI-06 Polish-literal scanner) (Plan 06-04)
 
 ### Blockers
 
