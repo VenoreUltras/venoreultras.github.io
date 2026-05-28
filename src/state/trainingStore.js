@@ -64,6 +64,11 @@ export function createTrainingStore(opts = {}) {
       labelsHoverOnly: false,
       // Wewnętrzny payload dla ConfirmModal (Plan 05-03) — nie eksponowany w UI bezpośrednio.
       _confirmPayload: null,
+      // Phase 6 Plan 06-04 (D-Phase6-07, EDU-04): widoczność replay drawera + indeks attemptu.
+      // ReplayDrawer subskrybuje replayOpen i ładuje session.attempts[replayAttemptIdx]
+      // do ReplayEngine. SessionOverlay (Plan 06-07) wywoła openReplay(attemptIdx) z button.
+      replayOpen: false,
+      replayAttemptIdx: 0,
       _now: now,
       _spinUpTimerHandle: null,
 
@@ -267,6 +272,16 @@ export function createTrainingStore(opts = {}) {
         scoring: snapshot.scoring ?? { score: 100, criticalCount: 0, mediumCount: 0, minorCount: 0 },
         events: snapshot.events ?? [],
       }),
+
+      /**
+       * D-Phase6-07: otwiera replay drawer dla wybranego attemptu.
+       * SessionOverlay (Plan 06-07) wywoła z button "Otwórz replay".
+       * @param {number} attemptIdx - indeks w session.attempts[]
+       */
+      openReplay: (attemptIdx = 0) => set({ replayOpen: true, replayAttemptIdx: attemptIdx }),
+
+      /** D-Phase6-07: zamyka replay drawer (X button lub session reset). */
+      closeReplay: () => set({ replayOpen: false }),
 
       /**
        * D-Phase6-09: zamyka sesję ustawiając finishedAt. Wywoływany automatycznie
