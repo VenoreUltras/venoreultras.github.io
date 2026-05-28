@@ -167,6 +167,7 @@ export class PressModel {
     this._buildMainSwitch();
     this._buildClutchLever();
     this._buildBearings();    // Phase 7 ANCHOR-02 — D-Phase7-03
+    this._buildFoundation();  // Phase 8 GEO-01 — D-Phase8-01
 
     // Inicjalizacja położenia
     this.update(0);
@@ -774,6 +775,60 @@ export class PressModel {
     bearingRight.receiveShadow = true;
     bearingRight.userData = { kind: 'decoration' };
     this.group.add(bearingRight);
+  }
+
+  /**
+   * GEO-01 / D-Phase8-01: fundament (industrial install base) + 4 śruby kotwowe.
+   *
+   * Wizualnie: prasa wygląda jak przykręcona do podłogi (anchor narrative — kontynuacja
+   * Phase 7 łożysk dla wału). Fundament siedzi PONIŻEJ istniejącej hierarchii (y=-0.8..0)
+   * — D-Phase8-01 wybiera ten wariant by NIE przesuwać `this.group` o +y=0.8 (cascade
+   * ryzyko 683 testów Phase 7 baseline).
+   *
+   * Geometria:
+   *  - Fundament: BoxGeometry(6, 0.8, 4), środek bryły @ (0, -0.4, 0) → y ∈ [-0.8, 0].
+   *  - 4 śruby kotwowe: CylinderGeometry(0.1, 0.1, 0.3, 16) w narożnikach @ (±2.8, -0.15, ±1.8).
+   *    Środek śruby y=-0.15 → top śruby y=0 (ledwo wystaje nad górną powierzchnią fundamentu).
+   *
+   * Boundary:
+   *  - Dzieci `this.group` (NIE `this.shaftAxis`) → rotacyjnie statyczne (KIN-01).
+   *  - `userData.kind === 'decoration'` (minimalny kontrakt, brak id/labelPL/poses).
+   *  - NIE wywołują `_registerInteractable` (D-Phase8-05) → poza `getInteractables()`
+   *    i `getMeshDictionary()` (oba nadal size===15).
+   *  - Brak wpisów w `src/i18n/pl.js parts` (decoration NIE wymaga labelPL).
+   *
+   * Materiały: lokalne MeshStandardMaterial (placeholder per D-Phase8-06). Phase 9 MAT-03
+   * dorobi PBR (metalness/roughness/texture) per group — dlatego NIE reusujemy `this.matBase`
+   * (matBase to korpus prasy 0x333333; fundament 0x3a3a3a wyróżnia industrial install layer).
+   */
+  _buildFoundation() {
+    // 1. Fundament — szeroka płyta pod istniejącą bazą.
+    const matFoundation = new THREE.MeshStandardMaterial({ color: 0x3a3a3a });
+    const foundationGeo = new THREE.BoxGeometry(6, 0.8, 4);
+    const foundation = new THREE.Mesh(foundationGeo, matFoundation);
+    foundation.position.set(0, -0.4, 0); // środek bryły, y ∈ [-0.8, 0]
+    foundation.castShadow = true;
+    foundation.receiveShadow = true;
+    foundation.userData = { kind: 'decoration' };
+    this.group.add(foundation);
+
+    // 2. 4 śruby kotwowe — narożniki fundamentu (czarne matowe, anchor bolt heads).
+    //    Współdzielona geometria + współdzielony materiał (immutable per-instance — safe).
+    const matAnchorBolt = new THREE.MeshStandardMaterial({ color: 0x1a1a1a, roughness: 0.9 });
+    const boltGeo = new THREE.CylinderGeometry(0.1, 0.1, 0.3, 16);
+    const boltPositions = [
+      [-2.8, -0.15, -1.8],
+      [ 2.8, -0.15, -1.8],
+      [-2.8, -0.15,  1.8],
+      [ 2.8, -0.15,  1.8],
+    ];
+    for (const [x, y, z] of boltPositions) {
+      const bolt = new THREE.Mesh(boltGeo, matAnchorBolt);
+      bolt.position.set(x, y, z);
+      bolt.castShadow = true;
+      bolt.userData = { kind: 'decoration' };
+      this.group.add(bolt);
+    }
   }
 
   // === CRIT-6 + CRIT-7 INVARIANT (Phase 1 lock-in, Phase 2 enforcement) ===

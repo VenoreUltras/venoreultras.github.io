@@ -31,24 +31,27 @@ describe('PressModel — Phase 7-02 ANCHOR-02 łożyska wału', () => {
     pressModel = new PressModel(scene);
   });
 
-  it('dodaje DOKŁADNIE 2 decoration meshes (Phase 7 baseline; Phase 8/9 dodadzą więcej)', () => {
+  // Phase 8-01 GEO-01: pool decoration meshes rozszerzony (fundament + 4 śruby).
+  // Łożyska identyfikujemy konkretnie po geometrii (CylinderGeometry R=0.6 H=0.8 → 2 meshe).
+  function getBearings(pm) {
     const decorations = [];
-    pressModel.group.traverse((node) => {
-      if (node.userData && node.userData.kind === 'decoration') {
-        decorations.push(node);
-      }
+    pm.group.traverse((node) => {
+      if (node.userData && node.userData.kind === 'decoration') decorations.push(node);
     });
-    expect(decorations).toHaveLength(2);
+    return decorations.filter((d) =>
+      d.geometry.type === 'CylinderGeometry' &&
+      Math.abs(d.geometry.parameters.radiusTop - 0.6) < 1e-6 &&
+      Math.abs(d.geometry.parameters.height - 0.8) < 1e-6
+    );
+  }
+
+  it('dodaje DOKŁADNIE 2 łożyska (Phase 7 baseline; rozpoznawane po R=0.6 H=0.8)', () => {
+    expect(getBearings(pressModel)).toHaveLength(2);
   });
 
   it('każde łożysko jest CylinderGeometry z R≈0.6 i H≈0.8', () => {
-    const decorations = [];
-    pressModel.group.traverse((node) => {
-      if (node.userData && node.userData.kind === 'decoration') {
-        decorations.push(node);
-      }
-    });
-    for (const bearing of decorations) {
+    const bearings = getBearings(pressModel);
+    for (const bearing of bearings) {
       expect(bearing.geometry.type).toBe('CylinderGeometry');
       const p = bearing.geometry.parameters;
       expect(p.radiusTop).toBeCloseTo(0.6, 6);
@@ -58,11 +61,13 @@ describe('PressModel — Phase 7-02 ANCHOR-02 łożyska wału', () => {
   });
 
   it('łożyska są dziećmi this.group (NIE this.shaftAxis)', () => {
-    const decorations = pressModel.group.children.filter(
-      (c) => c.userData && c.userData.kind === 'decoration'
-    );
-    expect(decorations).toHaveLength(2);
-    // Negatywne: shaftAxis nie zawiera decoration meshes
+    const bearings = getBearings(pressModel);
+    expect(bearings).toHaveLength(2);
+    // Każde łożysko musi być bezpośrednim dzieckiem this.group
+    for (const bearing of bearings) {
+      expect(bearing.parent).toBe(pressModel.group);
+    }
+    // Negatywne: shaftAxis nie zawiera ŻADNEGO decoration mesh
     const shaftDecorations = [];
     pressModel.shaftAxis.traverse((node) => {
       if (node.userData && node.userData.kind === 'decoration') {
@@ -73,12 +78,10 @@ describe('PressModel — Phase 7-02 ANCHOR-02 łożyska wału', () => {
   });
 
   it('world positions: lewe (-2.0, 8, 0), prawe (2.0, 8, 0) — tolerance 1e-6', () => {
-    const decorations = pressModel.group.children.filter(
-      (c) => c.userData && c.userData.kind === 'decoration'
-    );
+    const bearings = getBearings(pressModel);
     pressModel.update(0);
     pressModel.group.updateMatrixWorld(true);
-    const positions = decorations.map((b) => {
+    const positions = bearings.map((b) => {
       const wp = new THREE.Vector3();
       b.getWorldPosition(wp);
       return wp;
@@ -92,15 +95,13 @@ describe('PressModel — Phase 7-02 ANCHOR-02 łożyska wału', () => {
   });
 
   it('łożyska NIE rotują z wałem (KIN-01 invariant) — pozycja niezmieniona po update(π/2)', () => {
-    const decorations = pressModel.group.children.filter(
-      (c) => c.userData && c.userData.kind === 'decoration'
-    );
+    const bearings = getBearings(pressModel);
     pressModel.update(0);
     pressModel.group.updateMatrixWorld(true);
-    const before = decorations.map((b) => b.getWorldPosition(new THREE.Vector3()).clone());
+    const before = bearings.map((b) => b.getWorldPosition(new THREE.Vector3()).clone());
     pressModel.update(Math.PI / 2);
     pressModel.group.updateMatrixWorld(true);
-    const after = decorations.map((b) => b.getWorldPosition(new THREE.Vector3()).clone());
+    const after = bearings.map((b) => b.getWorldPosition(new THREE.Vector3()).clone());
     for (let i = 0; i < before.length; i++) {
       expect(after[i].x).toBeCloseTo(before[i].x, 6);
       expect(after[i].y).toBeCloseTo(before[i].y, 6);
