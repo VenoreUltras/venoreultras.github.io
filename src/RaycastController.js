@@ -54,6 +54,12 @@ export class RaycastController {
     // Dirty flag — pointermove ustawia, _runHysteresis konsumuje (1 raycast/tick INTERACT-01)
     this._pointerDirty = false;
 
+    // Phase 6 Plan 06-05 Task 2 (D-Phase6-04, SOP-04): bimanual flow state.
+    // _lastBimanualDown = { meshId, timestamp } gdy pierwszy klik bimanual mesh czeka na drugi.
+    // _bimanualTimeoutHandle = handle setTimeout (clearTimeout w dispose, T-06-12).
+    this._lastBimanualDown = null;
+    this._bimanualTimeoutHandle = null;
+
     // Bound listeners (zachowujemy referencję dla removeEventListener)
     this._onPointerMove = this._handlePointerMove.bind(this);
     this._onPointerDown = this.handlePointerDown.bind(this);
@@ -170,9 +176,81 @@ export class RaycastController {
     if (hits.length === 0) return;
 
     const mesh = hits[0].object;
+    const meshId = mesh.userData.id;
+
+    // Phase 6 Plan 06-05 Task 2 (D-Phase6-04, SOP-04): bimanual branch PRZED zwyklym
+    // attemptStep. Aktywny tylko gdy bieżący krok ma kind='bimanual' I meshId jest w
+    // step.targetMeshIds. Inaczej fall-through do zwyklego flow.
+    const currentStep = this._getCurrentStep();
+    if (
+      currentStep?.kind === 'bimanual' &&
+      Array.isArray(currentStep.targetMeshIds) &&
+      currentStep.targetMeshIds.includes(meshId)
+    ) {
+      this._handleBimanualClick(meshId, currentStep);
+      return;
+    }
+
     // D-Phase3-03 Opcja A: literal 'click' (CRIT-7 identity-only — meshId z userData)
-    const intent = { kind: 'click', meshId: mesh.userData.id };
+    const intent = { kind: 'click', meshId };
     this._store.getState().attemptStep(intent);
+  }
+
+  /**
+   * Phase 6 Plan 06-05 Task 2 (D-Phase6-04): zwraca aktualny krok aktywnego scenariusza.
+   * @returns {object|null}
+   */
+  _getCurrentStep() {
+    const s = this._store.getState();
+    return s.activeScenario?.steps?.find((x) => x.id === s.currentStepId) ?? null;
+  }
+
+  /**
+   * Phase 6 Plan 06-05 Task 2: dispatch logiki bimanual click.
+   * Pierwszy klik → setBimanualHintState('active') + timeout window. Drugi klik (różny mesh)
+   * → attemptBimanualStep + setBimanualHintState('success') przy advance kroku.
+   * @param {string} meshId
+   * @param {object} step - bieżący krok bimanual (kind='bimanual', targetMeshIds, windowMs)
+   */
+  _handleBimanualClick(meshId, step) {
+    const windowMs = step.windowMs ?? 500;
+
+    if (this._lastBimanualDown === null) {
+      // Pierwszy klik — zarejestruj i odpal timer window.
+      this._lastBimanualDown = { meshId, timestamp: Date.now() };
+      this._store.getState().setBimanualHintState('active');
+      clearTimeout(this._bimanualTimeoutHandle);
+      this._bimanualTimeoutHandle = setTimeout(() => {
+        this._store.getState().setBimanualHintState('timeout');
+        this._lastBimanualDown = null;
+        // Po flash 600ms wracamy do idle (zsynchronizowane z CSS bimanual-flash 200ms + buffer).
+        setTimeout(() => this._store.getState().setBimanualHintState('idle'), 600);
+      }, windowMs);
+      return;
+    }
+
+    // Drugi klik — sprawdz czy różny mesh. Jeśli ten sam, no-op (czekaj na różny lub timeout).
+    if (meshId === this._lastBimanualDown.meshId) return;
+
+    // Dwa różne mesh w targetMeshIds → dispatch intent. ProcedureEngine waliduje window.
+    clearTimeout(this._bimanualTimeoutHandle);
+    this._bimanualTimeoutHandle = null;
+    const intent = {
+      firstMeshId: this._lastBimanualDown.meshId,
+      firstTimestamp: this._lastBimanualDown.timestamp,
+      secondMeshId: meshId,
+      secondTimestamp: Date.now(),
+    };
+    const prevStepId = this._store.getState().currentStepId;
+    this._lastBimanualDown = null;
+    this._store.getState().attemptBimanualStep(intent);
+
+    // Jeśli step advansował (success) → setBimanualHintState('success') + fade do idle.
+    const newStepId = this._store.getState().currentStepId;
+    if (newStepId !== prevStepId) {
+      this._store.getState().setBimanualHintState('success');
+      setTimeout(() => this._store.getState().setBimanualHintState('idle'), 300);
+    }
   }
 
   /**
@@ -189,5 +267,10 @@ export class RaycastController {
     if (this._committedTarget) this._commitLeave();
     this._pendingTarget = null;
     this._pendingCount = 0;
+    // Phase 6 Plan 06-05 Task 2 (T-06-12 mitigation): clearTimeout dla bimanual window.
+    // Pierwszy klik + dispose() przed drugim (HMR) NIE odpala timeout setter'a.
+    clearTimeout(this._bimanualTimeoutHandle);
+    this._bimanualTimeoutHandle = null;
+    this._lastBimanualDown = null;
   }
 }
