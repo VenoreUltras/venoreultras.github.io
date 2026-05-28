@@ -6,7 +6,7 @@
 // + 3 nowych kluczy w pl.ui (scorePrefix / hcToggleOn / hcToggleOff).
 
 import { describe, it, expect } from 'vitest';
-import { pl } from '../src/i18n/pl.js';
+import { pl, pluralPL } from '../src/i18n/pl.js';
 
 describe('pl.stepStates (Phase 4 D-Phase4-04/05)', () => {
   it('eksportuje DOKŁADNIE 4 klucze: oczekuje, aktywny, poprawny, blad', () => {
@@ -40,11 +40,12 @@ describe('pl.stepStateIcons (Phase 4 D-Phase4-05)', () => {
 });
 
 describe('pl.machineStateIcons (Phase 4 D-Phase4-05)', () => {
-  it('ma DOKŁADNIE 7 kluczy pokrywających pl.machineState (zero rozbieżności)', () => {
+  it('klucze 1:1 z pl.machineState (zero rozbieżności)', () => {
     expect(Object.keys(pl.machineStateIcons).sort()).toEqual(
       Object.keys(pl.machineState).sort()
     );
-    expect(Object.keys(pl.machineStateIcons)).toHaveLength(7);
+    // Phase 6 Plan 06-01 dorzuca 4 nowe stany (D-Phase6-05) → 7 + 4 = 11.
+    expect(Object.keys(pl.machineStateIcons).length).toBeGreaterThanOrEqual(7);
   });
 
   it('wszystkie wartości są non-empty stringami (emoji)', () => {
@@ -151,5 +152,142 @@ describe('Phase 5 — keymap + modals + difficulty labels', () => {
     expect(pl.ui.difficultyNauka).toBe('📚 Nauka');
     expect(pl.ui.difficultyEgzamin).toBe('📝 Egzamin');
     expect(pl.ui.freeRoamActive).toBe('🆓 Tryb wolny');
+  });
+});
+
+// Phase 6 Plan 06-01 Task 3 (D-Phase6-05/06/18, SCORE-06): i18n extensions + pluralPL.
+describe('Phase 6 — i18n extensions', () => {
+  it('pl.machineState ma 11 wpisów (7 baseline + 4 nowe Phase 6)', () => {
+    expect(Object.keys(pl.machineState)).toHaveLength(11);
+    expect(pl.machineState['cykl-zakonczony']).toBe('Cykl zakończony');
+    expect(pl.machineState['awaria-os-otwarta']).toBe('Awaria — osłona otwarta');
+    expect(pl.machineState['awaria-brak-oleju']).toBe('Awaria — brak oleju');
+    expect(pl.machineState['lockout']).toBe('Lockout / LOTO');
+  });
+
+  it('pl.machineStateIcons 1:1 z pl.machineState', () => {
+    expect(Object.keys(pl.machineStateIcons).sort()).toEqual(
+      Object.keys(pl.machineState).sort()
+    );
+    expect(pl.machineStateIcons['cykl-zakonczony']).toBe('✔️');
+    expect(pl.machineStateIcons['awaria-os-otwarta']).toBe('🚨');
+    expect(pl.machineStateIcons['awaria-brak-oleju']).toBe('⛽');
+    expect(pl.machineStateIcons['lockout']).toBe('🔒');
+  });
+
+  it('pl.scenarios ma 4 wpisy (uruchomienie/cykl-pracy/zatrzymanie/awaria)', () => {
+    expect(Object.keys(pl.scenarios).sort()).toEqual(
+      ['awaria', 'cykl-pracy', 'uruchomienie', 'zatrzymanie']
+    );
+    expect(pl.scenarios['uruchomienie'].title).toBe('Uruchomienie');
+    expect(pl.scenarios['cykl-pracy'].title).toBe('Cykl pracy');
+    expect(pl.scenarios['zatrzymanie'].title).toBe('Zatrzymanie');
+    expect(pl.scenarios['awaria'].title).toBe('Awaria');
+  });
+
+  it('pl.plurals ma blad + proba z {one, few, many}', () => {
+    expect(pl.plurals.blad).toEqual({ one: 'błąd', few: 'błędy', many: 'błędów' });
+    expect(pl.plurals.proba).toEqual({ one: 'próba', few: 'próby', many: 'prób' });
+  });
+
+  it('pl.overlay ma komplet kluczy (sessionComplete/scoreLabel/openReplay/retry/exportJson/exportPdf/closeAria/errorsSectionTitle/noErrors/viewLastSession)', () => {
+    expect(pl.overlay.sessionComplete).toBe('Sesja zakończona');
+    expect(pl.overlay.scoreLabel).toBe('Wynik końcowy');
+    expect(pl.overlay.openReplay).toBe('Otwórz replay');
+    expect(pl.overlay.retry).toBe('Spróbuj ponownie');
+    expect(pl.overlay.exportJson).toBe('Eksportuj JSON');
+    expect(pl.overlay.exportPdf).toBe('Eksportuj PDF');
+    expect(pl.overlay.closeAria).toBe('Zamknij podsumowanie');
+    expect(pl.overlay.errorsSectionTitle).toBe('Lista błędów');
+    expect(pl.overlay.noErrors).toBe('Brak błędów — doskonały wynik!');
+    expect(pl.overlay.viewLastSession).toBe('Wyświetl ostatnią sesję');
+  });
+
+  it('pl.overlay.metricErrors(3) zawiera "3" i "błędy" (few form)', () => {
+    expect(typeof pl.overlay.metricErrors).toBe('function');
+    const out = pl.overlay.metricErrors(3);
+    expect(out).toContain('3');
+    expect(out).toContain('błędy');
+  });
+
+  it('pl.overlay.metricErrors(1) używa "błąd" (one form)', () => {
+    expect(pl.overlay.metricErrors(1)).toContain('błąd');
+    expect(pl.overlay.metricErrors(1)).not.toContain('błędy');
+  });
+
+  it('pl.overlay.metricTime(mm,ss) i metricAttempts(n) są funkcjami zwracającymi string', () => {
+    expect(typeof pl.overlay.metricTime).toBe('function');
+    expect(typeof pl.overlay.metricAttempts).toBe('function');
+    expect(typeof pl.overlay.metricTime('02', '34')).toBe('string');
+    expect(pl.overlay.metricAttempts(2)).toContain('próby');
+  });
+
+  it('pl.replay ma drawerLabel + playAria + pauseAria + speedNormal + speedSlow + closeAria + infoFormat(fn)', () => {
+    expect(pl.replay.drawerLabel).toBe('Replay sesji');
+    expect(pl.replay.playAria).toBe('Odtwarzaj');
+    expect(pl.replay.pauseAria).toBe('Pauza');
+    expect(pl.replay.speedNormal).toBe('1×');
+    expect(pl.replay.speedSlow).toBe('0.25×');
+    expect(pl.replay.closeAria).toBe('Zamknij replay');
+    expect(typeof pl.replay.infoFormat).toBe('function');
+    const info = pl.replay.infoFormat('Uruchomienie', 1, 3);
+    expect(info).toContain('Uruchomienie');
+    expect(info).toContain('1');
+    expect(info).toContain('3');
+  });
+
+  it('pl.pdf.reportTitle === "RAPORT SESJI SZKOLENIOWEJ" (CRIT-1 anti-Certyfikat lock)', () => {
+    expect(pl.pdf.reportTitle).toBe('RAPORT SESJI SZKOLENIOWEJ');
+    expect(pl.pdf.reportTitle).not.toMatch(/[Cc]ertyfikat/);
+  });
+
+  it('pl.pdf ma scenarioLabel + sectionSummary/Errors/Missed/Attempts + 4 kolumny + 3 severities + pageLabel(fn) + appVersion', () => {
+    expect(pl.pdf.scenarioLabel).toBe('Scenariusz:');
+    expect(pl.pdf.sectionSummary).toBe('Podsumowanie');
+    expect(pl.pdf.sectionErrors).toBe('Lista błędów');
+    expect(pl.pdf.sectionMissed).toBe('Pominięte kroki i naruszenia kolejności');
+    expect(pl.pdf.sectionAttempts).toBe('Historia prób');
+    expect(pl.pdf.colNum).toBe('#');
+    expect(pl.pdf.colTime).toBe('Czas');
+    expect(pl.pdf.colStep).toBe('Krok');
+    expect(pl.pdf.colSeverity).toBe('Powaga');
+    expect(pl.pdf.severityCritical).toBe('Krytyczny');
+    expect(pl.pdf.severityMedium).toBe('Sredni');
+    expect(pl.pdf.severityMinor).toBe('Drobny');
+    expect(typeof pl.pdf.pageLabel).toBe('function');
+    expect(pl.pdf.pageLabel(2, 5)).toContain('2');
+    expect(pl.pdf.pageLabel(2, 5)).toContain('5');
+    expect(pl.pdf.appVersion).toBe('pm300-trener v1.0');
+  });
+});
+
+describe('Phase 6 — pluralPL (D-Phase6-18, SCORE-06)', () => {
+  it('pluralPL jest funkcją eksportowaną z pl.js', () => {
+    expect(typeof pluralPL).toBe('function');
+  });
+
+  it('pluralPL(n, pl.plurals.blad) zwraca poprawne formy PL dla n=0/1/2/3/4/5/11/12/22/100', () => {
+    // Intl.PluralRules('pl-PL'):
+    //   1 → one (błąd)
+    //   2,3,4 → few (błędy)
+    //   0,5..21 → many (błędów)
+    //   22 → few (kończy się na 2-4, ale nie 12)
+    //   12 → many
+    expect(pluralPL(0, pl.plurals.blad)).toBe('błędów');
+    expect(pluralPL(1, pl.plurals.blad)).toBe('błąd');
+    expect(pluralPL(2, pl.plurals.blad)).toBe('błędy');
+    expect(pluralPL(3, pl.plurals.blad)).toBe('błędy');
+    expect(pluralPL(4, pl.plurals.blad)).toBe('błędy');
+    expect(pluralPL(5, pl.plurals.blad)).toBe('błędów');
+    expect(pluralPL(11, pl.plurals.blad)).toBe('błędów');
+    expect(pluralPL(12, pl.plurals.blad)).toBe('błędów');
+    expect(pluralPL(22, pl.plurals.blad)).toBe('błędy');
+    expect(pluralPL(100, pl.plurals.blad)).toBe('błędów');
+  });
+
+  it('pluralPL(1, pl.plurals.proba) === "próba"; (2) === "próby"', () => {
+    expect(pluralPL(1, pl.plurals.proba)).toBe('próba');
+    expect(pluralPL(2, pl.plurals.proba)).toBe('próby');
+    expect(pluralPL(5, pl.plurals.proba)).toBe('prób');
   });
 });
