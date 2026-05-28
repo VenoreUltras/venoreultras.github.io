@@ -75,6 +75,14 @@ export class PressModel {
     // --- Niezmieniane ---
     this.matOilSightYellow = new THREE.MeshStandardMaterial({ color: 0xd4a017, metalness: 0.1, roughness: 0.4 });
 
+    // --- Phase 9 DEC-02 / D-Phase9-03 — Kable (performance saver, BEZ PBR) ---
+    // MeshBasicMaterial — kable matowe czarne, nie wymagają shading. Najtańszy shader,
+    // jeden material współdzielony przez 1 TubeGeometry (kabel pneumatyczny panel→rama)
+    // + 3-4 Box segmenty (kabel E-stop→rama). NIE rejestrujemy w MaterialRegistry —
+    // material żyje na PressModel instance, renderer.dispose() w application teardown
+    // domknie buffers przy zamknięciu sceny (analog do matAnchorBolt lokalnego w _buildFoundation).
+    this.matCable = new THREE.MeshBasicMaterial({ color: 0x0a0a0a });
+
     // --- Phase 9 MAT-03 / D-Phase9-01 Grupa C — Beton (industrial install foundation) ---
     // Promotujemy matFoundation z lokalnej zmiennej _buildFoundation() (Phase 8 placeholder)
     // do instance field z PBR concrete: metalness 0 (non-metallic), roughness 0.95 (chropowaty
