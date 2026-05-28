@@ -441,3 +441,240 @@ describe('Phase 5 — flagi dydaktyczne (D-Phase5-01..18)', () => {
     expect(labelsListener).toHaveBeenCalledTimes(1);
   });
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Phase 6 Plan 06-02 — session schema + retry + bimanual + machineStateAttest + angle injection
+// (D-Phase6-04, D-Phase6-05, D-Phase6-09, D-Phase6-12 + Pitfall 1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Minimalny bimanual scenariusz: 1 krok bimanual, target [left, right]. */
+function makeBimanualScenario() {
+  return {
+    id: 'bimanual-test',
+    titlePL: 'B',
+    descriptionPL: 'B',
+    initialMachineState: 'gotowa-do-pracy',
+    steps: [{
+      id: 'press-both',
+      kind: 'bimanual',
+      targetMeshIds: ['left', 'right'],
+      labelPL: 'Naciśnij oba', descriptionPL: '', rationalePL: '',
+      effectsOnSuccess: [],
+      effectsOnError: [],
+    }],
+  };
+}
+
+/** Minimalny machineStateAttest scenariusz: 2 kroki (manipulation → attest). */
+function makeAttestScenario() {
+  return {
+    id: 'attest-test',
+    titlePL: 'A',
+    descriptionPL: 'A',
+    initialMachineState: 'w-cyklu',
+    steps: [
+      {
+        id: 'trigger',
+        kind: 'manipulation', targetMeshId: 'btn',
+        labelPL: '', descriptionPL: '', rationalePL: '',
+        effectsOnSuccess: [{ type: 'setMachineState', value: 'cykl-zakonczony' }],
+        effectsOnError: [],
+      },
+      {
+        id: 'observe',
+        kind: 'machineStateAttest',
+        targetMachineState: 'cykl-zakonczony',
+        labelPL: 'Obserwuj cykl', descriptionPL: '', rationalePL: '',
+        effectsOnSuccess: [],
+        effectsOnError: [],
+      },
+    ],
+  };
+}
+
+describe('Phase 6 — session schema + retry (D-Phase6-09)', () => {
+  it('initial state: session.attempts === [] (Array.isArray)', () => {
+    const s = createTrainingStore().getState();
+    expect(Array.isArray(s.session.attempts)).toBe(true);
+    expect(s.session.attempts).toHaveLength(0);
+    expect(s.session.retryCount).toBe(0);
+  });
+
+  it('initial state: _currentAngle === 0', () => {
+    const s = createTrainingStore().getState();
+    expect(s._currentAngle).toBe(0);
+  });
+
+  it('setCurrentAngle(1.5) ustawia _currentAngle', () => {
+    const store = createTrainingStore();
+    store.getState().setCurrentAngle(1.5);
+    expect(store.getState()._currentAngle).toBe(1.5);
+  });
+
+  it('retry(): push do attempts (0 → 1 → 2), zachowuje session.startedAt', () => {
+    let t = 1000;
+    const store = createTrainingStore({ now: () => t });
+    store.getState().startScenario(minimalScenario);
+    const startedAt = store.getState().session.startedAt;
+    expect(store.getState().session.attempts).toHaveLength(0);
+
+    t = 2000;
+    store.getState().retry();
+    expect(store.getState().session.attempts).toHaveLength(1);
+    expect(store.getState().session.retryCount).toBe(1);
+    expect(store.getState().session.startedAt).toBe(startedAt); // zachowane
+
+    t = 3000;
+    store.getState().retry();
+    expect(store.getState().session.attempts).toHaveLength(2);
+    expect(store.getState().session.retryCount).toBe(2);
+    expect(store.getState().session.startedAt).toBe(startedAt);
+  });
+
+  it('retry(): resetuje events do [session.start], scoring.score=100', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(minimalScenario);
+    // Wymuś violation by obniżyć score
+    store.getState().attemptStep({ kind: 'click', meshId: 'wrong-mesh' });
+    expect(store.getState().scoring.score).toBeLessThan(100);
+    expect(store.getState().events.length).toBeGreaterThan(1);
+
+    store.getState().retry();
+    const s = store.getState();
+    expect(s.scoring.score).toBe(100);
+    expect(s.scoring.criticalCount).toBe(0);
+    expect(s.scoring.mediumCount).toBe(0);
+    expect(s.scoring.minorCount).toBe(0);
+    expect(s.events).toHaveLength(1);
+    expect(s.events[0].type).toBe('session.start');
+  });
+
+  it('retry() no-op gdy activeScenario === null', () => {
+    const store = createTrainingStore();
+    expect(() => store.getState().retry()).not.toThrow();
+    expect(store.getState().session.attempts).toHaveLength(0);
+  });
+
+  it('retry(): attempt object zawiera events + scoring + attemptIdx', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(minimalScenario);
+    store.getState().attemptStep({ kind: 'click', meshId: 'wrong-mesh' });
+    const eventsSnapshot = [...store.getState().events];
+    const scoringSnapshot = { ...store.getState().scoring };
+
+    store.getState().retry();
+    const attempt = store.getState().session.attempts[0];
+    expect(attempt.attemptIdx).toBe(0);
+    expect(attempt.events).toEqual(eventsSnapshot);
+    expect(attempt.scoring).toEqual(scoringSnapshot);
+    expect(typeof attempt.finishedAt).toBe('number');
+  });
+});
+
+describe('Phase 6 — angle injection w step.done/step.violation (Pitfall 1)', () => {
+  it('step.done event ma pole angle === _currentAngle (po setCurrentAngle)', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(minimalScenario);
+    store.getState().setCurrentAngle(2.5);
+    store.getState().attemptStep({ kind: 'click', meshId: 'mesh-A' });
+    const done = store.getState().events.find(e => e.type === 'step.done');
+    expect(done).toBeDefined();
+    expect(done.angle).toBe(2.5);
+  });
+
+  it('step.violation event ma pole angle === _currentAngle', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(minimalScenario);
+    store.getState().setCurrentAngle(1.23);
+    store.getState().attemptStep({ kind: 'click', meshId: 'wrong-mesh' });
+    const v = store.getState().events.find(e => e.type === 'step.violation');
+    expect(v).toBeDefined();
+    expect(v.angle).toBe(1.23);
+  });
+
+  it('session.start event NIE ma pola angle', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().setCurrentAngle(3.14);
+    store.getState().startScenario(minimalScenario);
+    const start = store.getState().events.find(e => e.type === 'session.start');
+    expect(start).toBeDefined();
+    expect('angle' in start).toBe(false);
+  });
+});
+
+describe('Phase 6 — attemptBimanualStep (D-Phase6-04)', () => {
+  it('attemptBimanualStep z prawidłowym intent advansuje currentStepId i emituje step.done', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    const sc = makeBimanualScenario();
+    store.getState().startScenario(sc);
+    store.getState().attemptBimanualStep({
+      firstMeshId: 'left', firstTimestamp: 100,
+      secondMeshId: 'right', secondTimestamp: 300,
+    });
+    expect(store.getState().currentStepId).toBeNull(); // jedyny krok done → null
+    expect(store.getState().steps['press-both'].status).toBe('done');
+    expect(store.getState().events.some(e => e.type === 'step.done' && e.stepId === 'press-both')).toBe(true);
+  });
+
+  it('attemptBimanualStep z timeout emituje step.violation z errorCode E-BIMANUAL-TIMEOUT', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(makeBimanualScenario());
+    store.getState().attemptBimanualStep({
+      firstMeshId: 'left', firstTimestamp: 100,
+      secondMeshId: 'right', secondTimestamp: 700, // > 500ms
+    });
+    const v = store.getState().events.find(e => e.type === 'step.violation');
+    expect(v).toBeDefined();
+    expect(v.errorCode).toBe('E-BIMANUAL-TIMEOUT');
+    expect(store.getState().currentStepId).toBe('press-both'); // brak advance
+  });
+
+  it('attemptBimanualStep no-op gdy activeScenario === null', () => {
+    const store = createTrainingStore();
+    expect(() => store.getState().attemptBimanualStep({
+      firstMeshId: 'a', firstTimestamp: 0, secondMeshId: 'b', secondTimestamp: 0,
+    })).not.toThrow();
+  });
+});
+
+describe('Phase 6 — machineStateAttest subscriber auto-trigger (D-Phase6-05)', () => {
+  it('zmiana machineState na target advansuje krok machineStateAttest BEZ ręcznego klika', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    const sc = makeAttestScenario();
+    store.getState().startScenario(sc);
+    // Krok 1 to manipulation 'trigger', effectOnSuccess setMachineState 'cykl-zakonczony'
+    // Po wykonaniu kroku 1: machineState → 'cykl-zakonczony', subscriber wywoła
+    // attemptMachineStateAttest, krok 2 'observe' advansuje sam.
+    store.getState().attemptStep({ kind: 'click', meshId: 'btn' });
+    expect(store.getState().machineState).toBe('cykl-zakonczony');
+    expect(store.getState().steps['observe'].status).toBe('done');
+    expect(store.getState().currentStepId).toBeNull();
+  });
+});
+
+describe('Phase 6 — loadPersistedSession / finishSession', () => {
+  it('loadPersistedSession({session}) ustawia session w storze', () => {
+    const store = createTrainingStore();
+    const snapshot = {
+      session: {
+        scenarioId: 'uruchomienie',
+        startedAt: 1000,
+        finishedAt: 2000,
+        attempts: [{ attemptIdx: 0, startedAt: 1000, finishedAt: 1500, events: [], scoring: {} }],
+        retryCount: 1,
+      },
+    };
+    store.getState().loadPersistedSession(snapshot);
+    expect(store.getState().session.scenarioId).toBe('uruchomienie');
+    expect(store.getState().session.attempts).toHaveLength(1);
+    expect(store.getState().session.retryCount).toBe(1);
+  });
+
+  it('finishSession() ustawia session.finishedAt na now()', () => {
+    const store = createTrainingStore({ now: () => 5000 });
+    store.getState().startScenario(minimalScenario);
+    expect(store.getState().session.finishedAt).toBeNull();
+    store.getState().finishSession();
+    expect(store.getState().session.finishedAt).toBe(5000);
+  });
+});
