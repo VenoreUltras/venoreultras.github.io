@@ -1,9 +1,24 @@
 // src/training/scenarios/index.js
-// Rejestr scenariuszy. Phase 1: tylko `uruchomienie`. Phase 6 dorzuca 3 kolejne.
+// Rejestr scenariuszy. Phase 1: tylko `uruchomienie`. Phase 6 Plan 06-03: 4 scenariusze.
 
 import uruchomienie from './uruchomienie.js';
+import cyklPracy from './cykl-pracy.js';
+import zatrzymanie from './zatrzymanie.js';
+import awaria from './awaria.js';
 
-const REGISTRY = Object.freeze({ uruchomienie });
+// Phase 6 Plan 06-03 Task 3: klucze zgodne z pl.scenarios (Plan 06-01).
+const REGISTRY = Object.freeze({
+  'uruchomienie': uruchomienie,
+  'cykl-pracy':   cyklPracy,
+  'zatrzymanie':  zatrzymanie,
+  'awaria':       awaria,
+});
+
+/** Mapa scenariuszy pod kluczami stringowymi (Plan 06-07 ScenarioSelector + KeyboardController). */
+export const scenarios = REGISTRY;
+
+// Named exports dla bezpośredniego importu (zachowuje backward-compat z main.js).
+export { uruchomienie, cyklPracy, zatrzymanie, awaria };
 
 /**
  * Zwraca scenariusz po identyfikatorze stringowym.
