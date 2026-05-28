@@ -3,12 +3,12 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: Phase 06 in progress (4/8 plans)
-last_updated: "2026-05-28T06:19:19.600Z"
+last_updated: "2026-05-28T06:38:29.848Z"
 progress:
   total_phases: 6
   completed_phases: 5
   total_plans: 38
-  completed_plans: 35
+  completed_plans: 37
   percent: 83
 ---
 
@@ -33,7 +33,7 @@ progress:
 ## Current Position
 
 Phase: 06 (scenarios-replay-retry-export) — EXECUTING
-Plan: 6 of 8 (06-01, 06-02, 06-03, 06-04 complete)
+Plan: 7 of 8 (06-01, 06-02, 06-03, 06-04 complete)
 Phase 04 — COMPLETE (267 tests green; UAT 5/5 pass; +5 in-session fixes: main-switch repositioning, wrong-click flash + ordering race, spinup animation, completion overlay)
 Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
 Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
@@ -48,7 +48,7 @@ Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
 
 **Progress:**
 
-[█████████░] 92%
+[██████████] 97%
 Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
 Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
 Phase 3: Click-to-State Pipeline             [█████████░] 95%  code complete (5/5 plans, manual checkpoint pending)
@@ -72,6 +72,7 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 | Phase 06 P02 | 5min | 2 tasks | 2 files |
 | Phase 06 P03 | 15min | 3 tasks | 14 files (517/517 tests green) |
 | Phase 06 P04 | ~15min | 2 tasks | 9 files (542/542 tests green; EDU-04 done) |
+| Phase 06 P07 | 25 min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -190,6 +191,8 @@ Phase 7: (v2) Differentiators                [    v2    ] —    deferred
 - [Phase 06]: ReplayEngine deterministic re-execution przez fresh-store snapshot + slice copy (steps/currentStepId/machineState/meshStates/scoring/_currentAngle) do liveStore; declarative re-execution per event type sięga do scenario.steps[id].effectsOnSuccess (Plan 06-04)
 - [Phase 06]: ReplayDrawer.dispose() woła replayEngine.dispose() — drawer właścicielem lifecycle engine; Plan 06-08 może override w Application gdy potrzebne (Plan 06-04)
 - [Phase 06]: scrubTo clamp idx do [0, events.length-1] (T-06-11 spoofed scrubber mitigation); setSpeed throw English message dla nieobsługiwanych wartości (boundary-clean wobec UI-06 Polish-literal scanner) (Plan 06-04)
+- [Phase ?]: Plan 06-07: cross-plan brownfield finishSession push current attempt do attempts[] przed finishedAt (Plan 06-02 store edit)
+- [Phase ?]: Plan 06-07: SessionOverlay i PdfExporter używają DI dla computeMetrics/JsonExporter/PdfExporter — boundary entries zabraniają nawet importu ../export/ w SessionOverlay
 
 ### Blockers
 

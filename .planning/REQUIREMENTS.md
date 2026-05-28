@@ -90,8 +90,8 @@ Wymagania dla pierwszego wydania. Każde mapowane na fazę roadmapy.
 - [ ] **SCORE-02**: Metryki sesji — liczba błędów, czas ukończenia, lista pominiętych kroków, lista naruszeń kolejności, liczba retry
 - [ ] **SCORE-03**: Persystencja w `localStorage` z wersjonowanym schema key `pm300:session:v1` — migracja graceful przy zmianie schematu
 - [ ] **SCORE-04**: Eksport JSON — pełny dump sesji (eventy, scoring, metadane uczestnika opcjonalnie)
-- [ ] **SCORE-05**: Eksport PDF — używa `jsPDF` + osadzona czcionka TTF (Roboto / Noto Sans) dla polskich diakrytyk; code-split przez dynamic `import('jspdf')`; **stopka disclaimera** + neutralna nazwa "Raport sesji szkoleniowej" (nigdy "Certyfikat")
-- [ ] **SCORE-06**: Polskie liczby mnogie przez `Intl.PluralRules('pl-PL')` — zakaz konkatenacji stringów dla plurals
+- [x] **SCORE-05**: Eksport PDF — używa `jsPDF` + osadzona czcionka TTF (Roboto / Noto Sans) dla polskich diakrytyk; code-split przez dynamic `import('jspdf')`; **stopka disclaimera** + neutralna nazwa "Raport sesji szkoleniowej" (nigdy "Certyfikat")
+- [x] **SCORE-06**: Polskie liczby mnogie przez `Intl.PluralRules('pl-PL')` — zakaz konkatenacji stringów dla plurals
 
 ### Testing (TEST)
 
@@ -210,8 +210,8 @@ Mapowanie wymagań do faz roadmapy. Wypełnione przez roadmappera 2026-05-05.
 | SCORE-02 | Phase 6 | Pending |
 | SCORE-03 | Phase 6 | Pending |
 | SCORE-04 | Phase 6 | Pending |
-| SCORE-05 | Phase 6 | Pending |
-| SCORE-06 | Phase 6 | Pending |
+| SCORE-05 | Phase 6 | Complete |
+| SCORE-06 | Phase 6 | Complete |
 | TEST-01 | Phase 1 | Pending |
 | TEST-02 | Phase 1 | Pending |
 | TEST-03 | Phase 1 | Complete (Plan 01-05) |
