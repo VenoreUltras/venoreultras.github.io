@@ -803,3 +803,40 @@ describe('Phase 6 Plan 06-03 — startScenario initialMeshStates + faultRule eva
     expect(store.getState().events.filter(e => e.type === 'fault.triggered')).toHaveLength(0);
   });
 });
+
+// Phase 6 Plan 06-05 (D-Phase6-04) — bimanualHintState field + setBimanualHintState + reset
+describe('Phase 6 Plan 06-05 — bimanualHintState (D-Phase6-04)', () => {
+  it('initial state ma bimanualHintState === "idle"', () => {
+    const store = createTrainingStore();
+    expect(store.getState().bimanualHintState).toBe('idle');
+  });
+
+  it('setBimanualHintState("active") ustawia pole', () => {
+    const store = createTrainingStore();
+    store.getState().setBimanualHintState('active');
+    expect(store.getState().bimanualHintState).toBe('active');
+  });
+
+  it('setBimanualHintState("timeout") i ("success") działa', () => {
+    const store = createTrainingStore();
+    store.getState().setBimanualHintState('timeout');
+    expect(store.getState().bimanualHintState).toBe('timeout');
+    store.getState().setBimanualHintState('success');
+    expect(store.getState().bimanualHintState).toBe('success');
+  });
+
+  it('startScenario resetuje bimanualHintState do "idle"', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().setBimanualHintState('active');
+    store.getState().startScenario(uruchomienie);
+    expect(store.getState().bimanualHintState).toBe('idle');
+  });
+
+  it('retry() resetuje bimanualHintState do "idle"', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    store.getState().setBimanualHintState('active');
+    store.getState().retry();
+    expect(store.getState().bimanualHintState).toBe('idle');
+  });
+});

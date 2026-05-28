@@ -288,7 +288,7 @@ describe('Phase 5 — rationale inline (UI-04, D-Phase5-11)', () => {
     expect(li.querySelector('.phase4-attest-check')).not.toBeNull();
   });
 
-  it('R8 boundary unchanged: StepPanel nie importuje modułów poza ../i18n/pl.js', async () => {
+  it('R8 boundary unchanged: StepPanel nie importuje modułów poza ../i18n/pl.js (Phase 6 OK)', async () => {
     // Weryfikacja: tylko import '../i18n/pl.js' (bez THREE/gsap/training)
     const { readFileSync } = await import('fs');
     const { resolve, dirname } = await import('path');
@@ -298,5 +298,162 @@ describe('Phase 5 — rationale inline (UI-04, D-Phase5-11)', () => {
     const importLines = src.split('\n').filter(l => l.trim().startsWith('import '));
     expect(importLines).toHaveLength(1);
     expect(importLines[0]).toContain('../i18n/pl.js');
+  });
+});
+
+// Phase 6 Plan 06-05 — retry button (EDU-05, D-Phase6-10)
+describe('Phase 6 — retry button (EDU-05, D-Phase6-10)', () => {
+  let store, panel;
+  beforeEach(() => {
+    document.body.innerHTML = '<aside id="step-panel"></aside>';
+    store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    // difficulty domyślnie 'nauka'
+  });
+  afterEach(() => {
+    if (panel) panel.dispose();
+    panel = null;
+    document.body.innerHTML = '';
+  });
+
+  it('Nauka + aktywny krok status=error → retry button widoczny z tekstem pl.overlay.retry', () => {
+    const step0 = uruchomienie.steps[0];
+    store.setState(s => ({ steps: { ...s.steps, [step0.id]: { status: 'error' } } }));
+    panel = new StepPanel({ store });
+    const btn = document.querySelector('#step-panel .step-item__retry');
+    expect(btn).not.toBeNull();
+    expect(btn.textContent).toBe(pl.overlay.retry);
+    expect(btn.type).toBe('button');
+  });
+
+  it('Nauka + aktywny krok status=pending → retry button NIE renderuje się', () => {
+    panel = new StepPanel({ store });
+    const btn = document.querySelector('#step-panel .step-item__retry');
+    expect(btn).toBeNull();
+  });
+
+  it('Egzamin + aktywny krok status=error → retry button NIE renderuje się (D-Phase6-10)', () => {
+    const step0 = uruchomienie.steps[0];
+    store.setState({ difficulty: 'egzamin' });
+    store.setState(s => ({ steps: { ...s.steps, [step0.id]: { status: 'error' } } }));
+    panel = new StepPanel({ store });
+    const btn = document.querySelector('#step-panel .step-item__retry');
+    expect(btn).toBeNull();
+  });
+
+  it('Nauka + NIE-aktywny krok status=error → retry button NIE renderuje się (tylko aktywny)', () => {
+    // Symuluj: krok 0 error, currentStepId przesunięty na krok 1
+    const step0 = uruchomienie.steps[0];
+    const step1 = uruchomienie.steps[1];
+    store.setState(s => ({
+      steps: { ...s.steps, [step0.id]: { status: 'error' } },
+      currentStepId: step1.id,
+    }));
+    panel = new StepPanel({ store });
+    const btn = document.querySelector('#step-panel .step-item__retry');
+    expect(btn).toBeNull();
+  });
+
+  it('klik retry button → store.getState().retry() called (spy)', () => {
+    const step0 = uruchomienie.steps[0];
+    store.setState(s => ({ steps: { ...s.steps, [step0.id]: { status: 'error' } } }));
+    panel = new StepPanel({ store });
+    const spy = vi.spyOn(store.getState(), 'retry');
+    const btn = document.querySelector('#step-panel .step-item__retry');
+    btn.click();
+    expect(spy).toHaveBeenCalledTimes(1);
+    spy.mockRestore();
+  });
+
+  it('po retry() (kroki reset do pending) → retry button znika z DOM', () => {
+    const step0 = uruchomienie.steps[0];
+    store.setState(s => ({ steps: { ...s.steps, [step0.id]: { status: 'error' } } }));
+    panel = new StepPanel({ store });
+    expect(document.querySelector('#step-panel .step-item__retry')).not.toBeNull();
+    store.getState().retry();
+    // Po retry status pending → subscriber re-renderuje
+    expect(document.querySelector('#step-panel .step-item__retry')).toBeNull();
+  });
+});
+
+// Phase 6 Plan 06-05 — bimanual hint progress bar (D-Phase6-04, UI-SPEC §5)
+describe('Phase 6 — bimanual hint (D-Phase6-04)', () => {
+  let store, panel;
+  // Fixture scenariusz z 1 krokiem bimanual
+  const bimanualScenario = {
+    id: 'test-bimanual',
+    initialMachineState: 'gotowa-do-pracy',
+    steps: [
+      {
+        id: 'oburezny-start',
+        kind: 'bimanual',
+        targetMeshIds: ['przycisk-start-lewy', 'przycisk-start-prawy'],
+        windowMs: 500,
+        labelPL: 'Oburęczny start',
+        effectsOnSuccess: [],
+        effectsOnError: [],
+      },
+    ],
+  };
+
+  beforeEach(() => {
+    document.body.innerHTML = '<aside id="step-panel"></aside>';
+    store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(bimanualScenario);
+  });
+  afterEach(() => {
+    if (panel) panel.dispose();
+    panel = null;
+    document.body.innerHTML = '';
+  });
+
+  it('aktywny krok kind=bimanual status=pending → .bimanual-hint widoczny', () => {
+    panel = new StepPanel({ store });
+    const hint = document.querySelector('#step-panel .bimanual-hint');
+    expect(hint).not.toBeNull();
+  });
+
+  it('bimanualHintState="idle" → klasa .bimanual-hint--idle (default)', () => {
+    panel = new StepPanel({ store });
+    const hint = document.querySelector('#step-panel .bimanual-hint');
+    expect(hint.classList.contains('bimanual-hint--idle')).toBe(true);
+  });
+
+  it('setBimanualHintState("active") → .bimanual-hint--active class obecna', () => {
+    panel = new StepPanel({ store });
+    store.getState().setBimanualHintState('active');
+    const hint = document.querySelector('#step-panel .bimanual-hint');
+    expect(hint.classList.contains('bimanual-hint--active')).toBe(true);
+    expect(hint.classList.contains('bimanual-hint--idle')).toBe(false);
+  });
+
+  it('setBimanualHintState("timeout") → .bimanual-hint--timeout class', () => {
+    panel = new StepPanel({ store });
+    store.getState().setBimanualHintState('timeout');
+    const hint = document.querySelector('#step-panel .bimanual-hint');
+    expect(hint.classList.contains('bimanual-hint--timeout')).toBe(true);
+  });
+
+  it('setBimanualHintState("success") → .bimanual-hint--success class', () => {
+    panel = new StepPanel({ store });
+    store.getState().setBimanualHintState('success');
+    const hint = document.querySelector('#step-panel .bimanual-hint');
+    expect(hint.classList.contains('bimanual-hint--success')).toBe(true);
+  });
+
+  it('inny kind step (visual-attest) → .bimanual-hint NIE renderowany', () => {
+    // uruchomienie krok 1 to visual-attest
+    store.getState().startScenario(uruchomienie);
+    store.setState({ currentStepId: uruchomienie.steps[1].id });
+    panel = new StepPanel({ store });
+    const hint = document.querySelector('#step-panel .bimanual-hint');
+    expect(hint).toBeNull();
+  });
+
+  it('bimanual krok status=done → .bimanual-hint NIE renderowany', () => {
+    panel = new StepPanel({ store });
+    store.setState(s => ({ steps: { ...s.steps, 'oburezny-start': { status: 'done' } } }));
+    const hint = document.querySelector('#step-panel .bimanual-hint');
+    expect(hint).toBeNull();
   });
 });
