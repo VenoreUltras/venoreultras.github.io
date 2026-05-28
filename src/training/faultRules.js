@@ -25,7 +25,10 @@ export const faultRules = Object.freeze([
     then: {
       effects: [
         { type: 'appendEvent', event: { type: 'fault.triggered', faultId: 'oslona-otwarta-w-cyklu', severity: 'critical' } },
-        { type: 'setMachineState', value: 'awaria' },
+        // Phase 6 Plan 06-03 Task 2: granular machineState — różne źródła awarii potrzebują
+        // odrębnych machineStates by scenariusz `awaria` mógł skierować kursanta na właściwą
+        // reakcję per fault (validateBefore: machineState === 'awaria-os-otwarta').
+        { type: 'setMachineState', value: 'awaria-os-otwarta' },
       ],
     },
     severity: 'critical',

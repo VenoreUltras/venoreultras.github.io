@@ -97,4 +97,17 @@ export function validateScenario(scenario) {
       throw new Error(`Scenariusz "${scenario.id}": krok "${step.id}" \`validateBefore\` musi być funkcją (state) => boolean`);
     }
   }
+  // Phase 6 Plan 06-03 Task 2 — opcjonalne initialMeshStates dla scenariusza awaria
+  // (pretext fault rule: meshStates['oslona-przednia']='open' + machineState='w-cyklu'
+  // → faultRule oslona-otwarta-w-cyklu odpala przy startScenario).
+  if (scenario.initialMeshStates !== undefined) {
+    if (typeof scenario.initialMeshStates !== 'object' || scenario.initialMeshStates === null || Array.isArray(scenario.initialMeshStates)) {
+      throw new Error(`Scenariusz "${scenario.id}": \`initialMeshStates\` musi być obiektem`);
+    }
+    for (const [k, v] of Object.entries(scenario.initialMeshStates)) {
+      if (typeof v !== 'string') {
+        throw new Error(`Scenariusz "${scenario.id}": \`initialMeshStates["${k}"]\` musi być stringiem`);
+      }
+    }
+  }
 }

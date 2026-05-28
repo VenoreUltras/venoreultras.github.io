@@ -83,7 +83,7 @@ describe('TrainingStore — startScenario / attemptStep (minimalScenario)', () =
     expect(store.getState().scoring.score).toBe(100); // no-active-step nie generuje violation
   });
 
-  it('fault rule oslona-otwarta-w-cyklu emituje awaria po setState', () => {
+  it('fault rule oslona-otwarta-w-cyklu emituje awaria-os-otwarta po setState', () => {
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(minimalScenario);
     // Wymuszamy stan awarii: w-cyklu + oslona open
@@ -91,7 +91,8 @@ describe('TrainingStore — startScenario / attemptStep (minimalScenario)', () =
     // Trigger pipeline — wrong intent na nieistniejący mesh, ale fault rules pojadą po
     store.getState().attemptStep({ kind: 'click', meshId: 'mesh-A' });
     const s = store.getState();
-    expect(s.machineState).toBe('awaria');
+    // Phase 6 Plan 06-03 Task 2: granular machineState ('awaria-os-otwarta' nie 'awaria').
+    expect(s.machineState).toBe('awaria-os-otwarta');
     expect(s.events.some(e => e.type === 'fault.triggered' && e.faultId === 'oslona-otwarta-w-cyklu')).toBe(true);
   });
 });
@@ -760,3 +761,45 @@ describe('Phase 6 Task 2 — finishSession auto-trigger + idempotency + bimanual
   });
 });
 
+// Phase 6 Plan 06-03 Task 2: startScenario z initialMeshStates + faultRule eval na initial state.
+describe('Phase 6 Plan 06-03 — startScenario initialMeshStates + faultRule eval', () => {
+  it('initialMeshStates aplikuje się do meshStates przy startScenario', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    const scenario = {
+      id: 'pretext',
+      titlePL: 'Pretext',
+      descriptionPL: 'd',
+      initialMachineState: 'oczekiwanie-na-inspekcje',
+      initialMeshStates: { 'oslona-przednia': 'open', 'hamulec': 'engaged' },
+      steps: [{ id: 's', kind: 'visual-attest', labelPL: 'l', descriptionPL: 'd' }],
+    };
+    store.getState().startScenario(scenario);
+    expect(store.getState().meshStates).toEqual({ 'oslona-przednia': 'open', 'hamulec': 'engaged' });
+  });
+
+  it('initialMeshStates + w-cyklu triggeruje faultRule oslona-otwarta-w-cyklu przy startScenario', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    const scenario = {
+      id: 'pretext-fault',
+      titlePL: 'Pretext fault',
+      descriptionPL: 'd',
+      initialMachineState: 'w-cyklu',
+      initialMeshStates: { 'oslona-przednia': 'open' },
+      steps: [{ id: 's', kind: 'visual-attest', labelPL: 'l', descriptionPL: 'd' }],
+    };
+    store.getState().startScenario(scenario);
+    const s = store.getState();
+    // faultRule eval w startScenario ustawia machineState='awaria-os-otwarta'.
+    expect(s.machineState).toBe('awaria-os-otwarta');
+    const fault = s.events.find(e => e.type === 'fault.triggered' && e.faultId === 'oslona-otwarta-w-cyklu');
+    expect(fault).toBeDefined();
+  });
+
+  it('default startScenario bez initialMeshStates — meshStates pozostaje pustym obiektem (backward compat)', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    expect(store.getState().meshStates).toEqual({});
+    // Brak fault.triggered (initial 'oczekiwanie-na-inspekcje' + brak meshStates pretext)
+    expect(store.getState().events.filter(e => e.type === 'fault.triggered')).toHaveLength(0);
+  });
+});

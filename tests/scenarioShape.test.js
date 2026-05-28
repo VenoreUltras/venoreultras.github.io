@@ -209,6 +209,34 @@ describe('Scenario shape (SOP-02)', () => {
       };
       expect(() => validateScenario(baseScenario(step))).not.toThrow();
     });
+
+    // Phase 6 Plan 06-03 Task 2: scenario.initialMeshStates (pretext fault rule dla awaria).
+    it('akceptuje scenariusz z initialMeshStates jako obiekt string→string', () => {
+      const scenario = {
+        id: 'pretext',
+        steps: [{ id: 's', kind: 'visual-attest', labelPL: 'l', descriptionPL: 'd' }],
+        initialMeshStates: { 'oslona-przednia': 'open' },
+      };
+      expect(() => validateScenario(scenario)).not.toThrow();
+    });
+
+    it('odrzuca initialMeshStates jako tablica', () => {
+      const scenario = {
+        id: 'pretext',
+        steps: [{ id: 's', kind: 'visual-attest', labelPL: 'l', descriptionPL: 'd' }],
+        initialMeshStates: [],
+      };
+      expect(() => validateScenario(scenario)).toThrow(/initialMeshStates/);
+    });
+
+    it('odrzuca initialMeshStates z wartością nie-stringową', () => {
+      const scenario = {
+        id: 'pretext',
+        steps: [{ id: 's', kind: 'visual-attest', labelPL: 'l', descriptionPL: 'd' }],
+        initialMeshStates: { 'oslona-przednia': 42 },
+      };
+      expect(() => validateScenario(scenario)).toThrow(/initialMeshStates/);
+    });
   });
 
   it('UI-06 enforcement: każdy errorCode w uruchomienie ma odpowiednik w pl.errors', async () => {

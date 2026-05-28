@@ -31,7 +31,7 @@ describe('faultRules — data integrity (D-03)', () => {
 });
 
 describe('evaluateFaultRulesData — guard-open-during-cycle (SOP-07)', () => {
-  it('wykrywa otwartą osłonę w cyklu pracy → emituje fault.triggered + setMachineState awaria', () => {
+  it('wykrywa otwartą osłonę w cyklu pracy → emituje fault.triggered + setMachineState awaria-os-otwarta', () => {
     const state = {
       machineState: 'w-cyklu',
       meshStates: { 'oslona-przednia': 'open' },
@@ -40,7 +40,8 @@ describe('evaluateFaultRulesData — guard-open-during-cycle (SOP-07)', () => {
     const fault = effects.find(e => e.type === 'appendEvent' && e.event?.type === 'fault.triggered');
     expect(fault).toBeDefined();
     expect(fault.event.severity).toBe('critical');
-    expect(effects.some(e => e.type === 'setMachineState' && e.value === 'awaria')).toBe(true);
+    // Phase 6 Plan 06-03 Task 2: granular machineState dla scenariusza `awaria` (validateBefore).
+    expect(effects.some(e => e.type === 'setMachineState' && e.value === 'awaria-os-otwarta')).toBe(true);
   });
 
   it('NIE wyzwala reguły gdy osłona zamknięta', () => {

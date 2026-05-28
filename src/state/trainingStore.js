@@ -67,20 +67,31 @@ export function createTrainingStore(opts = {}) {
       _now: now,
       _spinUpTimerHandle: null,
 
-      startScenario: (scenario) => set({
-        // D-Phase3-02: zapisujemy pełen obiekt scenariusza (nie tylko id) — attemptStep
-        // sięgnie po niego z state, dzięki czemu warstwa wywołująca (RaycastController,
-        // testy) nie musi już przekazywać scenario jako argument.
-        activeScenario: scenario,
-        // Phase 6 D-Phase6-09: attempts=[] na świeży start; retry() pushuje.
-        session: { scenarioId: scenario.id, startedAt: now(), finishedAt: null, attempts: [], retryCount: 0 },
-        steps: Object.fromEntries(scenario.steps.map(s => [s.id, { status: 'pending' }])),
-        currentStepId: scenario.steps[0].id,
-        machineState: scenario.initialMachineState ?? 'oczekiwanie-na-inspekcje',
-        meshStates: {},
-        events: [{ type: 'session.start', scenarioId: scenario.id, timestamp: now() }],
-        scoring: { score: 100, criticalCount: 0, mediumCount: 0, minorCount: 0 },
-      }),
+      startScenario: (scenario) => {
+        set({
+          // D-Phase3-02: zapisujemy pełen obiekt scenariusza (nie tylko id) — attemptStep
+          // sięgnie po niego z state, dzięki czemu warstwa wywołująca (RaycastController,
+          // testy) nie musi już przekazywać scenario jako argument.
+          activeScenario: scenario,
+          // Phase 6 D-Phase6-09: attempts=[] na świeży start; retry() pushuje.
+          session: { scenarioId: scenario.id, startedAt: now(), finishedAt: null, attempts: [], retryCount: 0 },
+          steps: Object.fromEntries(scenario.steps.map(s => [s.id, { status: 'pending' }])),
+          currentStepId: scenario.steps[0].id,
+          machineState: scenario.initialMachineState ?? 'oczekiwanie-na-inspekcje',
+          // Phase 6 Plan 06-03 Task 2: initialMeshStates pretext dla scenariusza awaria
+          // (oslona-przednia='open' + machineState='w-cyklu' → faultRule odpala).
+          meshStates: scenario.initialMeshStates ? { ...scenario.initialMeshStates } : {},
+          events: [{ type: 'session.start', scenarioId: scenario.id, timestamp: now() }],
+          scoring: { score: 100, criticalCount: 0, mediumCount: 0, minorCount: 0 },
+        });
+        // Phase 6 Plan 06-03 Task 2: ewaluuj faultRules na initial state by initialMeshStates
+        // triggujące fault rule (np. awaria) natychmiast ustawiły machineState='awaria-os-otwarta'.
+        // Application Plan 06-08 nie musi już manualnie wołać evaluateFaultRules.
+        const faultEffects = evaluateFaultRules(get(), faultRules);
+        if (faultEffects.length > 0) {
+          applyEffects(set, get, faultEffects, scheduleTimer);
+        }
+      },
 
       // D-Phase3-02: sygnatura 1-argumentowa — scenariusz pochodzi z state.activeScenario.
       // D-Phase3-14: isAnimating lock + try/finally. Lock NIE obejmuje 3-sekundowego
