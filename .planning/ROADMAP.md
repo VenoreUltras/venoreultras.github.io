@@ -52,9 +52,13 @@ Polish + visual realism milestone — naprawia 2 wizualne bugi z v1.0 (rotacja c
 2. Stół roboczy pod suwakiem — pozycja `worldPosition.y` zgodna z dolną martwą strefą + clearance; nie koliduje z animacją suwaka
 3. Osłony łożysk (2× — lewa, prawa) jako wsporniki wału łączące górną ramę z kolumną; eliminuje ANCHOR-02 floating
 4. Kolumny ramy z subtelnymi detalami (przekątne wsporniki LUB pofazowane krawędzie LUB cross-bracing) — minimalistyczna estetyka zachowana
-5. `getInteractables().size === 13` po fazie (bez zmian — nowe meshy decorative); RaycastController nie reaguje na nowe meshy
+5. `getInteractables().size === 15` po fazie (bez zmian — nowe meshy decorative; Phase 7-03 audit ustalił faktyczną baseline 15, nie 13 — korekta vs poprzedni roadmap snapshot); RaycastController nie reaguje na nowe meshy
 6. Testy boundary: `pressModel.js` nadal nie importuje DOM/store
-**Plans**: TBD (5-6 plans via `/gsd-plan-phase 8`)
+**Plans**: 4 plans (decomposed via /gsd:plan-phase 8); Status: 0/4 complete
+- ⏳ Plan 08-01: Fundament + 4 śruby kotwowe (GEO-01) [Wave 1]
+- ⏳ Plan 08-02: Stół roboczy KIN-aware z PhysicsEngine derywacją (GEO-02) [Wave 2]
+- ⏳ Plan 08-03: Wsporniki łożysk + mid-brace (GEO-03, GEO-04) [Wave 2]
+- ⏳ Plan 08-04: Integration audit + floor invariant update (TEST-06/08 partial) [Wave 3]
 
 ### Phase 9: Detail & Material Pass
 **Goal:** Industrial feel przez drobne dekoracje (śruby, kable, panele) i PBR materiały różnicujące rolę elementów (metal frame vs plastik osłony vs beton podstawa). Funkcjonalność nietknięta, performance 60 FPS sustained.
