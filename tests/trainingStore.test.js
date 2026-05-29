@@ -840,3 +840,23 @@ describe('Phase 6 Plan 06-05 — bimanualHintState (D-Phase6-04)', () => {
     expect(store.getState().bimanualHintState).toBe('idle');
   });
 });
+
+describe('TrainingStore — openElementInfo / closeModal extension (Phase 11 Plan 11-03)', () => {
+  it('openElementInfo ustawia activeModal=element-info i _elementInfoMeshId', () => {
+    const store = createTrainingStore();
+    store.getState().openElementInfo('kolo-zamachowe');
+    const s = store.getState();
+    expect(s.activeModal).toBe('element-info');
+    expect(s._elementInfoMeshId).toBe('kolo-zamachowe');
+  });
+
+  it('closeModal czyści _elementInfoMeshId (oraz activeModal + _confirmPayload)', () => {
+    const store = createTrainingStore();
+    store.getState().openElementInfo('hamulec');
+    store.getState().closeModal();
+    const s = store.getState();
+    expect(s.activeModal).toBeNull();
+    expect(s._elementInfoMeshId).toBeNull();
+    expect(s._confirmPayload).toBeNull();
+  });
+});

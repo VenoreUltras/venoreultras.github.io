@@ -183,6 +183,16 @@ export const pl = {
       confirm: 'Załaduj scenariusz',
       cancel:  'Anuluj',
     },
+    // Phase 11 Plan 11-03 (FUNC-11-07): ElementInfoPanel section labels + fallback.
+    elementInfo: {
+      titleFallback:         'Nieznany element',
+      sectionFunction:       'Funkcja',
+      sectionParameters:     'Parametry techniczne',
+      sectionSopSteps:       'Powiązane kroki SOP',
+      sectionSafety:         'BHP — ostrzeżenia',
+      sectionShortDesc:      'Opis',
+      lectorListenButton:    'Odsłuchaj',
+    },
   },
 
   // D-Phase2-08: Nazwy i opisy komponentów prasy (UI-SPEC §Copywriting Contract).

@@ -71,6 +71,9 @@ export function createTrainingStore(opts = {}) {
       labelsHoverOnly: false,
       // Wewnętrzny payload dla ConfirmModal (Plan 05-03) — nie eksponowany w UI bezpośrednio.
       _confirmPayload: null,
+      // Phase 11 Plan 11-03 (FUNC-11-07): aktualnie wybrany mesh dla ElementInfoPanel.
+      // Ustawiany przez openElementInfo(meshId); czyszczony przez closeModal.
+      _elementInfoMeshId: null,
       // Phase 6 Plan 06-04 (D-Phase6-07, EDU-04): widoczność replay drawera + indeks attemptu.
       // ReplayDrawer subskrybuje replayOpen i ładuje session.attempts[replayAttemptIdx]
       // do ReplayEngine. SessionOverlay (Plan 06-07) wywoła openReplay(attemptIdx) z button.
@@ -201,7 +204,18 @@ export function createTrainingStore(opts = {}) {
       })),
 
       /** Zamyka dowolny aktywny modal. D-Phase5-20 (Esc precedencja). */
-      closeModal: () => set({ activeModal: null, _confirmPayload: null }),
+      closeModal: () => set({ activeModal: null, _confirmPayload: null, _elementInfoMeshId: null }),
+
+      /**
+       * Phase 11 Plan 11-03 (FUNC-11-07): otwiera ElementInfoPanel dla danego mesh.
+       * RaycastController woła z mode in {'free','nauka'}; panel renderuje conditional
+       * content (1 sekcja w 'free', 4 sekcje w 'nauka').
+       * @param {string} meshId
+       */
+      openElementInfo: (meshId) => set({
+        activeModal: 'element-info',
+        _elementInfoMeshId: meshId,
+      }),
 
       /**
        * Otwiera modal potwierdzenia zmiany scenariusza. D-Phase5-07.
