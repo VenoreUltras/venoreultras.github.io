@@ -6,6 +6,8 @@ import { UI } from './UI';
 import { PhysicsEngine } from './PhysicsEngine';
 import { createTrainingStore } from './state/trainingStore.js';
 import { DisclaimerBanner } from './DisclaimerBanner';
+// Phase 10 D-10-06: klik-driven manipulation animator (oslona-przednia + dzwignia-sprzegla; architektura otwarta dla wylacznik-glowny).
+import { InteractionAnimator } from './interaction/InteractionAnimator.js';
 import { RaycastController } from './RaycastController.js';
 import { EmissiveController } from './highlight/EmissiveController.js';
 import { HighlightManager } from './highlight/HighlightManager.js';
@@ -190,6 +192,12 @@ export class Application {
     });
     this.tickables.push((dt) => this.raycastController._runHysteresis(dt));
 
+    // Phase 10 D-10-09: RaycastController emituje (id, mesh) dla mesh z userData.poses; animator filtruje per
+    // `userData.poses` i tweenuje pivot.rotation. Brak coupling do trainingStore (D-10-07).
+    this.interactionAnimator = new InteractionAnimator({ interactables: this.pressModel.getInteractables() });
+    // Po-hoc callback assign: analog _onHoverChange / TooltipManager (Plan 03 D-10-09).
+    this.raycastController._onManipulationClick = (id, mesh) => { this.interactionAnimator.handleClick(id, mesh); };
+
     // D-Phase4-15: HighlightManager subskrybuje state.steps → emissive layer 'state' (error pulse / done flash).
     this.highlightManager = new HighlightManager({
       store: this.store,
@@ -370,6 +378,10 @@ export class Application {
     // Phase 4 cd.
     if (this.highlightManager) this.highlightManager.dispose();
     if (this.edgeOutlineController) this.edgeOutlineController.dispose();
+    // Phase 10 — animator dispose PRZED raycast: zatrzymuje GSAP timelines piszące do pivot.rotation, czyści Mapy.
+    // Raycast `_onManipulationClick` callback ref clearuje się w cleanup zewnętrznym (GC),
+    // ale animator dispose zapobiega ghost tween po HMR (T-10-08 mitigation).
+    if (this.interactionAnimator) this.interactionAnimator.dispose();
     if (this.raycastController) this.raycastController.dispose();    // PRZED emissive — _commitLeave woła clearLayer (T-04-14)
     if (this.emissiveController) this.emissiveController.dispose();
     this.pressModel.disposeMaterials();  // TWIN-11 SC5 — release GPU buffers (materials + textures) na HMR
