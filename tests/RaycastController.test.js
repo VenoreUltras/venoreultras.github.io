@@ -676,3 +676,101 @@ describe('Phase 6 — bimanual flow (D-Phase6-04, SOP-04)', () => {
     }
   });
 });
+
+// Phase 10 manipulation click channel — integration sanity (D-10-09)
+describe('Phase 10 manipulation click channel — integration sanity', () => {
+  // Helper: mesh z userData.poses (guard)
+  function makeGuardMesh() {
+    const mesh = makeMesh('oslona-przednia', 'manipulation');
+    mesh.userData.poses = {
+      closed: { rot: { x: 0, y: 0, z: 0 } },
+      open:   { rot: { x: -Math.PI / 2, y: 0, z: 0 } },
+    };
+    mesh.userData.pivotTarget = 'parent';
+    return mesh;
+  }
+
+  it('RC1: po-hoc assign _onManipulationClick dziala po pointerup na mesh z poses', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    const guardMesh = makeGuardMesh();
+    const interactables = new Map([['oslona-przednia', guardMesh]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
+    const clickSpy = vi.fn();
+    controller._onManipulationClick = clickSpy;
+
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: guardMesh }]);
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 401, clientY: 300 });
+
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    expect(clickSpy).toHaveBeenCalledWith('oslona-przednia', guardMesh);
+    controller.dispose();
+  });
+
+  it('RC2 (regresja): _onManipulationClick NIE wywolany podczas hover (tylko pointermove, nie pointerup)', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    const guardMesh = makeGuardMesh();
+    const interactables = new Map([['oslona-przednia', guardMesh]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
+    const clickSpy = vi.fn();
+    controller._onManipulationClick = clickSpy;
+
+    // Symuluj hover (pointermove + hysteresis ticki) — NIE pointerup
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: guardMesh }]);
+    controller._pointerDirty = true;
+    controller._runHysteresis(16); // tick 1 pending
+    controller._pointerDirty = true;
+    controller._runHysteresis(16); // tick 2 commit hover
+
+    // Manipulation callback NIE wywolany podczas hover
+    expect(clickSpy).not.toHaveBeenCalled();
+    controller.dispose();
+  });
+
+  it('RC3 (regresja): bimanual flow nadal dziala po dodaniu Phase 10 emit (oba fired przy pierwszym kliku)', () => {
+    const store = createTrainingStore({ now: () => 1000 });
+    const bimanualScenario = {
+      id: 'test-bim-rc',
+      initialMachineState: 'gotowa-do-pracy',
+      steps: [{
+        id: 'bim-step',
+        kind: 'bimanual',
+        targetMeshIds: ['oslona-przednia'],
+        windowMs: 500,
+        labelPL: 'test',
+        effectsOnSuccess: [],
+        effectsOnError: [],
+      }],
+    };
+    store.getState().startScenario(bimanualScenario);
+
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const guardMesh = makeGuardMesh();
+    const interactables = new Map([['oslona-przednia', guardMesh]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
+    const clickSpy = vi.fn();
+    controller._onManipulationClick = clickSpy;
+    const hintSpy = vi.spyOn(store.getState(), 'setBimanualHintState');
+
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: guardMesh }]);
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 400, clientY: 300 });
+
+    // Phase 10: manipulation emit fired (animator tweenuje niezaleznie)
+    expect(clickSpy).toHaveBeenCalledTimes(1);
+    // Bimanual flow: setBimanualHintState('active') nadal dziala
+    expect(hintSpy).toHaveBeenCalledWith('active');
+    controller.dispose();
+  });
+});

@@ -104,6 +104,12 @@ const FORBIDDEN_PAIRS = [
   // ReplayDrawer — DOM + store + i18n + replayEngine (DI); NIE THREE/gsap/training/highlight/floating-ui.
   { file: 'src/ui/ReplayDrawer.js',
     mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/', '../education/', './education/'] },
+
+  // Phase 10 Plan 02 D-10-07: InteractionAnimator klik-driven, NIE store-driven.
+  // Zaden import z state/training/ui — animator trzyma stan lokalnie w Map per-mesh.
+  // Boundary analogiczny do EmissiveController (THREE+gsap allowed, reszta forbidden).
+  { file: 'src/interaction/InteractionAnimator.js',
+    mustNotImport: ['../state/', '../training/', './state/', './training/', '../ui/', './ui/'] },
 ];
 
 /** Regex: static + dynamic imports. Capturuje string specifier. */
