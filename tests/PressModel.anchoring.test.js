@@ -173,6 +173,19 @@ describe('PressModel — KIN-01: rotation invariants (post Phase 7 fix)', () => 
     }
   });
 
+  it('shaftAxis position stays X=0 Z=0 through full cycle (D-10-03)', () => {
+    // D-10-03 KIN-01 extension: shaftAxis nie dryfuje na X ani Z przez pełen obrót.
+    // KIN-01 regression guard — explicit X=0, Z=0 assertion per plan 10-01.
+    for (const angle of ANGLES_FULL_CYCLE) {
+      pressModel.update(angle);
+      pressModel.group.updateMatrixWorld(true);
+      const v = new THREE.Vector3();
+      pressModel.shaftAxis.getWorldPosition(v);
+      expect(Math.abs(v.x), `shaftAxis world.x=${v.x} przy angle=${angle.toFixed(3)} (oczekiwane: ≈0)`).toBeLessThan(1e-6);
+      expect(Math.abs(v.z), `shaftAxis world.z=${v.z} przy angle=${angle.toFixed(3)} (oczekiwane: ≈0)`).toBeLessThan(1e-6);
+    }
+  });
+
   it('kolo-zamachowe (rim w shaftAxis) JEST shaftAxis-descendant — proxy via shaftAxis.rotation', () => {
     // Rim sam w lokalnej pozycji (0,0,0) w flywheelGroup @ (-2.5, 0, 0) w shaftAxis @ (0, 8, 0).
     // Centerline koła = oś X w (-2.5, 8, 0) — rim worldPosition NIE zmienia się pod rotacją wokół X
@@ -291,5 +304,34 @@ describe('PressModel — ANCHOR-02: decoration bearings (Plan 07-02 dependent)',
       const dist = v.distanceTo(snapshot[i]);
       expect(dist, `decoration[${i}] drifted o ${dist} (oczekiwane: static)`).toBeLessThan(STATIC_DRIFT_TOL);
     });
+  });
+
+  it('Phase 10 D-10-10: wspornik dźwigni (BoxGeometry 1.0×0.3×0.3) jest statyczny pod update(angle) (KIN-01 static)', () => {
+    // Weryfikuje że wspornik dźwigni jako dziecko this.group pozostaje statyczny (D-10-10).
+    // Snapshotujemy worldPos wspornika przed/po update(PI/2) — muszą być identyczne.
+    const bracket = pressModel.group.children.find(c =>
+      c instanceof THREE.Mesh &&
+      c.geometry?.type === 'BoxGeometry' &&
+      Math.abs(c.geometry.parameters.width - 1.0) < 1e-6 &&
+      Math.abs(c.geometry.parameters.height - 0.3) < 1e-6 &&
+      c.userData?.kind === 'decoration'
+    );
+    if (!bracket) return; // guard — Phase 10 musi go dodać
+
+    pressModel.update(0);
+    pressModel.group.updateMatrixWorld(true);
+    const v0 = new THREE.Vector3();
+    bracket.getWorldPosition(v0);
+    const snap = v0.clone();
+
+    // Explicit floor assertion — wspornik @ y=7 >> -0.8 - EPSILON.
+    expect(v0.y, 'wspornik dźwigni poniżej fundamentu (ANCHOR-01 floor)').toBeGreaterThan(-0.8 - EPSILON);
+
+    pressModel.update(Math.PI / 2);
+    pressModel.group.updateMatrixWorld(true);
+    const v1 = new THREE.Vector3();
+    bracket.getWorldPosition(v1);
+    const dist = v1.distanceTo(snap);
+    expect(dist, `wspornik dźwigni drifted o ${dist} pod update(PI/2) (oczekiwane: static)`).toBeLessThan(STATIC_DRIFT_TOL);
   });
 });

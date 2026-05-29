@@ -88,30 +88,34 @@ describe('PressModel — Phase 8 Integration Audit (aggregate plans 08-01..08-03
     pressModel.group.updateMatrixWorld(true);
   });
 
-  it('#1 total decoration meshes count === 11 (2 łożyska + 1 fundament + 4 śruby + 1 stół + 2 brackets + 1 mid-brace)', () => {
+  it('#1 total decoration meshes count === 12 (2 łożyska + 1 fundament + 4 śruby + 1 stół + 2 brackets + 1 mid-brace + 1 wspornik-dźwigni Phase10)', () => {
+    // Phase 10 D-10-10: wspornik dźwigni sprzęgła (BoxGeometry 1.0×0.3×0.3) dodaje 1 decoration → 12 total.
     const decorations = getDecorations(pressModel);
-    expect(decorations).toHaveLength(11);
+    expect(decorations).toHaveLength(12);
   });
 
-  it('#2 per-mesh inventory by geometry signature (2+1+4+1+2+1 = 11)', () => {
+  it('#2 per-mesh inventory by geometry signature (2+1+4+1+2+1+1 = 12)', () => {
     const decorations = getDecorations(pressModel);
-    const bearings   = decorations.filter(d => isCyl(d, 0.6, 0.8));
-    const foundation = decorations.filter(d => isBox(d, 6, 0.8, 4));
-    const bolts      = decorations.filter(d => isCyl(d, 0.1, 0.3));
-    const worktable  = decorations.filter(d => isBox(d, 3, 0.3, 2.5));
-    const brackets   = decorations.filter(d => isBox(d, 0.4, 1.0, 1.0));
-    const midBrace   = decorations.filter(d => isBox(d, 4, 0.4, 0.4));
+    const bearings      = decorations.filter(d => isCyl(d, 0.6, 0.8));
+    const foundation    = decorations.filter(d => isBox(d, 6, 0.8, 4));
+    const bolts         = decorations.filter(d => isCyl(d, 0.1, 0.3));
+    const worktable     = decorations.filter(d => isBox(d, 3, 0.3, 2.5));
+    const brackets      = decorations.filter(d => isBox(d, 0.4, 1.0, 1.0));
+    const midBrace      = decorations.filter(d => isBox(d, 4, 0.4, 0.4));
+    // Phase 10 D-10-10: wspornik dźwigni BoxGeometry(1.0, 0.3, 0.3)
+    const leverBracket  = decorations.filter(d => isBox(d, 1.0, 0.3, 0.3));
 
-    expect(bearings,   'oczekiwane 2 łożyska (Phase 7-02)').toHaveLength(2);
-    expect(foundation, 'oczekiwany 1 fundament (Phase 8-01)').toHaveLength(1);
-    expect(bolts,      'oczekiwane 4 śruby kotwowe (Phase 8-01)').toHaveLength(4);
-    expect(worktable,  'oczekiwany 1 stół roboczy (Phase 8-02)').toHaveLength(1);
-    expect(brackets,   'oczekiwane 2 wsporniki łożysk (Phase 8-03)').toHaveLength(2);
-    expect(midBrace,   'oczekiwany 1 mid-brace (Phase 8-03)').toHaveLength(1);
+    expect(bearings,      'oczekiwane 2 łożyska (Phase 7-02)').toHaveLength(2);
+    expect(foundation,    'oczekiwany 1 fundament (Phase 8-01)').toHaveLength(1);
+    expect(bolts,         'oczekiwane 4 śruby kotwowe (Phase 8-01)').toHaveLength(4);
+    expect(worktable,     'oczekiwany 1 stół roboczy (Phase 8-02)').toHaveLength(1);
+    expect(brackets,      'oczekiwane 2 wsporniki łożysk (Phase 8-03)').toHaveLength(2);
+    expect(midBrace,      'oczekiwany 1 mid-brace (Phase 8-03)').toHaveLength(1);
+    expect(leverBracket,  'oczekiwany 1 wspornik dźwigni (Phase 10 D-10-10)').toHaveLength(1);
 
     const total = bearings.length + foundation.length + bolts.length
-                + worktable.length + brackets.length + midBrace.length;
-    expect(total).toBe(11);
+                + worktable.length + brackets.length + midBrace.length + leverBracket.length;
+    expect(total).toBe(12);
   });
 
   it('#3 getInteractables().size === 15 (Phase 2 baseline preserved przez wszystkie plany v1.0 + Phase 7 + Phase 8)', () => {
