@@ -176,15 +176,23 @@ export class PressModel {
     topFrame.receiveShadow = true;
     this.group.add(topFrame);
 
-    // Phase 10 fix-up #3: przednia obudowa górnej części prasy między kolumnami ramy.
-    // Wziernik smarowania (@ 0, 7, 1.0) wcześniej wisiał w pustce między left/right frame
-    // i topFrame — teraz przylega fizycznie do tej ściany obudowy.
-    // BoxGeometry(4 szer × 2.5 wys × 0.15 grub) @ (0, 7, 0.9) — front prasy na Z=~0.9-1.0.
+    // Phase 10 fix-up #4: przednia obudowa górnej części prasy — PRZEZROCZYSTA
+    // (user explicit), żeby nadal widać było mechanizm wewnątrz. Lokalny materiał
+    // matUpperHousingGlass (color 0xD0E0E8 transparent opacity 0.25).
+    if (!this.matUpperHousingGlass) {
+      this.matUpperHousingGlass = new THREE.MeshStandardMaterial({
+        color: 0xD0E0E8,
+        metalness: 0.1,
+        roughness: 0.2,
+        transparent: true,
+        opacity: 0.25,
+      });
+    }
     const upperHousingGeo = new THREE.BoxGeometry(4, 2.5, 0.15);
-    const upperHousing = new THREE.Mesh(upperHousingGeo, this.matBody);
+    const upperHousing = new THREE.Mesh(upperHousingGeo, this.matUpperHousingGlass);
     upperHousing.position.set(0, 7, 0.9);
-    upperHousing.castShadow = true;
-    upperHousing.receiveShadow = true;
+    upperHousing.castShadow = false;
+    upperHousing.receiveShadow = false;
     this.group.add(upperHousing);
 
     // 2. Wał główny (Shaft) - oś obrotu
@@ -210,9 +218,12 @@ export class PressModel {
     eccentricGeo.rotateZ(Math.PI / 2);
     const eccentric = new THREE.Mesh(eccentricGeo, this.matEccentric);
     
-    // Przesunięcie środka mimośrodu względem osi obrotu wału o r
-    // W początkowym stanie (angle=0), niech będzie w górze. Zatem na osi Y rośnie.
-    eccentric.position.set(0, this.r, 0);
+    // Phase 10 fix-up #4: eccentric mesh WYCENTROWANE na osi wału (Y=0, Z=0).
+    // Wcześniej @ (0, r=0.8, 0) — wizualnie wyglądało jak niewycentrowane gruba
+    // tarcza która "lata" przód-tył podczas obrotu. Teraz to centralny pas wału.
+    // KINEMATYKA zachowana: eccentricPin (poniżej) i pin (D-10-04) pozostają
+    // na (0, r, 0) — to one napędzają korbowód po okręgu r, nie mesh eccentric.
+    eccentric.position.set(0, 0, 0);
     eccentric.castShadow = true;
     this.shaftAxis.add(eccentric);
 
@@ -401,32 +412,28 @@ export class PressModel {
    * Kolor bursztynowy (UI-SPEC visual fidelity). Statyczny, dziecko this.group.
    */
   _buildOilSightGlass() {
-    // Phase 10 fix-up #2: przezroczysta szklana obudowa wokół wziernika zamiast metalowego
-    // collar. Większy szklany walec (R=0.4 H=0.25) z transparent material — wygląda jak
-    // szklana kopuła osłaniająca wziernik i wizualnie łączy go z obudową prasy.
-    // Materiał na bieżąco — nie reużywamy matGuardOrange (inny kolor/opacity).
+    // Phase 10 fix-up #4: obudowa wziernika — CZARNA, nieprzezroczysta (user explicit).
+    // Pełni rolę metalowej/plastikowej oprawy szybki. Color 0x202020 matte.
     if (!this.matOilSightShell) {
       this.matOilSightShell = new THREE.MeshStandardMaterial({
-        color: 0xD0E0E8,
-        metalness: 0.1,
-        roughness: 0.2,
-        transparent: true,
-        opacity: 0.3,
+        color: 0x202020,
+        metalness: 0.4,
+        roughness: 0.7,
       });
     }
     const shellGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.25, 24);
     shellGeo.rotateX(Math.PI / 2);
     const shell = new THREE.Mesh(shellGeo, this.matOilSightShell);
-    shell.position.set(0, 7, 1.0);
-    shell.castShadow = false;  // szkło — bez cienia
-    shell.receiveShadow = false;
+    shell.position.set(0, 7, 0.95);  // ZA wziernikiem (oprawa od strony obudowy)
+    shell.castShadow = true;
+    shell.receiveShadow = true;
     shell.userData = { kind: 'decoration' };
     this.group.add(shell);
 
     const sightGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.05, 24);
     sightGeo.rotateX(Math.PI / 2);
     const sight = new THREE.Mesh(sightGeo, this.matOilSightYellow);
-    sight.position.set(0, 7, 1.0);  // w środku szklanej obudowy
+    sight.position.set(0, 7, 1.08);  // wystaje z czarnej obudowy
     sight.castShadow = true;
     this.group.add(sight);
 
@@ -734,6 +741,9 @@ export class PressModel {
   _buildFrontGuard() {
     const guardGroup = new THREE.Group();
     guardGroup.position.set(0, 5, 1.5);  // pozycja zawiasu (D-Phase2-04)
+    // Phase 10 fix-up #4: startup pose = open (uchylona na zewnątrz). User expect
+    // żeby na starcie osłona była uniesiona — dostęp do mechanizmu z przodu od razu.
+    guardGroup.rotation.x = -Math.PI / 2;
     this.group.add(guardGroup);
 
     const guardGeo = new THREE.BoxGeometry(2.5, 1.8, 0.05);
@@ -753,11 +763,11 @@ export class PressModel {
       kind: 'manipulation',
       baseMaterial: this.matGuardOrange,
       poses: {
-        // Phase 10 fix-up #2: open=-π/2 — osłona uchyla się NA ZEWNĄTRZ (do przodu,
-        // jak daszek nad operatorem), nie do środka prasy nad mechanizm. User chce
-        // otwierać klapę "od siebie" (dostęp do mechanizmu z przodu).
-        closed: { rot: { x: 0, y: 0, z: 0 } },
+        // Phase 10 fix-up #4: 'open' first w obiekcie → InteractionAnimator bootstrap
+        // currentPose='open' (matches startup guardGroup.rotation.x=-π/2 powyżej).
+        // Pierwszy klik → toggle → closed (rot.x=0).
         open:   { rot: { x: -Math.PI / 2, y: 0, z: 0 } },
+        closed: { rot: { x: 0, y: 0, z: 0 } },
       },
       pivotTarget: 'parent',
     });
