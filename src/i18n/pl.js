@@ -43,6 +43,18 @@ export const pl = {
     freeRoamActive:      '🆓 Tryb wolny',
     setDifficultyNauka:  'Przełącz na Naukę',
     setDifficultyEgzamin: 'Przełącz na Egzamin',
+    // Phase 11 Plan 11-01 (FUNC-11-02): 3-stanowy mode toggler (free/nauka/egzamin).
+    // modeLabel — current state badge text; setModeNext — toggle button label (opisuje "next" akcję po kliku).
+    modeLabel: {
+      free:    'Swobodny',
+      nauka:   'Nauka',
+      egzamin: 'Egzamin',
+    },
+    setModeNext: {
+      free:    'Tryb: Nauka',
+      nauka:   'Tryb: Egzamin',
+      egzamin: 'Tryb: Swobodny',
+    },
     labelsToggleOn:      'Etykiety: WŁ',
     labelsToggleOff:     'Etykiety: WYŁ',
     labelsModeAll:       'Tryb: wszystkie',

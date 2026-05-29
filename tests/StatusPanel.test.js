@@ -5,7 +5,7 @@
 // localStorage 'pm300:hc-outline:v1' → state.hcOutlineMode, ARIA aria-pressed,
 // dispose lifecycle + sanity throw, graceful localStorage failure.
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { StatusPanel } from '../src/ui/StatusPanel.js';
 import { createTrainingStore } from '../src/state/trainingStore.js';
 import { pl } from '../src/i18n/pl.js';
@@ -232,6 +232,77 @@ describe('StatusPanel — dispose (STATE-03)', () => {
     expect(store.getState().hcOutlineMode).toBe(hcBefore);
     document.body.innerHTML = '';
     localStorage.clear();
+  });
+});
+
+describe('Phase 11 — mode toggler (Plan 11-01, FUNC-11-02)', () => {
+  let store, panel;
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="status-panel"></div>';
+    localStorage.clear();
+    store = createTrainingStore();
+  });
+  afterEach(() => {
+    if (panel) panel.dispose();
+    panel = null;
+    document.body.innerHTML = '';
+    localStorage.clear();
+  });
+
+  it('M1: initial mode=free → button text "Tryb: Nauka", badge "Swobodny"', () => {
+    store.setState({ mode: 'free', difficulty: 'nauka', freeRoam: true });
+    panel = new StatusPanel({ store });
+    const btn = document.querySelector('.status-panel__difficulty-toggle');
+    const badge = document.querySelector('.difficulty-badge');
+    expect(btn.textContent).toBe(pl.ui.setModeNext.free);
+    expect(badge.textContent).toBe(pl.ui.modeLabel.free);
+    expect(badge.classList.contains('difficulty-badge--free')).toBe(true);
+  });
+
+  it('M2: klik gdy mode=free → setMode("nauka") (cykl free→nauka)', () => {
+    store.setState({ mode: 'free' });
+    panel = new StatusPanel({ store });
+    const setModeSpy = vi.spyOn(store.getState(), 'setMode');
+    const btn = document.querySelector('.status-panel__difficulty-toggle');
+    btn.click();
+    expect(setModeSpy).toHaveBeenCalledWith('nauka');
+  });
+
+  it('M3: klik gdy mode=nauka → setMode("egzamin")', () => {
+    store.setState({ mode: 'nauka' });
+    panel = new StatusPanel({ store });
+    const setModeSpy = vi.spyOn(store.getState(), 'setMode');
+    const btn = document.querySelector('.status-panel__difficulty-toggle');
+    btn.click();
+    expect(setModeSpy).toHaveBeenCalledWith('egzamin');
+  });
+
+  it('M4: lock — mode=egzamin + session.finishedAt=null → button.disabled true (FUNC-11-02)', () => {
+    store.setState({
+      mode: 'egzamin',
+      difficulty: 'egzamin',
+      freeRoam: false,
+      session: { scenarioId: 's', startedAt: 1, finishedAt: null, attempts: [], retryCount: 0 },
+    });
+    panel = new StatusPanel({ store });
+    const btn = document.querySelector('.status-panel__difficulty-toggle');
+    expect(btn.disabled).toBe(true);
+    expect(btn.getAttribute('aria-disabled')).toBe('true');
+  });
+
+  it('M5: mode=egzamin + session.finishedAt!==null → button enabled, klik → setMode("free")', () => {
+    store.setState({
+      mode: 'egzamin',
+      difficulty: 'egzamin',
+      freeRoam: false,
+      session: { scenarioId: 's', startedAt: 1, finishedAt: 2000, attempts: [], retryCount: 0 },
+    });
+    panel = new StatusPanel({ store });
+    const btn = document.querySelector('.status-panel__difficulty-toggle');
+    expect(btn.disabled).toBe(false);
+    const setModeSpy = vi.spyOn(store.getState(), 'setMode');
+    btn.click();
+    expect(setModeSpy).toHaveBeenCalledWith('free');
   });
 });
 
