@@ -468,30 +468,33 @@ export default {
 | A7 | Phase 11 nie potrzebuje nowych pakietów npm | Standard Stack | Jeśli planner uzna że SDK ElevenLabs jest lepszy mimo +50 KB → wymaga `checkpoint:human-verify` + slopcheck. |
 | A8 | "777 testów Phase 9 zielone" obowiązuje jako Phase 11 baseline | Project Constraints | Verified via ROADMAP + STATE.md linia 13 (`completed_phases: 3`, milestone v1.1 closed). |
 
-## Open Questions
+## Open Questions (RESOLVED 2026-05-29 via /gsd:plan-phase 11 inline discuss)
 
-1. **`mode` vs `difficulty`/`freeRoam` — Opcja A czy B?**
-   - What we know: Trzy pola istnieją osobno, FUNC-11-02 wymaga unified flow.
-   - What's unclear: Czy planner chce zmigrować 5+ testów Phase 5 do `s.mode` (Opcja A: clean, więcej diffów), czy zostawić jako alias (Opcja B: mniej testów do dotknięcia).
-   - Recommendation: **Opcja A** — wprowadzić `mode` jako canonical, set'ować `difficulty`/`freeRoam` synchronicznie w `setMode` action, w follow-up cleanup (poza Phase 11) wyrugować `difficulty`/`freeRoam` z subskryberów.
+User dokonał 4 decyzji w plan-phase orchestrator zamiast pełnego /gsd:discuss-phase. Wszystkie 5 Open Questions zostały rozstrzygnięte (Q4 implicit przez FUNC-11-01).
 
-2. **FUNC-11-04 — widget legacy lub nowy?**
-   - What we know: `#status-dot`/`#status-text` w `.control-panel` (`index.html:32-35`) są w DOM ale unbound. StatusPanel renderuje SOP machineState (osobny kanał).
-   - What's unclear: Czy intencja "Status urządzenia" odnosi się do tego legacy widgetu (ω-driven), czy do StatusPanel (machineState).
-   - Recommendation: Re-bind LEGACY widget do `isRunning + _omega>0` (3 stany: `aktywny` / `nieaktywny` / `idle`). StatusPanel zostaje dla SOP. Dwa różne kanały, dwa różne widgety.
+1. **`mode` vs `difficulty`/`freeRoam` — Opcja A czy B?** — **RESOLVED: Opcja B (alias)**
+   - Decision: Nowe pole `mode` jako source of truth dla nowej logiki Phase 11; `setMode()` synchronicznie ustawia legacy `difficulty`/`freeRoam`. Cleanup legacy odroczony poza Phase 11.
+   - Rationale: zero breakage 777 istniejących testów; mniejszy blast radius.
+   - Applied in: 11-01-PLAN.md (`setMode` action).
 
-3. **Lektor: streaming czy full-response?**
-   - What we know: Endpoint `/v1/text-to-speech/{voiceId}` zwraca full audio; istnieje też `/v1/text-to-speech/{voiceId}/stream`.
-   - What's unclear: Streaming daje lower TTFP (time-to-first-play) ~300 ms vs ~1 s dla full; ale wymaga MediaSource lub WebStream + complex error handling.
-   - Recommendation: **Full-response dla MVP** (prostszy code), upgrade do streaming gdy UX feedback wskaże >1s delay jako problem.
+2. **FUNC-11-04 — widget legacy lub nowy?** — **RESOLVED: Re-bind legacy `#status-text`**
+   - Decision: Reaktywować odpięte w D-Phase4-17 binding, dodać 3 stany (`aktywny` / `nieaktywny` / `idle`) w UI.js. Nie tworzymy nowego widgetu w StatusPanel.
+   - Rationale: minimalny diff; D-Phase4-03 invariant (StatusPanel = SOP, #status-text = hardware/ω) zachowany.
+   - Applied in: 11-02-PLAN.md.
 
-4. **Domyślny `mode` na cold start — `free` czy `nauka`?**
-   - FUNC-11-01 mówi explicit "swobodny" → `free`. Ale obecnie `difficulty` defaultuje do `'nauka'` (verified `trainingStore.js:54` + bootstrap `main.js:84`).
-   - Recommendation: **`free`** zgodnie z FUNC-11-01. Migrate cold-start logic w `main.js`.
+3. **Lektor: streaming czy full-response?** — **RESOLVED: Full-response Blob URL**
+   - Decision: `fetch` POST `/v1/text-to-speech/{voiceId}` → `response.blob()` → `URL.createObjectURL` → `<audio>`. BRAK SDK (oszczędność ~50 KB). Cache `Map<voiceId::text, blobUrl>` LRU max 20 z `URL.revokeObjectURL` przy eviction.
+   - Rationale: prostszy code dla MVP; upgrade do streaming odroczony do v1.2+.
+   - Applied in: 11-05-PLAN.md.
 
-5. **Backend proxy dla TTS — out-of-MVP czy in-MVP?**
-   - FUNC-11-10 mówi "klucz przez `.env` ... graceful fallback gdy brak klucza" — to suggestuje wprost: klient-side klucz.
-   - Recommendation: **Out-of-MVP**, jasna nota w README. Phase 12+ może dodać proxy.
+4. **Domyślny `mode` na cold start — `free` czy `nauka`?** — **RESOLVED: `free` (implicit z FUNC-11-01)**
+   - Decision: FUNC-11-01 jest wymaganiem explicit — cold start mode='free'. Migrate cold-start logic w `main.js` bootstrap.
+   - Applied in: 11-01-PLAN.md.
+
+5. **Backend proxy dla TTS — out-of-MVP czy in-MVP?** — **RESOLVED: Out-of-MVP**
+   - Decision: VITE_ELEVENLABS_API_KEY przez `.env` (client-side). Akceptowalny MVP trade-off — udokumentowany WARNING w nagłówku LectorService.js + `.env.example` (VITE_ env vars wyciekają do production bundle).
+   - Long-term: backend proxy odroczony do v1.2+.
+   - Applied in: 11-05-PLAN.md (security note w frontmatter `user_setup.security_warning`).
 
 ## Environment Availability
 
