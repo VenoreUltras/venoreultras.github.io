@@ -109,7 +109,9 @@ Plans:
 - [x] 10-02-PLAN.md — InteractionAnimator + RaycastController click channel + boundary entry
 - [x] 10-03-PLAN.md — Application wiring + dispose order + manual smoke gate (D-10-05 + opacity tweak)
 
-### Phase 11: Poprawki funkcjonalności trybów + lektor ElevenLabs
+### Phase 11: Poprawki funkcjonalności trybów + lektor ElevenLabs — ✅ COMPLETE (2026-05-29)
+
+**Close metrics:** 903 passed + 1 skipped tests (777 baseline + ~126 new) · main bundle 809.94 KB (<850 KB, 40 KB headroom) · 13/13 FUNC-11-01..13 satisfied · getInteractables().size===15 preserved · D-Phase7-05 boundary preserved · manual smoke gate APPROVED by user.
 
 **Goal:** Spójny flow trybów (swobodny → nauka → egzamin → swobodny z możliwością dalszego przełączania), poprawiony wskaźnik statusu urządzenia, rozbudowane etykiety klik-driven w trybie nauki, etykiety dostępne także w trybie swobodnym, oraz integracja lektora głosowego ElevenLabs dla opisów elementów i instrukcji SOP.
 
@@ -140,11 +142,11 @@ Plans:
 7. `npm test` przechodzi (existing + nowe testy: ModeStateMachine transitions, statusIndicator vs ω, elementInfo coverage===15, TTS cache hit)
 8. `npm run build` < 850 KB main bundle (limit z v1.1 zachowany; lektor jako oddzielny chunk dynamic import jeśli to potrzebne dla budżetu)
 
-**Plans:** TBD via `/gsd:plan-phase 11` (sugerowany podział):
-- 11-01 — ModeStateMachine + start w trybie swobodnym + UI toggle trybów (FUNC-11-01..03, 11-06)
-- 11-02 — Status urządzenia fix + binding do ω (FUNC-11-04)
-- 11-03 — Rozszerzony panel informacyjny + `elementInfo.js` dla 15 elementów (FUNC-11-07, 11-08)
-- 11-04 — Modal "przejdź do egzaminu" po SOP done + powrót po egzaminie (FUNC-11-05, 11-06)
-- 11-05 — ElevenLabs TTS service + cache + UI toggle + voice picker + .env handling (FUNC-11-09..12)
-- 11-06 — Integration audit (boundary, bundle, testy, manual smoke flow przez 3 tryby)
+**Plans:** 6/6 complete
+- ✅ 11-01 — ModeStateMachine + start w trybie swobodnym + UI toggle trybów (FUNC-11-01..03, 11-06)
+- ✅ 11-02 — Status urządzenia fix + binding do ω (FUNC-11-04)
+- ✅ 11-03 — Rozszerzony panel informacyjny + `elementInfo.js` dla 15 elementów (FUNC-11-07, 11-08)
+- ✅ 11-04 — Modal "przejdź do egzaminu" po SOP done + powrót po egzaminie (FUNC-11-05, 11-06)
+- ✅ 11-05 — ElevenLabs TTS service + cache + UI toggle + voice picker + .env handling (FUNC-11-09..12)
+- ✅ 11-06 — Integration audit + manual smoke gate (FUNC-11-13) — user-approved
 
