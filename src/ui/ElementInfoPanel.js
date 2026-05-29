@@ -1,5 +1,6 @@
 // src/ui/ElementInfoPanel.js
-// Phase 11 Plan 11-03 (FUNC-11-07/03): edukacyjny modal panel dla 15 interactables.
+// Phase 11 Plan 11-03 (FUNC-11-07/03): edukacyjny dymek (tooltip) dla 15 interactables.
+// FIX: nie blokujący modal na cały ekran, lecz mały tooltip przy kursorze (dialog.show()).
 // Otwiera się przy activeModal === 'element-info' + _elementInfoMeshId !== null.
 // Tryb 'nauka' → 4 sekcje (function/parameters/sopSteps/safety) z src/data/elementInfo.js.
 // Tryb 'free'  → 1 sekcja "Opis" (pl.parts[id].description) — krótki edukacyjny tooltip.
@@ -40,14 +41,14 @@ export class ElementInfoPanel {
    * @private
    */
   _build() {
-    this._overlay = document.createElement('div');
-    this._overlay.className = 'modal-overlay';
-    this._overlay.setAttribute('aria-hidden', 'true');
-
+    // FIX (dymek): panel renderuje się jako mały, NIE-blokujący tooltip przy kursorze
+    // (element-info-tip) zamiast modalu na cały ekran z ciemnym tłem. Brak .modal-overlay —
+    // scena 3D pozostaje klikalna; tooltip zamyka się klikiem poza nim, przyciskiem ✕ lub Esc.
+    // aria-modal=false bo to już nie jest modal blokujący (dialog.show() zamiast showModal()).
     this._dialog = document.createElement('dialog');
-    this._dialog.className = 'modal-card modal-card--element-info';
+    this._dialog.className = 'modal-card modal-card--element-info element-info-tip';
     this._dialog.setAttribute('role', 'dialog');
-    this._dialog.setAttribute('aria-modal', 'true');
+    this._dialog.setAttribute('aria-modal', 'false');
     this._dialog.setAttribute('aria-labelledby', 'element-info-title');
 
     // Statyczny szkielet (literały — brak user contentu, XSS-safe).
@@ -64,13 +65,21 @@ export class ElementInfoPanel {
     closeBtn.textContent = '✕';
     closeBtn.setAttribute('aria-label', pl.modals.closeAria);
 
-    this._root.appendChild(this._overlay);
     this._root.appendChild(this._dialog);
 
     // Bound handlers — referencja dla removeEventListener.
     this._onClose = () => this._store.getState().closeModal();
     closeBtn.addEventListener('click', this._onClose);
-    this._overlay.addEventListener('click', this._onClose);
+
+    // Klik poza tooltipem zamyka go (capture-phase, by zadziałać też nad canvasem 3D).
+    // Otwarcie następuje na pointerup (RaycastController) — pointerdown poza dymkiem
+    // po otwarciu = zamknięcie; klik w inny element re-otwiera z nową treścią.
+    this._onDocPointerDown = (e) => {
+      if (this._store.getState().activeModal !== 'element-info') return;
+      if (this._dialog.contains(e.target)) return;
+      this._store.getState().closeModal();
+    };
+    document.addEventListener('pointerdown', this._onDocPointerDown, true);
   }
 
   /**
@@ -99,6 +108,7 @@ export class ElementInfoPanel {
     this._unsubscribers.push(
       this._store.subscribe((s) => s.activeModal, () => this._render()),
       this._store.subscribe((s) => s._elementInfoMeshId, () => this._render()),
+      this._store.subscribe((s) => s._elementInfoPos, () => this._render()),
       this._store.subscribe((s) => s.mode, () => this._render()),
       // Phase 11 Plan 11-05: re-render gdy lektor on/off lub voice picker zmieni się.
       this._store.subscribe((s) => s.lectorEnabled, () => this._render()),
@@ -206,13 +216,14 @@ export class ElementInfoPanel {
       if (slot) slot.textContent = '';
     }
 
-    this._overlay.classList.toggle('modal-overlay--visible', isOpen);
     if (isOpen) {
-      if (typeof this._dialog.showModal === 'function') {
-        try { this._dialog.showModal(); } catch { this._dialog.setAttribute('open', ''); }
+      // NIE-blokujący tooltip: dialog.show() (nie showModal) — brak ::backdrop, scena klikalna.
+      if (typeof this._dialog.show === 'function') {
+        try { if (!this._dialog.open) this._dialog.show(); } catch { this._dialog.setAttribute('open', ''); }
       } else {
         this._dialog.setAttribute('open', '');
       }
+      this._positionTip(state._elementInfoPos);
     } else {
       if (typeof this._dialog.close === 'function') {
         try { this._dialog.close(); } catch { this._dialog.removeAttribute('open'); }
@@ -223,18 +234,49 @@ export class ElementInfoPanel {
   }
 
   /**
+   * Pozycjonuje tooltip przy kursorze (pos = clientX/clientY), z offsetem i clampem do
+   * viewportu by dymek nie wychodził poza ekran. pos=null → wyśrodkowany fallback (CSS).
+   * @param {{x:number,y:number}|null} pos
+   * @private
+   */
+  _positionTip(pos) {
+    if (!pos || typeof pos.x !== 'number' || typeof pos.y !== 'number') {
+      // Fallback: brak pozycji → wyśrodkuj (klasa --centered steruje CSS-em).
+      this._dialog.classList.add('element-info-tip--centered');
+      this._dialog.style.left = '';
+      this._dialog.style.top = '';
+      return;
+    }
+    this._dialog.classList.remove('element-info-tip--centered');
+    const OFFSET = 16;
+    const vw = window.innerWidth || 0;
+    const vh = window.innerHeight || 0;
+    const w = this._dialog.offsetWidth || 280;
+    const h = this._dialog.offsetHeight || 160;
+    // Domyślnie na prawo-dół od kursora; jeśli nie mieści — odbij w lewo/górę.
+    let left = pos.x + OFFSET;
+    let top = pos.y + OFFSET;
+    if (left + w > vw - 8) left = Math.max(8, pos.x - w - OFFSET);
+    if (top + h > vh - 8) top = Math.max(8, vh - h - 8);
+    this._dialog.style.left = `${Math.max(8, left)}px`;
+    this._dialog.style.top = `${Math.max(8, top)}px`;
+  }
+
+  /**
    * Zwalnia event listenery + subskrypcje + usuwa elementy z DOM (STATE-03 / T-04-01).
    * Idempotent.
    */
   dispose() {
     const closeBtn = this._dialog?.querySelector('.modal-card__close');
     if (closeBtn && this._onClose) closeBtn.removeEventListener('click', this._onClose);
-    if (this._overlay && this._onClose) this._overlay.removeEventListener('click', this._onClose);
+    if (this._onDocPointerDown) {
+      document.removeEventListener('pointerdown', this._onDocPointerDown, true);
+      this._onDocPointerDown = null;
+    }
 
     for (const u of this._unsubscribers) u();
     this._unsubscribers = [];
 
-    this._overlay?.remove();
     this._dialog?.remove();
   }
 }

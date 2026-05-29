@@ -273,6 +273,9 @@ describe('Application — Phase 4 wiring (Plan 04-06)', () => {
   });
 
   it('StepPanel renderuje 8 kroków uruchomienia z aktywnym pierwszym', () => {
+    // FIX: cold-start to tryb swobodny (freeRoam) → panel procedury ukryty.
+    // Przełączamy na 'nauka' by procedura się renderowała.
+    app.store.getState().setMode('nauka');
     const items = document.querySelectorAll('#step-panel .step-item');
     expect(items.length).toBe(8);
     const active = document.querySelector('.step-item--aktywny');
@@ -281,6 +284,7 @@ describe('Application — Phase 4 wiring (Plan 04-06)', () => {
   });
 
   it('subscriber currentStepId reaguje — kliknięcie tabliczki advansuje StepPanel do "2."', () => {
+    app.store.getState().setMode('nauka'); // FIX: procedura widoczna tylko poza trybem swobodnym
     app.store.getState().attemptStep({ kind: 'click', meshId: 'tabliczka-znamionowa' });
     const active = document.querySelector('.step-item--aktywny');
     expect(active).not.toBeNull();

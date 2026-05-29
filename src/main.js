@@ -120,6 +120,12 @@ export class Application {
     })();
     this.store.setState({
       difficulty: difficultyInitial,
+      // Phase 11 FIX: mode jest canonical SSOT — bootstrap MUSI rzutować alias freeRoam
+      // tak jak robi setMode (free → freeRoam=true). Bez tego cold-start 'free' zostawał
+      // z freeRoam=false (default store'a), więc HighlightManager traktował scenę jak 'nauka'
+      // (podświetlał kroki SOP) a wskaźnik "tryb swobodny" był ukryty — tryb swobodny
+      // efektywnie "nie startował" mimo mode==='free'.
+      freeRoam: modeInitial === 'free',
       audioMuted: audioMutedInitial,
       mode: modeInitial,
       lectorEnabled: lectorEnabledInitial,

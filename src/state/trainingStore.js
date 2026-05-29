@@ -75,6 +75,9 @@ export function createTrainingStore(opts = {}) {
       // Phase 11 Plan 11-03 (FUNC-11-07): aktualnie wybrany mesh dla ElementInfoPanel.
       // Ustawiany przez openElementInfo(meshId); czyszczony przez closeModal.
       _elementInfoMeshId: null,
+      // FIX (dymek): pozycja ekranowa klikniętego elementu {x,y} (clientX/clientY) — panel
+      // renderuje się jako mały tooltip przy kursorze zamiast modalu na cały ekran. null → wyśrodkowany fallback.
+      _elementInfoPos: null,
       // Phase 11 Plan 11-04 (FUNC-11-05): idempotent flag — prompt "Przejść do egzaminu?"
       // pokazywany tylko raz na sesję. Reset przez startScenario (świeży scenariusz =
       // świeży flag). closeModal NIE resetuje — by ręczne re-finishedAt nie retriggerowało.
@@ -216,17 +219,19 @@ export function createTrainingStore(opts = {}) {
       })),
 
       /** Zamyka dowolny aktywny modal. D-Phase5-20 (Esc precedencja). */
-      closeModal: () => set({ activeModal: null, _confirmPayload: null, _elementInfoMeshId: null }),
+      closeModal: () => set({ activeModal: null, _confirmPayload: null, _elementInfoMeshId: null, _elementInfoPos: null }),
 
       /**
        * Phase 11 Plan 11-03 (FUNC-11-07): otwiera ElementInfoPanel dla danego mesh.
        * RaycastController woła z mode in {'free','nauka'}; panel renderuje conditional
        * content (1 sekcja w 'free', 4 sekcje w 'nauka').
        * @param {string} meshId
+       * @param {{x:number,y:number}} [pos] - pozycja ekranowa kliknięcia (clientX/clientY) dla tooltipa
        */
-      openElementInfo: (meshId) => set({
+      openElementInfo: (meshId, pos = null) => set({
         activeModal: 'element-info',
         _elementInfoMeshId: meshId,
+        _elementInfoPos: pos,
       }),
 
       /**

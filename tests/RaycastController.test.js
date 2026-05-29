@@ -400,8 +400,8 @@ describe('Phase 5 — free-roam branch (EDU-01, D-Phase5-05)', () => {
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(uruchomienie); store.getState().setMode('egzamin');
-    // Phase 11 Plan 11-03: attemptStep flow jest aktywny TYLKO w mode='egzamin'.
-    // mode='free'/'nauka' otwierają ElementInfoPanel (testowane niżej w describe block).
+    // Phase 11 Plan 11-03 (FIX): attemptStep flow (SOP) jest aktywny w 'egzamin' ORAZ 'nauka'.
+    // Tylko mode='free' otwiera ElementInfoPanel (testowane niżej w describe block).
     store.getState().setMode('egzamin');
     const mesh = makeMesh('tabliczka-znamionowa', 'visual-target');
     const interactables = new Map([['tabliczka-znamionowa', mesh]]);
@@ -438,7 +438,8 @@ describe('Phase 5 — free-roam branch (EDU-01, D-Phase5-05)', () => {
     controller.handlePointerDown({ clientX: 400, clientY: 300 });
     controller._handlePointerUp({ clientX: 401, clientY: 300 });
     expect(attemptSpy).not.toHaveBeenCalled();
-    expect(openSpy).toHaveBeenCalledWith('tabliczka-znamionowa');
+    // FIX (dymek): openElementInfo dostaje też pozycję kliknięcia {x,y} dla tooltipa.
+    expect(openSpy).toHaveBeenCalledWith('tabliczka-znamionowa', expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }));
     controller.dispose();
   });
 
@@ -519,7 +520,9 @@ describe('Phase 11 — mode branch (FUNC-11-03/07)', () => {
     controller.dispose();
   });
 
-  it('M2 mode=nauka + klik mesh → store.openElementInfo wywołane, attemptStep NIE', () => {
+  it('M2 mode=nauka + klik mesh → store.attemptStep wywołane (SOP), openElementInfo NIE', () => {
+    // FIX: w 'nauka' klik napędza procedurę SOP (kroki + punktacja), NIE otwiera dymka.
+    // Dymek ElementInfoPanel jest wyłącznie funkcją trybu swobodnego ('free').
     const renderer = makeMockRenderer();
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
@@ -537,8 +540,8 @@ describe('Phase 11 — mode branch (FUNC-11-03/07)', () => {
     controller.handlePointerDown({ clientX: 400, clientY: 300 });
     controller._handlePointerUp({ clientX: 401, clientY: 300 });
 
-    expect(openSpy).toHaveBeenCalledWith('hamulec');
-    expect(attemptSpy).not.toHaveBeenCalled();
+    expect(attemptSpy).toHaveBeenCalledWith({ kind: 'click', meshId: 'hamulec' });
+    expect(openSpy).not.toHaveBeenCalled();
     controller.dispose();
   });
 
@@ -560,7 +563,7 @@ describe('Phase 11 — mode branch (FUNC-11-03/07)', () => {
     controller.handlePointerDown({ clientX: 400, clientY: 300 });
     controller._handlePointerUp({ clientX: 401, clientY: 300 });
 
-    expect(openSpy).toHaveBeenCalledWith('estop');
+    expect(openSpy).toHaveBeenCalledWith('estop', expect.objectContaining({ x: expect.any(Number), y: expect.any(Number) }));
     expect(attemptSpy).not.toHaveBeenCalled();
     controller.dispose();
   });
