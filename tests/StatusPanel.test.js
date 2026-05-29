@@ -389,6 +389,27 @@ describe('Phase 6 — scenario selector (Plan 06-07, UI-SPEC §1)', () => {
     expect(store.getState().activeModal).not.toBe('confirm-scenario-switch');
   });
 
+  it('Phase 11 Plan 11-05: renderuje status-panel__lector-toggle + lector-voice select gdy lectorService podany', () => {
+    const lector = { isAvailable: () => true };
+    const voices = [{ id: 'v1', label: 'Voice 1' }];
+    panel = new StatusPanel({ store, scenarios, lectorService: lector, lectorVoices: voices });
+    const toggle = document.querySelector('.status-panel__lector-toggle');
+    const select = document.querySelector('.status-panel__lector-voice');
+    expect(toggle).not.toBeNull();
+    expect(select).not.toBeNull();
+    expect(select.querySelectorAll('option').length).toBe(1);
+  });
+
+  it('Phase 11 Plan 11-05: klik toggle → setLectorEnabled flip', () => {
+    const lector = { isAvailable: () => true };
+    const voices = [{ id: 'v1', label: 'Voice 1' }];
+    panel = new StatusPanel({ store, scenarios, lectorService: lector, lectorVoices: voices });
+    expect(store.getState().lectorEnabled).toBe(false);
+    const toggle = document.querySelector('.status-panel__lector-toggle');
+    toggle.click();
+    expect(store.getState().lectorEnabled).toBe(true);
+  });
+
   it('klik na ten sam scenariusz → no-op (żaden side effect)', () => {
     panel = new StatusPanel({ store, scenarios });
     store.getState().startScenario(scenarios['uruchomienie']);

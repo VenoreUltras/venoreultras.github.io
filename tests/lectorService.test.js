@@ -168,6 +168,27 @@ describe('LectorService — fetch error (Test 8)', () => {
   });
 });
 
+describe('trainingStore — lector state (Task 2)', () => {
+  it('initial state: lectorEnabled=false, lectorVoiceId=DEFAULT', async () => {
+    const { createTrainingStore } = await import('../src/state/trainingStore.js');
+    const store = createTrainingStore();
+    const s = store.getState();
+    expect(s.lectorEnabled).toBe(false);
+    expect(s.lectorVoiceId).toBe(DEFAULT_LECTOR_VOICE_ID);
+    expect(typeof s.setLectorEnabled).toBe('function');
+    expect(typeof s.setLectorVoiceId).toBe('function');
+  });
+
+  it('setLectorEnabled / setLectorVoiceId mutują state', async () => {
+    const { createTrainingStore } = await import('../src/state/trainingStore.js');
+    const store = createTrainingStore();
+    store.getState().setLectorEnabled(true);
+    expect(store.getState().lectorEnabled).toBe(true);
+    store.getState().setLectorVoiceId('xyz-123');
+    expect(store.getState().lectorVoiceId).toBe('xyz-123');
+  });
+});
+
 describe('lectorVoices module', () => {
   it('eksportuje frozen array + DEFAULT_LECTOR_VOICE_ID', () => {
     expect(Array.isArray(LECTOR_VOICES)).toBe(true);

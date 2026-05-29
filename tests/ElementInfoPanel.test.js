@@ -163,3 +163,45 @@ describe('ElementInfoPanel — mode=free short description (Test 7)', () => {
     expect(body.textContent).toContain(elementInfo['kolo-zamachowe'].parameters);
   });
 });
+
+// Phase 11 Plan 11-05 (FUNC-11-09/10): 🔊 button w lector-slot.
+describe('ElementInfoPanel — lector 🔊 button (Plan 11-05)', () => {
+  let store, panel;
+  function fakeLectorService(available, speakSpy) {
+    return {
+      isAvailable: () => available,
+      speak: speakSpy ?? (() => Promise.resolve()),
+    };
+  }
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="modal-container"></div>';
+    store = createTrainingStore();
+  });
+  afterEach(() => {
+    if (panel) panel.dispose();
+    panel = null;
+    document.body.innerHTML = '';
+  });
+
+  it('renderuje button.element-info-panel__lector-btn gdy isAvailable + lectorEnabled', () => {
+    const lector = fakeLectorService(true);
+    panel = new ElementInfoPanel({ store, lectorService: lector });
+    store.setState({ mode: 'nauka', lectorEnabled: true });
+    store.getState().openElementInfo('kolo-zamachowe');
+    const btn = document.querySelector('.element-info-panel__lector-btn');
+    expect(btn).not.toBeNull();
+    expect(btn.disabled).toBe(false);
+    expect(btn.textContent).toContain(pl.modals.elementInfo.lectorListenButton);
+  });
+
+  it('button disabled + tooltip gdy isAvailable===false', () => {
+    const lector = fakeLectorService(false);
+    panel = new ElementInfoPanel({ store, lectorService: lector });
+    store.setState({ mode: 'nauka', lectorEnabled: true });
+    store.getState().openElementInfo('kolo-zamachowe');
+    const btn = document.querySelector('.element-info-panel__lector-btn');
+    expect(btn).not.toBeNull();
+    expect(btn.disabled).toBe(true);
+    expect(btn.title).toBeTruthy();
+  });
+});
