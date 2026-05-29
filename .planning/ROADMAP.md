@@ -147,3 +147,4 @@ Plans:
 - 11-04 — Modal "przejdź do egzaminu" po SOP done + powrót po egzaminie (FUNC-11-05, 11-06)
 - 11-05 — ElevenLabs TTS service + cache + UI toggle + voice picker + .env handling (FUNC-11-09..12)
 - 11-06 — Integration audit (boundary, bundle, testy, manual smoke flow przez 3 tryby)
+
