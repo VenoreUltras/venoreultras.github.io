@@ -8,6 +8,7 @@
 // dla pełnej dynamicznej weryfikacji konstruktor + subscribers + dispose.
 // Phase 4 (Plan 04-06): describe block "Phase 4 wiring" — 5 nowych controllerów + dispose chain.
 // Phase 5 (Plan 05-07): describe block "Phase 5 wiring" — 5 nowych kontrolerów + bootstrap + dispose.
+// Phase 10 (Plan 10-03): describe block "Phase 10 InteractionAnimator wiring" — animator + dispose order.
 
 // Mock @floating-ui/dom przed importem src/main.js
 vi.mock('@floating-ui/dom', () => ({
@@ -678,5 +679,118 @@ describe('Application — Phase 6 wiring (Plan 06-08)', () => {
     expect(src).toMatch(/loadPersistedSession/);
     expect(src).toMatch(/setCurrentAngle/);
     expect(src).toMatch(/cycle-end/);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 10 InteractionAnimator wiring (D-10-06/07/08/09 integration)
+// — animator + po-hoc callback + dispose order animator → raycast → emissive
+// ---------------------------------------------------------------------------
+describe('Application — Phase 10 InteractionAnimator wiring (D-10-06/07/08/09 integration)', () => {
+  let app;
+  let Application;
+  let InteractionAnimator;
+
+  beforeEach(async () => {
+    document.body.innerHTML = `
+      <div id="three-canvas"></div>
+      <div id="status-panel"></div>
+      <aside id="step-panel"></aside>
+      <div id="modal-container"></div>
+      <div id="label-overlay-container"></div>
+      <div id="session-overlay" style="display:none;"></div>
+      <div id="replay-drawer" style="display:none;"></div>
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text"></span>
+      <input type="range" id="speed-slider" min="10" max="120" value="30">
+      <span id="speed-value">30</span>
+      <button id="btn-toggle">Start/Stop</button>
+      <span id="val-angle">0</span>
+      <span id="val-displacement">0</span>
+    `;
+    try {
+      localStorage.removeItem('pm300:hc-outline:v1');
+      localStorage.removeItem('pm300:difficulty:v1');
+      localStorage.removeItem('pm300:audio-mute:v1');
+      localStorage.removeItem('pm300:session:v1');
+    } catch { /* noop */ }
+    vi.stubGlobal('AudioContext', MockAudioContext);
+    vi.resetModules();
+    const appMod = await import('../src/main.js');
+    const animMod = await import('../src/interaction/InteractionAnimator.js');
+    Application = appMod.Application;
+    InteractionAnimator = animMod.InteractionAnimator;
+    app = new Application();
+  });
+
+  afterEach(() => {
+    if (app) {
+      try { app.dispose(); } catch { /* już zdisposed */ }
+    }
+    app = null;
+    document.body.innerHTML = '';
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  // IA-01: interactionAnimator obecny po konstruktorze
+  it('IA-01: po new Application() app.interactionAnimator istnieje i jest instancją InteractionAnimator', () => {
+    expect(app.interactionAnimator).toBeDefined();
+    expect(app.interactionAnimator?.constructor?.name).toBe('InteractionAnimator');
+  });
+
+  // IA-02: po-hoc callback _onManipulationClick jest funkcją (nie null) po Plan 03 wiringу
+  it('IA-02: app.raycastController._onManipulationClick jest funkcją (nie null) po wiring Plan 03', () => {
+    expect(typeof app.raycastController._onManipulationClick).toBe('function');
+  });
+
+  // IA-03: callback deleguje do interactionAnimator.handleClick
+  it('IA-03: wywołanie _onManipulationClick deleguje do interactionAnimator.handleClick(id, mesh)', () => {
+    const handleClickSpy = vi.spyOn(app.interactionAnimator, 'handleClick');
+    // Minimalny mock mesh z poses (handleClick odrzuci bez poses — sprawdzamy forwarding)
+    const guardMesh = { userData: {} };
+    app.raycastController._onManipulationClick('oslona-przednia', guardMesh);
+    expect(handleClickSpy).toHaveBeenCalledWith('oslona-przednia', guardMesh);
+  });
+
+  // IA-04: RaycastController stworzony PRZED InteractionAnimator (kolejność konstrukcji)
+  it('IA-04: src/main.js tworzy raycastController PRZED interactionAnimator (source-level check)', () => {
+    const src = readFileSync('src/main.js', 'utf-8');
+    const raycastIdx = src.indexOf('new RaycastController');
+    const animatorIdx = src.indexOf('new InteractionAnimator');
+    expect(raycastIdx).toBeGreaterThan(-1);
+    expect(animatorIdx).toBeGreaterThan(-1);
+    // raycast musi pojawić się WCZEŚNIEJ niż animator
+    expect(raycastIdx).toBeLessThan(animatorIdx);
+  });
+
+  // IA-05: dispose order — animator PRZED raycast PRZED emissive (T-04-14 extension, T-10-08)
+  it('IA-05: dispose order: interactionAnimator → raycastController → emissiveController', () => {
+    const animatorSpy  = vi.spyOn(app.interactionAnimator, 'dispose');
+    const raycastSpy   = vi.spyOn(app.raycastController, 'dispose');
+    const emissiveSpy  = vi.spyOn(app.emissiveController, 'dispose');
+
+    app.dispose();
+
+    expect(animatorSpy).toHaveBeenCalled();
+    expect(raycastSpy).toHaveBeenCalled();
+    expect(emissiveSpy).toHaveBeenCalled();
+
+    const order = (spy) => spy.mock.invocationCallOrder[0];
+    // T-10-08: animator dispose PRZED raycast → zatrzymuje GSAP tweeny piszące do pivot.rotation
+    expect(order(animatorSpy)).toBeLessThan(order(raycastSpy));
+    // T-04-14 (rozszerzony): raycast PRZED emissive
+    expect(order(raycastSpy)).toBeLessThan(order(emissiveSpy));
+
+    app = null;
+  });
+
+  // IA-06: dispose idempotent (podwójne dispose nie rzuca błędu)
+  it('IA-06: podwójne app.dispose() nie rzuca błędu', () => {
+    expect(() => {
+      app.dispose();
+      app.dispose();
+    }).not.toThrow();
+    app = null;
   });
 });
