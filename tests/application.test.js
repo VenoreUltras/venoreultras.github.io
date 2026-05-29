@@ -794,3 +794,85 @@ describe('Application — Phase 10 InteractionAnimator wiring (D-10-06/07/08/09 
     app = null;
   });
 });
+
+// ---------------------------------------------------------------------------
+// Phase 11 mode bootstrap (Plan 11-01 Task 2) — FUNC-11-01 cold start + persist
+// ---------------------------------------------------------------------------
+describe('Application — Phase 11 mode bootstrap (Plan 11-01)', () => {
+  let app;
+  let Application;
+
+  beforeEach(async () => {
+    document.body.innerHTML = `
+      <div id="three-canvas"></div>
+      <div id="status-panel"></div>
+      <aside id="step-panel"></aside>
+      <div id="modal-container"></div>
+      <div id="label-overlay-container"></div>
+      <div id="session-overlay" style="display:none;"></div>
+      <div id="replay-drawer" style="display:none;"></div>
+      <span id="status-dot" class="dot"></span>
+      <span id="status-text"></span>
+      <input type="range" id="speed-slider" min="10" max="120" value="30">
+      <span id="speed-value">30</span>
+      <button id="btn-toggle">Start/Stop</button>
+      <span id="val-angle">0</span>
+      <span id="val-displacement">0</span>
+    `;
+    try {
+      localStorage.removeItem('pm300:hc-outline:v1');
+      localStorage.removeItem('pm300:difficulty:v1');
+      localStorage.removeItem('pm300:audio-mute:v1');
+      localStorage.removeItem('pm300:mode:v1');
+    } catch { /* noop */ }
+    vi.stubGlobal('AudioContext', MockAudioContext);
+  });
+
+  afterEach(() => {
+    if (app) {
+      try { app.dispose(); } catch { /* już zdisposed */ }
+    }
+    app = null;
+    document.body.innerHTML = '';
+    try { localStorage.removeItem('pm300:mode:v1'); } catch { /* noop */ }
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  it('M1: świeży localStorage → app.store.getState().mode === "free" (FUNC-11-01)', async () => {
+    vi.resetModules();
+    const mod = await import('../src/main.js');
+    Application = mod.Application;
+    app = new Application();
+    expect(app.store.getState().mode).toBe('free');
+  });
+
+  it('M2: localStorage "pm300:mode:v1"="nauka" → mode==="nauka" po konstrukcji', async () => {
+    localStorage.setItem('pm300:mode:v1', 'nauka');
+    vi.resetModules();
+    const mod = await import('../src/main.js');
+    Application = mod.Application;
+    app = new Application();
+    expect(app.store.getState().mode).toBe('nauka');
+  });
+
+  it('M3: localStorage "pm300:mode:v1"="egzamin" → fallback "free" (świeża sesja, nie wpychamy w stary egzamin)', async () => {
+    localStorage.setItem('pm300:mode:v1', 'egzamin');
+    vi.resetModules();
+    const mod = await import('../src/main.js');
+    Application = mod.Application;
+    app = new Application();
+    expect(app.store.getState().mode).toBe('free');
+  });
+
+  it('M4: store.setMode("nauka") → localStorage.setItem("pm300:mode:v1","nauka") (persist subscriber)', async () => {
+    vi.resetModules();
+    const mod = await import('../src/main.js');
+    Application = mod.Application;
+    app = new Application();
+    const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
+    app.store.getState().setMode('nauka');
+    expect(setItemSpy).toHaveBeenCalledWith('pm300:mode:v1', 'nauka');
+  });
+});
+
