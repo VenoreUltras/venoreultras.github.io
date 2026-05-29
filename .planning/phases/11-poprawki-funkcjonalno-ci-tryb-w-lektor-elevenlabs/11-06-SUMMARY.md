@@ -3,7 +3,7 @@ phase: 11-poprawki-funkcjonalno-ci-tryb-w-lektor-elevenlabs
 plan: 06
 subsystem: testing / phase-close
 tags: [integration-audit, boundary, bundle-budget, phase11-close]
-status: PARTIAL — automated tasks complete, MANUAL SMOKE GATE PENDING
+status: COMPLETE — automated tasks done; manual smoke gate APPROVED by user 2026-05-29
 requires:
   - "11-01..11-05 (wave 1-3 plans merged)"
 provides:
@@ -38,7 +38,7 @@ Plan 11-06 zamyka Phase 11 dwoma krokami: (1) automatyczny aggregate integration
 | Task                                            | Type                  | Status                          |
 | ----------------------------------------------- | --------------------- | ------------------------------- |
 | Task 1: Aggregate integration audit             | auto                  | DONE — commit `0c050db`         |
-| Task 2: Manual smoke gate (flow + lektor + CORS) | checkpoint:human-verify | **PENDING USER VERIFICATION**   |
+| Task 2: Manual smoke gate (flow + lektor + CORS) | checkpoint:human-verify | **APPROVED by user 2026-05-29** |
 
 ## MANUAL SMOKE GATE — PENDING USER VERIFICATION
 
