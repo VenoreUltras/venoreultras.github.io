@@ -69,7 +69,10 @@ export class PressModel {
 
     // --- Phase 9 Grupa B cd. — Osłony (matGuardOrange BHP override + matGuardRearBlack) ---
     // matGuardOrange: BHP ostrzegawczy żółty 0xC8B400 (norma BHP), zmiana z 0xE07A1F Phase 2.
-    this.matGuardOrange = new THREE.MeshStandardMaterial({ color: 0xC8B400, metalness: 0.1, roughness: 0.85 });
+    // D-10-01: stała półprzezroczystość — mechanizm wewnątrz widoczny przy zamkniętej osłonie.
+    // NIE zmieniać depthWrite/alphaTest (Pitfall 1 — domyślne zapewniają poprawny Z-buffer).
+    // NIE animować opacity w flash (Pitfall 2 — _savePreFlash NIE zapisuje opacity/transparent).
+    this.matGuardOrange = new THREE.MeshStandardMaterial({ color: 0xC8B400, metalness: 0.1, roughness: 0.85, transparent: true, opacity: 0.5 });
     this.matGuardRearBlack = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.1, roughness: 0.85 });
 
     // --- Niezmieniane ---
@@ -175,6 +178,7 @@ export class PressModel {
     // 2. Wał główny (Shaft) - oś obrotu
     // Wał przechodzi od lewej do prawej ramki
     this.shaftAxis = new THREE.Group();
+    // D-10-03: explicit X=0, Z=0 — KIN-01 regression test w tests/PressModel.phase10.test.js.
     this.shaftAxis.position.set(0, this.shaftY, 0);
     this.group.add(this.shaftAxis);
 
@@ -200,6 +204,10 @@ export class PressModel {
     this.eccentricPin = new THREE.Object3D();
     this.eccentricPin.position.set(0, this.r, 0);
     this.shaftAxis.add(this.eccentricPin);
+
+    // D-10-04: wizualne łączniki wał↔mimośród (kołnierze) + mimośród↔korbowód (czop).
+    // Dzieci shaftAxis — rotują z wałem (KIN-01 dynamic).
+    this._buildShaftConnectors();
 
     // 4. Korbowód (Connecting Rod)
     this.rod = new THREE.Group();
@@ -246,6 +254,7 @@ export class PressModel {
     this._buildFrontGuard();
     this._buildMainSwitch();
     this._buildClutchLever();
+    this._buildLeverBracket(); // Phase 10 D-10-10 — wspornik dźwigni sprzęgła (decoration)
     this._buildBearings();    // Phase 7 ANCHOR-02 — D-Phase7-03
     this._buildFoundation();  // Phase 8 GEO-01 — D-Phase8-01
     this._buildWorktable();   // Phase 8 GEO-02 — D-Phase8-02
@@ -860,6 +869,66 @@ export class PressModel {
     bearingRight.receiveShadow = true;
     bearingRight.userData = { kind: 'decoration' };
     this.group.add(bearingRight);
+  }
+
+  /**
+   * D-10-04: wizualne łączniki wał↔mimośród (kołnierze) + mimośród↔korbowód (czop).
+   *
+   * Kołnierze (2 sztuki) flankują mimośród (H eccentric=1.0 wzdłuż X) — eliminują wrażenie
+   * że mimośród "wisi" w powietrzu bez mechanicznego połączenia z wałem.
+   * Czop sterczy z boków głowicy korbowodu wzdłuż osi X (niezmienniczej pod shaftAxis.rotation.x),
+   * co tworzy wizualne połączenie mimośród↔korbowód identyczne z realną prasą mimośrodową.
+   *
+   * Wszystkie dzieci this.shaftAxis — rotują razem z wałem (KIN-01 dynamic).
+   * Materiały: reuse matShaft (kołnierze) i matEccentric (czop) — bez nowych slotów PBR.
+   * Pitfall 4: kołnierze przy ±0.575 (tuż obok krawędzi eccentric ±0.5) — bezpieczna przerwa 0.075.
+   * Pitfall 5: rotateZ(PI/2) obraca oś cylindra wzdłuż X; lokalna oś X = oś obrotu shaftAxis
+   *            → czop pozostaje poziomy niezależnie od kąta wału.
+   */
+  _buildShaftConnectors() {
+    // Kołnierze (2 sztuki) flankujące eccentric (H=1.0 wzdłuż X → krawędzie przy ±0.5)
+    const flangeGeo = new THREE.CylinderGeometry(0.5, 0.5, 0.15, 24);
+    flangeGeo.rotateZ(Math.PI / 2); // oś cylindra wzdłuż X (konwencja shaft/eccentric)
+
+    const flangeLeft = new THREE.Mesh(flangeGeo, this.matShaft);
+    flangeLeft.position.set(-0.575, 0, 0); // tuż obok lewej powierzchni eccentric
+    flangeLeft.castShadow = true;
+    this.shaftAxis.add(flangeLeft);
+
+    const flangeRight = new THREE.Mesh(flangeGeo, this.matShaft);
+    flangeRight.position.set(0.575, 0, 0); // tuż obok prawej powierzchni eccentric
+    flangeRight.castShadow = true;
+    this.shaftAxis.add(flangeRight);
+
+    // Czop mimośród↔korbowód — sterczy z boków głowicy korbowodu wzdłuż osi X.
+    // Pozycja lokalnie identyczna z eccentricPin Object3D (0, r, 0).
+    const pinGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.3, 16);
+    pinGeo.rotateZ(Math.PI / 2); // oś cylindra wzdłuż X — niezmiennicza pod shaftAxis.rotation.x
+    const pin = new THREE.Mesh(pinGeo, this.matEccentric);
+    pin.position.set(0, this.r, 0);
+    pin.castShadow = true;
+    this.shaftAxis.add(pin);
+  }
+
+  /**
+   * D-10-10: dekoracyjny wspornik dźwigni sprzęgła — łączy wizualnie kolumnę ramy (x≈-2)
+   * z podstawą leverGroup (-3, 7, 0.5). Eliminuje wrażenie że dźwignia "wisi w powietrzu".
+   *
+   * BoxGeometry(1.0, 0.3, 0.3): rozciągnięty wzdłuż X od x=-3 (lever base) do x=-2 (rama),
+   * centroid @ x=-2.5, y=7 (podstawa dźwigni), z=0.5 (offset jak leverGroup).
+   *
+   * Dziecko this.group (NIE shaftAxis) — statyczny pod update(angle) (KIN-01 static).
+   * D-10-11: decoration only — NIE w getInteractables(); NIE rejestrowany w MaterialRegistry.
+   * userData.kind='decoration' — kontrakt z Phase 7 bearings + Phase 8 fundament (spójny).
+   */
+  _buildLeverBracket() {
+    const bracketGeo = new THREE.BoxGeometry(1.0, 0.3, 0.3);
+    const bracket = new THREE.Mesh(bracketGeo, this.matBody);
+    bracket.position.set(-2.5, 7, 0.5);
+    bracket.castShadow = true;
+    bracket.receiveShadow = true;
+    bracket.userData = { kind: 'decoration' };
+    this.group.add(bracket); // statyczny (KIN-01 invariant — NIE shaftAxis)
   }
 
   /**
