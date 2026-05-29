@@ -60,6 +60,11 @@ export const pl = {
     labelsModeAll:       'Tryb: wszystkie',
     labelsModeHover:     'Tryb: hover',
     statusPanelToggleAria: 'Zwiń / rozwiń pasek statusu',
+    // Phase 11 Plan 11-02 (FUNC-11-04): re-bind #status-text jako ω-driven hardware state.
+    // Ortogonalny kanał od StatusPanel SOP machineState (D-Phase4-03 single source preserved).
+    statusActive:   'Aktywny',
+    statusInactive: 'Nieaktywny',
+    statusIdle:     'Bezczynny (idle)',
   },
 
   // Komunikaty bledow PhysicsEngine (UI-06 enforcement — wczesniej inline w throw)
