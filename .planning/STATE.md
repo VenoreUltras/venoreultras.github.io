@@ -85,6 +85,10 @@ Phase 9: Detail & Material Pass               [██████████] 1
 
 ## Accumulated Context
 
+### Roadmap Evolution
+
+- Phase 10 added: Poprawki wizualne mechanizmu i animacje osłon — przezroczystość zasłaniających elementów, wyrównanie i połączenie środkowego wału z mechanizmem, animacja osłony przedniej i dźwigni sprzęgła, zakotwiczenie dźwigni sprzęgła w obudowie
+
 ### Key Decisions (from PROJECT.md)
 
 - **Pełny digital twin** — every SOP-relevant component clickable in 3D (Phase 2)

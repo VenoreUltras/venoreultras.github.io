@@ -96,3 +96,13 @@ Pozostawiony jako udokumentowany docking point dla v2 (DIFF-01..04):
 - ExplodedViewController (klawisz E), randomized fault eventy, supervisor recommendations w PDF, scalable font + high-contrast theme
 
 **Uwaga:** v1.1 ZAJMUJE numerację Phase 7-9. Phase 7 v2 frontier zostanie przenumerowany na Phase 10+ przy uruchomieniu /gsd-new-milestone v2.
+
+### Phase 10: Poprawki wizualne mechanizmu i animacje osłon — przezroczystość zasłaniających elementów, wyrównanie i połączenie środkowego wału z mechanizmem, animacja osłony przedniej i dźwigni sprzęgła, zakotwiczenie dźwigni sprzęgła w obudowie
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 9
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd-plan-phase 10 to break down)
