@@ -176,6 +176,17 @@ export class PressModel {
     topFrame.receiveShadow = true;
     this.group.add(topFrame);
 
+    // Phase 10 fix-up #3: przednia obudowa górnej części prasy między kolumnami ramy.
+    // Wziernik smarowania (@ 0, 7, 1.0) wcześniej wisiał w pustce między left/right frame
+    // i topFrame — teraz przylega fizycznie do tej ściany obudowy.
+    // BoxGeometry(4 szer × 2.5 wys × 0.15 grub) @ (0, 7, 0.9) — front prasy na Z=~0.9-1.0.
+    const upperHousingGeo = new THREE.BoxGeometry(4, 2.5, 0.15);
+    const upperHousing = new THREE.Mesh(upperHousingGeo, this.matBody);
+    upperHousing.position.set(0, 7, 0.9);
+    upperHousing.castShadow = true;
+    upperHousing.receiveShadow = true;
+    this.group.add(upperHousing);
+
     // 2. Wał główny (Shaft) - oś obrotu
     // Wał przechodzi od lewej do prawej ramki
     this.shaftAxis = new THREE.Group();
@@ -183,11 +194,11 @@ export class PressModel {
     this.shaftAxis.position.set(0, this.shaftY, 0);
     this.group.add(this.shaftAxis);
 
-    // Phase 10 fix-up #2: wal 4.5 → 5.5 — sięga PRZEZ flywheel @ X=-2.5 (rim X∈[-2.65,-2.35]).
-    // User feedback: "wal lata przod tyl" — wynikało z tego że wał kończył się na X=-2.25,
-    // a flywheel zaczynał na X=-2.65 → wal "wisiał" przy końcu koła zamiast przechodzić
-    // przez środek. Wydłużenie + dodanie hub w flywheel (poniżej) eliminuje to wrażenie.
-    const shaftGeo = new THREE.CylinderGeometry(0.4, 0.4, 5.5, 32);
+    // Phase 10 fix-up #3: wal 5.5 → 6.5 — wystaje wyraźnie po obu stronach flywheel.
+    // Wal X∈[-3.25, +3.25]; flywheel @ X=-2.5 (hub X∈[-2.9,-2.1] po fix-up #3 H=0.8).
+    // Wal wystaje 0.35 na lewo od hub i daleko na prawo — wyraźnie widać że wał
+    // PRZECHODZI PRZEZ flywheel, nie kończy się na jego krawędzi.
+    const shaftGeo = new THREE.CylinderGeometry(0.4, 0.4, 6.5, 32);
     shaftGeo.rotateZ(Math.PI / 2); // Układamy poziomo
     const shaft = new THREE.Mesh(shaftGeo, this.matShaft);
     shaft.castShadow = true;
@@ -317,12 +328,14 @@ export class PressModel {
     rim.receiveShadow = true;
     flywheelGroup.add(rim);
 
-    // Phase 10 fix-up #2: central hub (piasta) wokół wału — wyraźnie pokazuje że
-    // wał przechodzi przez ŚRODEK flywheel, nie kończy się na jego krawędzi.
-    // CylinderGeometry R=0.55 H=0.5 oś X (konwencja shaft).
-    const hubGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.5, 24);
+    // Phase 10 fix-up #3: central hub (piasta) szerszy + matShaft kolor (kontynuacja
+    // wału kolorystycznie zamiast matFlywheel ciemnoszary). H 0.5→0.8 (szersza piasta
+    // poza rim po obu stronach), kolor matShaft żeby wizualnie wal się WLEWAŁ w hub
+    // (jednolita oś jasnoszara wystająca z hub) — eliminuje wrażenie że wał kończy
+    // się na flywheel.
+    const hubGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.8, 24);
     hubGeo.rotateZ(Math.PI / 2);
-    const hub = new THREE.Mesh(hubGeo, this.matFlywheel);
+    const hub = new THREE.Mesh(hubGeo, this.matShaft);
     hub.castShadow = true;
     hub.receiveShadow = true;
     flywheelGroup.add(hub);
