@@ -168,10 +168,6 @@ export class RaycastController {
     const dist = Math.sqrt(dx * dx + dy * dy);
     if (dist >= CLICK_DRAG_THRESHOLD_PX) return; // drag — nie click
 
-    // D-Phase5-05: free-roam pauzuje SOP — klik = no-op (hover wciąż działa,
-    // tooltipy i etykiety 3D nadal renderują, wyjście z free-roam wraca do bieżącego kroku).
-    if (this._store.getState().freeRoam) return;
-
     const rect = this._renderer.domElement.getBoundingClientRect();
     this._ndc.x = ((event.clientX - rect.left) / rect.width) * 2 - 1;
     this._ndc.y = -((event.clientY - rect.top) / rect.height) * 2 + 1;
@@ -187,6 +183,18 @@ export class RaycastController {
     // Emit PRZED bimanual branch — wizualna animacja zawsze tweenuje (nawet w trybie bimanual).
     if (mesh.userData?.poses) {
       this._onManipulationClick?.(meshId, mesh);
+    }
+
+    // Phase 11 Plan 11-03 (FUNC-11-03/07): mode branch — klik w 'free' / 'nauka' otwiera
+    // ElementInfoPanel zamiast advance SOP. Tryb 'egzamin' (lub mode undefined w testach
+    // backward-compat) → fall-through do bimanual / attemptStep flow.
+    // _onManipulationClick (animacja oslony/dzwigni) emit'owane PRZED — animacja działa we
+    // wszystkich trybach (Phase 10 inwariant).
+    const storeStateForMode = this._store.getState();
+    const mode = storeStateForMode.mode;
+    if ((mode === 'free' || mode === 'nauka') && typeof storeStateForMode.openElementInfo === 'function') {
+      storeStateForMode.openElementInfo(meshId);
+      return;
     }
 
     // Phase 6 Plan 06-05 Task 2 (D-Phase6-04, SOP-04): bimanual branch PRZED zwyklym

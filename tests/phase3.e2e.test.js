@@ -135,6 +135,9 @@ describe('Phase 3 E2E — happy path uruchomienie 8/8 (Phase 3 SC3)', () => {
     const camera = makeCamera();
     store = createTrainingStore({ now: () => 1000, scheduleTimer: (fn, ms) => setTimeout(fn, ms) });
     store.getState().startScenario(uruchomienie);
+    // Phase 11 Plan 11-03: attemptStep aktywny TYLKO w mode='egzamin'.
+    // mode='free'/'nauka' przekierowują klik do ElementInfoPanel (FUNC-11-03/07).
+    store.getState().setMode('egzamin');
 
     // Tworzymy mesh dla każdego unique meshId w scenariuszu (gather z target/effects)
     const meshIds = new Set();

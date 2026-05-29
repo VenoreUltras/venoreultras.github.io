@@ -22,6 +22,7 @@ import { KeyboardController } from './education/KeyboardController.js';
 import { LabelOverlay } from './education/LabelOverlay.js';
 import { HelpModal } from './ui/HelpModal.js';
 import { ConfirmModal } from './ui/ConfirmModal.js';
+import { ElementInfoPanel } from './ui/ElementInfoPanel.js';
 // Phase 6 Plan 06-08 — replay + session overlay + persistence + export wrappers.
 import { ReplayEngine } from './replay/ReplayEngine.js';
 import { ReplayDrawer } from './ui/ReplayDrawer.js';
@@ -262,6 +263,11 @@ export class Application {
       scenarios: allScenarios,
     });
 
+    // (d.3) ElementInfoPanel — Phase 11 Plan 11-03 (FUNC-11-03/07): edukacyjny panel
+    // dla 15 interactables. Renderuje conditional content per store.mode (free=opis, nauka=4 sekcje).
+    // RaycastController wywołuje store.openElementInfo w mode='free'/'nauka' branch.
+    this.elementInfoPanel = new ElementInfoPanel({ store: this.store });
+
     // (e) TooltipManager — PO RaycastController, by wpiąć onHoverChange callback po-hoc
     this.tooltipManager = new TooltipManager({
       store: this.store,
@@ -390,6 +396,7 @@ export class Application {
     if (this.statusPanel) this.statusPanel.dispose();
     // Phase 5 — odwrotna kolejność tworzenia
     if (this.tooltipManager) this.tooltipManager.dispose();
+    if (this.elementInfoPanel) this.elementInfoPanel.dispose();
     if (this.confirmModal) this.confirmModal.dispose();
     if (this.helpModal) this.helpModal.dispose();
     if (this.labelOverlay) this.labelOverlay.dispose();              // PRZED sceneSetup.dispose (CSS2DRenderer order)

@@ -223,7 +223,7 @@ describe('RaycastController — INTERACT-02: click-vs-drag pixel threshold + int
     const renderer = makeMockRenderer();
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
-    store.getState().startScenario(uruchomienie);
+    store.getState().startScenario(uruchomienie); store.getState().setMode('egzamin');
     // userData.kind='visual-target' celowo — zeby zweryfikowac ze intent.kind to LITERAL 'click', NIE userData.kind
     const mesh = makeMesh('tabliczka-znamionowa', 'visual-target');
     const interactables = new Map([['tabliczka-znamionowa', mesh]]);
@@ -245,7 +245,7 @@ describe('RaycastController — INTERACT-02: click-vs-drag pixel threshold + int
     const renderer = makeMockRenderer();
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
-    store.getState().startScenario(uruchomienie);
+    store.getState().startScenario(uruchomienie); store.getState().setMode('egzamin');
     const mesh = makeMesh('tabliczka-znamionowa', 'visual-target');
     const interactables = new Map([['tabliczka-znamionowa', mesh]]);
     const { emissive } = makeEmissiveWithSpies(interactables);
@@ -266,7 +266,7 @@ describe('RaycastController — TEST-04 (INTERACT-05): 100-click stress na estop
     const renderer = makeMockRenderer();
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
-    store.getState().startScenario(uruchomienie);
+    store.getState().startScenario(uruchomienie); store.getState().setMode('egzamin');
 
     // Przesun recznie store do kroku 'odblokuj-estop' (D-Phase3-15: stub state directly)
     const stepIds = uruchomienie.steps.map(s => s.id);
@@ -308,7 +308,7 @@ describe('RaycastController — D-Phase3-04: wrong-mesh emituje engine-side viol
     const renderer = makeMockRenderer();
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
-    store.getState().startScenario(uruchomienie); // currentStepId === 'sprawdz-tabliczke'
+    store.getState().startScenario(uruchomienie); store.getState().setMode('egzamin'); // currentStepId === 'sprawdz-tabliczke'
 
     const meshEstop = makeMesh('estop', 'manipulation');
     const interactables = new Map([['estop', meshEstop]]);
@@ -395,12 +395,14 @@ describe('RaycastController — Phase 5: onHoverChange DI (D-Phase5-08 + Pitfall
 });
 
 describe('Phase 5 — free-roam branch (EDU-01, D-Phase5-05)', () => {
-  it('F1 default click działa: freeRoam=false → attemptStep wywołane z {kind:click, meshId}', () => {
+  it('F1 default click działa: mode=egzamin → attemptStep wywołane z {kind:click, meshId}', () => {
     const renderer = makeMockRenderer();
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
-    store.getState().startScenario(uruchomienie);
-    // freeRoam domyślnie false (Phase 5 store)
+    store.getState().startScenario(uruchomienie); store.getState().setMode('egzamin');
+    // Phase 11 Plan 11-03: attemptStep flow jest aktywny TYLKO w mode='egzamin'.
+    // mode='free'/'nauka' otwierają ElementInfoPanel (testowane niżej w describe block).
+    store.getState().setMode('egzamin');
     const mesh = makeMesh('tabliczka-znamionowa', 'visual-target');
     const interactables = new Map([['tabliczka-znamionowa', mesh]]);
     const { emissive } = makeEmissiveWithSpies(interactables);
@@ -416,31 +418,35 @@ describe('Phase 5 — free-roam branch (EDU-01, D-Phase5-05)', () => {
     controller.dispose();
   });
 
-  it('F2 free-roam blokuje click: freeRoam=true → attemptStep NIE wywołane', () => {
+  it('F2 mode=free blokuje attemptStep i otwiera ElementInfoPanel (FUNC-11-03)', () => {
+    // Phase 11 Plan 11-03 refactor: legacy freeRoam → zastąpione przez mode='free'.
+    // Klik w 'free' wywołuje openElementInfo zamiast attemptStep.
     const renderer = makeMockRenderer();
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
     store.getState().startScenario(uruchomienie);
-    store.setState({ freeRoam: true });
+    store.getState().setMode('free');
     const mesh = makeMesh('tabliczka-znamionowa', 'visual-target');
     const interactables = new Map([['tabliczka-znamionowa', mesh]]);
     const { emissive } = makeEmissiveWithSpies(interactables);
     const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
 
     vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: mesh }]);
-    const spy = vi.spyOn(store.getState(), 'attemptStep');
+    const attemptSpy = vi.spyOn(store.getState(), 'attemptStep');
+    const openSpy = vi.spyOn(store.getState(), 'openElementInfo');
 
     controller.handlePointerDown({ clientX: 400, clientY: 300 });
     controller._handlePointerUp({ clientX: 401, clientY: 300 });
-    expect(spy).not.toHaveBeenCalled();
+    expect(attemptSpy).not.toHaveBeenCalled();
+    expect(openSpy).toHaveBeenCalledWith('tabliczka-znamionowa');
     controller.dispose();
   });
 
-  it('F3 hover NIE jest blokowany w free-roam: freeRoam=true → _commitHover i onHoverChange działają', () => {
+  it('F3 hover NIE jest blokowany w mode=free: → _commitHover i onHoverChange działają', () => {
     const renderer = makeMockRenderer();
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
-    store.setState({ freeRoam: true });
+    store.getState().setMode('free');
     const mesh = makeMesh('estop', 'manipulation');
     const interactables = new Map([['estop', mesh]]);
     const { emissive, setLayerSpy } = makeEmissiveWithSpies(interactables);
@@ -459,7 +465,8 @@ describe('Phase 5 — free-roam branch (EDU-01, D-Phase5-05)', () => {
     controller.dispose();
   });
 
-  it('F4 po wyłączeniu free-roam, click znów działa: freeRoam true→false → attemptStep wywołane', () => {
+  it('F4 mode toggling: free → egzamin przywraca attemptStep flow', () => {
+    // Phase 11 refactor: testuje przejście mode='free' (openElementInfo) → 'egzamin' (attemptStep).
     const renderer = makeMockRenderer();
     const camera = makeCamera();
     const store = createTrainingStore({ now: () => 1000 });
@@ -470,19 +477,91 @@ describe('Phase 5 — free-roam branch (EDU-01, D-Phase5-05)', () => {
     const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
 
     vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: mesh }]);
-    const spy = vi.spyOn(store.getState(), 'attemptStep');
+    const attemptSpy = vi.spyOn(store.getState(), 'attemptStep');
 
-    // freeRoam=true → click blokowany
-    store.setState({ freeRoam: true });
+    // mode='free' → click blokowany dla attemptStep
+    store.getState().setMode('free');
     controller.handlePointerDown({ clientX: 400, clientY: 300 });
     controller._handlePointerUp({ clientX: 401, clientY: 300 });
-    expect(spy).not.toHaveBeenCalled();
+    expect(attemptSpy).not.toHaveBeenCalled();
 
-    // freeRoam=false → click przechodzi
-    store.setState({ freeRoam: false });
+    // mode='egzamin' → click przechodzi do attemptStep
+    store.getState().setMode('egzamin');
     controller.handlePointerDown({ clientX: 400, clientY: 300 });
     controller._handlePointerUp({ clientX: 401, clientY: 300 });
-    expect(spy).toHaveBeenCalledTimes(1);
+    expect(attemptSpy).toHaveBeenCalledTimes(1);
+    controller.dispose();
+  });
+});
+
+// Phase 11 Plan 11-03 — mode branch w _handlePointerUp (FUNC-11-03/07).
+describe('Phase 11 — mode branch (FUNC-11-03/07)', () => {
+  it('M1 mode=egzamin + klik mesh → store.attemptStep wywołane, openElementInfo NIE', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    store.getState().setMode('egzamin');
+    const mesh = makeMesh('tabliczka-znamionowa', 'visual-target');
+    const interactables = new Map([['tabliczka-znamionowa', mesh]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
+
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: mesh }]);
+    const attemptSpy = vi.spyOn(store.getState(), 'attemptStep');
+    const openSpy = vi.spyOn(store.getState(), 'openElementInfo');
+
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 401, clientY: 300 });
+
+    expect(attemptSpy).toHaveBeenCalledTimes(1);
+    expect(openSpy).not.toHaveBeenCalled();
+    controller.dispose();
+  });
+
+  it('M2 mode=nauka + klik mesh → store.openElementInfo wywołane, attemptStep NIE', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    store.getState().setMode('nauka');
+    const mesh = makeMesh('hamulec', 'visual-target');
+    const interactables = new Map([['hamulec', mesh]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
+
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: mesh }]);
+    const attemptSpy = vi.spyOn(store.getState(), 'attemptStep');
+    const openSpy = vi.spyOn(store.getState(), 'openElementInfo');
+
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 401, clientY: 300 });
+
+    expect(openSpy).toHaveBeenCalledWith('hamulec');
+    expect(attemptSpy).not.toHaveBeenCalled();
+    controller.dispose();
+  });
+
+  it('M3 mode=free + klik mesh → store.openElementInfo wywołane (krótki opis), attemptStep NIE', () => {
+    const renderer = makeMockRenderer();
+    const camera = makeCamera();
+    const store = createTrainingStore({ now: () => 1000 });
+    store.getState().startScenario(uruchomienie);
+    store.getState().setMode('free');
+    const mesh = makeMesh('estop', 'manipulation');
+    const interactables = new Map([['estop', mesh]]);
+    const { emissive } = makeEmissiveWithSpies(interactables);
+    const controller = new RaycastController({ renderer, camera, interactables, store, emissive });
+
+    vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: mesh }]);
+    const attemptSpy = vi.spyOn(store.getState(), 'attemptStep');
+    const openSpy = vi.spyOn(store.getState(), 'openElementInfo');
+
+    controller.handlePointerDown({ clientX: 400, clientY: 300 });
+    controller._handlePointerUp({ clientX: 401, clientY: 300 });
+
+    expect(openSpy).toHaveBeenCalledWith('estop');
+    expect(attemptSpy).not.toHaveBeenCalled();
     controller.dispose();
   });
 });
@@ -522,7 +601,7 @@ describe('Phase 6 — bimanual flow (D-Phase6-04, SOP-04)', () => {
 
   it('B1 pierwszy klik bimanual mesh → setBimanualHintState("active"); attemptBimanualStep NIE wywolane', () => {
     const store = createTrainingStore({ now: () => 1000 });
-    store.getState().startScenario(bimanualScenario);
+    store.getState().startScenario(bimanualScenario); store.getState().setMode('egzamin');
     const { controller, meshL } = setupBimanual(store);
 
     const hintSpy = vi.spyOn(store.getState(), 'setBimanualHintState');
@@ -541,7 +620,7 @@ describe('Phase 6 — bimanual flow (D-Phase6-04, SOP-04)', () => {
 
   it('B2 drugi klik innego targetu w window → attemptBimanualStep z poprawnym intentem', () => {
     const store = createTrainingStore({ now: () => 1000 });
-    store.getState().startScenario(bimanualScenario);
+    store.getState().startScenario(bimanualScenario); store.getState().setMode('egzamin');
     const { controller, meshL, meshR } = setupBimanual(store);
     const attemptSpy = vi.spyOn(store.getState(), 'attemptBimanualStep');
     const intersectSpy = vi.spyOn(controller._raycaster, 'intersectObjects');
@@ -570,7 +649,7 @@ describe('Phase 6 — bimanual flow (D-Phase6-04, SOP-04)', () => {
     vi.useFakeTimers();
     try {
       const store = createTrainingStore({ now: () => 1000 });
-      store.getState().startScenario(bimanualScenario);
+      store.getState().startScenario(bimanualScenario); store.getState().setMode('egzamin');
       const { controller, meshL } = setupBimanual(store);
       const hintSpy = vi.spyOn(store.getState(), 'setBimanualHintState');
       vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: meshL }]);
@@ -590,7 +669,7 @@ describe('Phase 6 — bimanual flow (D-Phase6-04, SOP-04)', () => {
 
   it('B4 drugi klik na ten sam mesh → NIE wywoluje attemptBimanualStep, hint zostaje active', () => {
     const store = createTrainingStore({ now: () => 1000 });
-    store.getState().startScenario(bimanualScenario);
+    store.getState().startScenario(bimanualScenario); store.getState().setMode('egzamin');
     const { controller, meshL } = setupBimanual(store);
     const attemptSpy = vi.spyOn(store.getState(), 'attemptBimanualStep');
     vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: meshL }]);
@@ -611,7 +690,7 @@ describe('Phase 6 — bimanual flow (D-Phase6-04, SOP-04)', () => {
 
   it('B5 klik na mesh NIE w targetMeshIds (current step bimanual) → fall-through do zwyklego flow (attemptStep)', () => {
     const store = createTrainingStore({ now: () => 1000 });
-    store.getState().startScenario(bimanualScenario);
+    store.getState().startScenario(bimanualScenario); store.getState().setMode('egzamin');
     // Mesh poza targetMeshIds — dodajemy 'tabliczka' do interactables
     const meshOther = makeMesh('tabliczka-znamionowa', 'visual-target');
     const interactables = new Map([['tabliczka-znamionowa', meshOther]]);
@@ -635,7 +714,7 @@ describe('Phase 6 — bimanual flow (D-Phase6-04, SOP-04)', () => {
 
   it('B6 current step kind=manipulation → bimanual branch nie odpala, zwykly attemptStep dziala', () => {
     const store = createTrainingStore({ now: () => 1000 });
-    store.getState().startScenario(uruchomienie); // pierwszy krok = visual-target (manipulation-like dla testu)
+    store.getState().startScenario(uruchomienie); store.getState().setMode('egzamin'); // pierwszy krok = visual-target (manipulation-like dla testu)
     const mesh = makeMesh('tabliczka-znamionowa', 'visual-target');
     const interactables = new Map([['tabliczka-znamionowa', mesh]]);
     const { emissive } = makeEmissiveWithSpies(interactables);
@@ -658,7 +737,7 @@ describe('Phase 6 — bimanual flow (D-Phase6-04, SOP-04)', () => {
     vi.useFakeTimers();
     try {
       const store = createTrainingStore({ now: () => 1000 });
-      store.getState().startScenario(bimanualScenario);
+      store.getState().startScenario(bimanualScenario); store.getState().setMode('egzamin');
       const { controller, meshL } = setupBimanual(store);
       vi.spyOn(controller._raycaster, 'intersectObjects').mockReturnValue([{ object: meshL }]);
 
@@ -750,7 +829,7 @@ describe('Phase 10 manipulation click channel — integration sanity', () => {
         effectsOnError: [],
       }],
     };
-    store.getState().startScenario(bimanualScenario);
+    store.getState().startScenario(bimanualScenario); store.getState().setMode('egzamin');
 
     const renderer = makeMockRenderer();
     const camera = makeCamera();
