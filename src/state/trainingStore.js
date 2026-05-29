@@ -53,6 +53,13 @@ export function createTrainingStore(opts = {}) {
       // 'nauka' domyślnie (D-Phase5-04); freeRoam NIE jest persistowany (eksploracja).
       difficulty: 'nauka',
       freeRoam: false,
+      // Phase 11 Plan 11-01 (FUNC-11-01/02/06): canonical mode state machine.
+      // Single source of truth dla 3-trybowego flow ('free' | 'nauka' | 'egzamin').
+      // setMode synchronicznie alias-projektuje legacy difficulty/freeRoam, dzięki czemu
+      // ~816 baseline testów Phase 4-10 pozostaje zielone (D-Phase5-01 testy korzystają z
+      // setDifficulty/toggleFreeRoam — pozostają ortogonalne). Cold start 'free' (FUNC-11-01),
+      // bootstrap z localStorage 'pm300:mode:v1' w Application (Plan 11-01 Task 2).
+      mode: 'free',
       // D-Phase5-01: stan aktywnego modalu — null lub 'help' lub 'confirm-scenario-switch'.
       // Pauza animacji gdy activeModal !== null (Plan 05-07 — gsap ticker predicate).
       activeModal: null,
@@ -141,6 +148,46 @@ export function createTrainingStore(opts = {}) {
 
       /** Ustawia tryb trudności ('nauka' | 'egzamin'). D-Phase5-01/02/04. */
       setDifficulty: (mode) => set({ difficulty: mode }),
+
+      /**
+       * Phase 11 FUNC-11-01/02: ustawia canonical mode ('free'|'nauka'|'egzamin')
+       * z synchroniczną alias-projekcją do legacy difficulty/freeRoam:
+       *   - 'free'     → difficulty='nauka', freeRoam=true
+       *   - 'nauka'    → difficulty='nauka', freeRoam=false
+       *   - 'egzamin'  → difficulty='egzamin', freeRoam=false
+       *
+       * FUNC-11-02 lock: gdy bieżący mode==='egzamin' i sesja jest aktywna
+       * (session.finishedAt === null), próba zmiany na inny tryb jest no-op
+       * z console.warn. Egzamin można opuścić tylko przez finishSession() lub endExam()
+       * (endExam force-resetuje bez sprawdzania locka).
+       *
+       * @param {'free'|'nauka'|'egzamin'} next
+       */
+      setMode: (next) => {
+        const state = get();
+        if (
+          state.mode === 'egzamin' &&
+          state.session.finishedAt === null &&
+          next !== 'egzamin'
+        ) {
+          // FUNC-11-02 lock — egzamin in-progress blokuje toggler.
+          // eslint-disable-next-line no-console
+          console.warn('[trainingStore] setMode zablokowany podczas aktywnej sesji egzaminu');
+          return;
+        }
+        set({
+          mode: next,
+          difficulty: next === 'egzamin' ? 'egzamin' : 'nauka',
+          freeRoam: next === 'free',
+        });
+      },
+
+      /**
+       * Phase 11 FUNC-11-06: force-reset do trybu swobodnego.
+       * Wywoływany po zakończeniu egzaminu (auto-return na ekran wynik / exit),
+       * bez sprawdzania locka (lock jest tylko w setMode toggler-path).
+       */
+      endExam: () => set({ mode: 'free', difficulty: 'nauka', freeRoam: true }),
 
       /** Przełącza tryb swobodnej eksploracji. D-Phase5-05. */
       toggleFreeRoam: () => set(s => ({ freeRoam: !s.freeRoam })),
