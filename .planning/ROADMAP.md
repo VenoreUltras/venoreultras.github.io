@@ -127,7 +127,7 @@ Plans:
 - FUNC-11-09 — Integracja ElevenLabs TTS API: przycisk "🔊 Odsłuchaj" w rozszerzonym panelu informacyjnym (tryb nauki) oraz dla instrukcji kroków SOP
 - FUNC-11-10 — Klucz API ElevenLabs przez `.env` (VITE_ELEVENLABS_API_KEY); nigdy zhardkodowany; graceful fallback gdy brak klucza (przycisk disabled + tooltip)
 - FUNC-11-11 — Cache audio per (text, voiceId) — jeden tekst nie generuje wielokrotnych requestów; LRU lub Map w pamięci sesji
-- FUNC-11-12 — Toggle lektora w UI (on/off) + wybór głosu (PL) z 2-3 zdefiniowanych voiceIds; preferencja persistowana w localStorage
+- FUNC-11-12 — Toggle lektora w UI (on/off) + wybór głosu (PL) z minimum 1 voiceId (MVP: 1 zweryfikowany — Damian PL `S1JKkpuAQNsowB8ZvKRO`; 2-3 voices odroczone do v1.2 po empirycznej walidacji w ElevenLabs Voice Library); preferencja persistowana w localStorage pod `pm300:lector:voice`
 - FUNC-11-13 — Preserve invariants: 777 testów Phase 9 nadal zielone; boundary D-Phase7-05 (PressModel/PhysicsEngine bez DOM); getInteractables().size===15
 
 **Success Criteria:**
