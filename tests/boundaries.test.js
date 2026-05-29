@@ -110,6 +110,15 @@ const FORBIDDEN_PAIRS = [
   // Boundary analogiczny do EmissiveController (THREE+gsap allowed, reszta forbidden).
   { file: 'src/interaction/InteractionAnimator.js',
     mustNotImport: ['../state/', '../training/', './state/', './training/', '../ui/', './ui/'] },
+
+  // Phase 11 Plan 11-03 (FUNC-11-08): elementInfo.js to pure data module.
+  // Zero importów: THREE/gsap/state/training/ui/highlight/RaycastController/education.
+  { file: 'src/data/elementInfo.js',
+    mustNotImport: ['three', 'gsap', '../state/', '../training/', './state/', './training/', '../RaycastController', '../ui/', './ui/', '../highlight/', './highlight/', '../education/', './education/'] },
+  // Phase 11 Plan 11-03 (FUNC-11-07): ElementInfoPanel — DOM + store + i18n + data.
+  // Boundary clean analogicznie do HelpModal: NIE THREE/gsap/training/highlight/floating-ui.
+  { file: 'src/ui/ElementInfoPanel.js',
+    mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/'] },
 ];
 
 /** Regex: static + dynamic imports. Capturuje string specifier. */
@@ -145,7 +154,9 @@ describe('boundaries: import-graph guard (INFRA-02, TEST-03)', () => {
 
 describe('boundaries: Polish string literal scanner (UI-06, MOD-3)', () => {
   it('no Polish string literal in src/*.js outside src/i18n/ and src/training/scenarios/', () => {
-    const ALLOWED_PATHS = ['src/i18n/', 'src/training/scenarios/'];
+    // Phase 11 Plan 11-03: src/data/ (elementInfo.js) to pure data module z dydaktycznym
+    // contentem PL — analogicznie do scenariuszy (data, nie kod logiczny).
+    const ALLOWED_PATHS = ['src/i18n/', 'src/training/scenarios/', 'src/data/'];
     const violations = [];
 
     function walk(dir) {
