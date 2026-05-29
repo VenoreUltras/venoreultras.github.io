@@ -183,7 +183,11 @@ export class PressModel {
     this.shaftAxis.position.set(0, this.shaftY, 0);
     this.group.add(this.shaftAxis);
 
-    const shaftGeo = new THREE.CylinderGeometry(0.4, 0.4, 4.5, 32);
+    // Phase 10 fix-up #2: wal 4.5 → 5.5 — sięga PRZEZ flywheel @ X=-2.5 (rim X∈[-2.65,-2.35]).
+    // User feedback: "wal lata przod tyl" — wynikało z tego że wał kończył się na X=-2.25,
+    // a flywheel zaczynał na X=-2.65 → wal "wisiał" przy końcu koła zamiast przechodzić
+    // przez środek. Wydłużenie + dodanie hub w flywheel (poniżej) eliminuje to wrażenie.
+    const shaftGeo = new THREE.CylinderGeometry(0.4, 0.4, 5.5, 32);
     shaftGeo.rotateZ(Math.PI / 2); // Układamy poziomo
     const shaft = new THREE.Mesh(shaftGeo, this.matShaft);
     shaft.castShadow = true;
@@ -313,6 +317,16 @@ export class PressModel {
     rim.receiveShadow = true;
     flywheelGroup.add(rim);
 
+    // Phase 10 fix-up #2: central hub (piasta) wokół wału — wyraźnie pokazuje że
+    // wał przechodzi przez ŚRODEK flywheel, nie kończy się na jego krawędzi.
+    // CylinderGeometry R=0.55 H=0.5 oś X (konwencja shaft).
+    const hubGeo = new THREE.CylinderGeometry(0.55, 0.55, 0.5, 24);
+    hubGeo.rotateZ(Math.PI / 2);
+    const hub = new THREE.Mesh(hubGeo, this.matFlywheel);
+    hub.castShadow = true;
+    hub.receiveShadow = true;
+    flywheelGroup.add(hub);
+
     // 6 szprych (CONTEXT discretion §"6 szprych") — prostokątne belki co 60° wokół osi X
     for (let i = 0; i < 6; i++) {
       const spokeGeo = new THREE.BoxGeometry(0.1, 2.8, 0.1);
@@ -374,22 +388,32 @@ export class PressModel {
    * Kolor bursztynowy (UI-SPEC visual fidelity). Statyczny, dziecko this.group.
    */
   _buildOilSightGlass() {
-    // Phase 10 fix-up: metalowy collar (oprawka) wokół szybki — wizualne mocowanie
-    // do obudowy, żeby wziernik nie wyglądał jakby wisiał w powietrzu.
-    // Pierścień R_outer=0.22 R_inner=0.15 grubość 0.08 — przylega do obudowy z tyłu (z=1.05).
-    const collarGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.08, 24);
-    collarGeo.rotateX(Math.PI / 2);
-    const collar = new THREE.Mesh(collarGeo, this.matBody);
-    collar.position.set(0, 7, 1.05);
-    collar.castShadow = true;
-    collar.receiveShadow = true;
-    collar.userData = { kind: 'decoration' };
-    this.group.add(collar);
+    // Phase 10 fix-up #2: przezroczysta szklana obudowa wokół wziernika zamiast metalowego
+    // collar. Większy szklany walec (R=0.4 H=0.25) z transparent material — wygląda jak
+    // szklana kopuła osłaniająca wziernik i wizualnie łączy go z obudową prasy.
+    // Materiał na bieżąco — nie reużywamy matGuardOrange (inny kolor/opacity).
+    if (!this.matOilSightShell) {
+      this.matOilSightShell = new THREE.MeshStandardMaterial({
+        color: 0xD0E0E8,
+        metalness: 0.1,
+        roughness: 0.2,
+        transparent: true,
+        opacity: 0.3,
+      });
+    }
+    const shellGeo = new THREE.CylinderGeometry(0.4, 0.4, 0.25, 24);
+    shellGeo.rotateX(Math.PI / 2);
+    const shell = new THREE.Mesh(shellGeo, this.matOilSightShell);
+    shell.position.set(0, 7, 1.0);
+    shell.castShadow = false;  // szkło — bez cienia
+    shell.receiveShadow = false;
+    shell.userData = { kind: 'decoration' };
+    this.group.add(shell);
 
     const sightGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.05, 24);
     sightGeo.rotateX(Math.PI / 2);
     const sight = new THREE.Mesh(sightGeo, this.matOilSightYellow);
-    sight.position.set(0, 7, 1.12);  // wysunięta lekko przed collar
+    sight.position.set(0, 7, 1.0);  // w środku szklanej obudowy
     sight.castShadow = true;
     this.group.add(sight);
 
@@ -716,11 +740,11 @@ export class PressModel {
       kind: 'manipulation',
       baseMaterial: this.matGuardOrange,
       poses: {
-        // Phase 10 fix-up: open obraca w drugą stronę (rot.x=+π/2) — osłona idzie
-        // NAD mechanizm (do tyłu/góry), nie do przodu jako daszek. Bardziej intuicyjne
-        // "unoszenie" niż przewracanie do operatora.
+        // Phase 10 fix-up #2: open=-π/2 — osłona uchyla się NA ZEWNĄTRZ (do przodu,
+        // jak daszek nad operatorem), nie do środka prasy nad mechanizm. User chce
+        // otwierać klapę "od siebie" (dostęp do mechanizmu z przodu).
         closed: { rot: { x: 0, y: 0, z: 0 } },
-        open:   { rot: { x: Math.PI / 2, y: 0, z: 0 } },
+        open:   { rot: { x: -Math.PI / 2, y: 0, z: 0 } },
       },
       pivotTarget: 'parent',
     });

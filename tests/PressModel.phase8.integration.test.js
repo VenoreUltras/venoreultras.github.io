@@ -106,8 +106,8 @@ describe('PressModel — Phase 8 Integration Audit (aggregate plans 08-01..08-03
     const midBrace      = decorations.filter(d => isBox(d, 4, 0.4, 0.4));
     // Phase 10 D-10-10: wspornik dźwigni BoxGeometry(1.0, 0.3, 0.3)
     const leverBracket  = decorations.filter(d => isBox(d, 1.0, 0.3, 0.3));
-    // Phase 10 fix-up: oprawka wziernika oleju CylinderGeometry(0.22, 0.22, 0.08).
-    const oilCollar     = decorations.filter(d => isCyl(d, 0.22, 0.08));
+    // Phase 10 fix-up #2: przezroczysta szklana obudowa wziernika CylinderGeometry(0.4, 0.4, 0.25).
+    const oilCollar     = decorations.filter(d => isCyl(d, 0.4, 0.25));
 
     expect(bearings,      'oczekiwane 2 łożyska (Phase 7-02, Phase 10 R=0.95)').toHaveLength(2);
     expect(foundation,    'oczekiwany 1 fundament (Phase 8-01)').toHaveLength(1);
@@ -116,7 +116,7 @@ describe('PressModel — Phase 8 Integration Audit (aggregate plans 08-01..08-03
     expect(brackets,      'oczekiwane 2 wsporniki łożysk (Phase 8-03)').toHaveLength(2);
     expect(midBrace,      'oczekiwany 1 mid-brace (Phase 8-03)').toHaveLength(1);
     expect(leverBracket,  'oczekiwany 1 wspornik dźwigni (Phase 10 D-10-10)').toHaveLength(1);
-    expect(oilCollar,     'oczekiwana 1 oprawka wziernika (Phase 10 fix-up)').toHaveLength(1);
+    expect(oilCollar,     'oczekiwana 1 szklana obudowa wziernika (Phase 10 fix-up #2)').toHaveLength(1);
 
     const total = bearings.length + foundation.length + bolts.length
                 + worktable.length + brackets.length + midBrace.length + leverBracket.length
