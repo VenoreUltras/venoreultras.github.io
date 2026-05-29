@@ -133,9 +133,12 @@ describe('Application.dispose() (STATE-03 smoke)', () => {
     expect(src).not.toMatch(/_wireStoreSubscribers/);
   });
 
-  it('src/UI.js NIE zawiera już updateStatus() projekcji isRunning → #status-text', () => {
+  // Phase 11 Plan 11-02 (FUNC-11-04): updateStatus przywrocone jako ORTOGONALNY kanal
+  // ω-driven hardware state (NIE projekcja SOP machineState — StatusPanel pozostaje single source D-Phase4-03).
+  it('src/UI.js zawiera updateStatus(isRunning, omega) jako ortogonalny ω-driven kanal (FUNC-11-04)', () => {
     const src = readFileSync('src/UI.js', 'utf-8');
-    expect(src).not.toMatch(/updateStatus/);
+    expect(src).toMatch(/updateStatus\s*\(\s*isRunning\s*,\s*omega\s*\)/);
+    expect(src).toMatch(/IDLE_OMEGA_THRESHOLD/);
     // Slider RPM tor pozostaje (D-Phase4-17)
     expect(src).toMatch(/this\.isRunning/);
     expect(src).toMatch(/getAngularVelocity/);
@@ -873,6 +876,98 @@ describe('Application — Phase 11 mode bootstrap (Plan 11-01)', () => {
     const setItemSpy = vi.spyOn(Storage.prototype, 'setItem');
     app.store.getState().setMode('nauka');
     expect(setItemSpy).toHaveBeenCalledWith('pm300:mode:v1', 'nauka');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 11 Plan 11-02 (FUNC-11-04) — status indicator binding (#status-text per-tick)
+// ω-driven projekcja: simulationTick(deltaTime) → ui.updateStatus(isRunning, _omega).
+// Ortogonalny kanal od StatusPanel SOP machineState (D-Phase4-03 invariant zachowany).
+// ---------------------------------------------------------------------------
+describe('Phase 11 status indicator binding (FUNC-11-04)', () => {
+  let app;
+  let Application;
+
+  beforeEach(async () => {
+    document.body.innerHTML = `
+      <div id="three-canvas"></div>
+      <div id="status-panel"></div>
+      <aside id="step-panel"></aside>
+      <div id="modal-container"></div>
+      <div id="label-overlay-container"></div>
+      <div id="session-overlay" style="display:none;"></div>
+      <div id="replay-drawer" style="display:none;"></div>
+      <span id="status-dot" class="dot stopped"></span>
+      <span id="status-text">Zatrzymana</span>
+      <input type="range" id="speed-slider" min="10" max="120" value="30">
+      <span id="speed-value">30</span>
+      <button id="btn-toggle">Start/Stop</button>
+      <span id="val-angle">0</span>
+      <span id="val-displacement">0</span>
+    `;
+    try {
+      localStorage.removeItem('pm300:hc-outline:v1');
+      localStorage.removeItem('pm300:difficulty:v1');
+      localStorage.removeItem('pm300:audio-mute:v1');
+      localStorage.removeItem('pm300:mode:v1');
+    } catch { /* noop */ }
+    vi.stubGlobal('AudioContext', MockAudioContext);
+    vi.resetModules();
+    const mod = await import('../src/main.js');
+    Application = mod.Application;
+    app = new Application();
+  });
+
+  afterEach(() => {
+    if (app) {
+      try { app.dispose(); } catch { /* już zdisposed */ }
+    }
+    app = null;
+    document.body.innerHTML = '';
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  it('P1: fresh app + simulationTick — isRunning=false, omega=0 → #status-text="Nieaktywny"', () => {
+    app.ui.isRunning = false;
+    app._omega = 0;
+    app.simulationTick(16);
+    expect(document.getElementById('status-text').textContent).toBe('Nieaktywny');
+    expect(document.getElementById('status-dot').className).toContain('stopped');
+  });
+
+  it('P2: isRunning=true + omega ramp-up (kilka tikow przy speed=60) → "Aktywny" + dot.running', () => {
+    app.ui.isRunning = true;
+    app.ui.speed = 60;
+    // Kilka długich tików → _omega lerp dochodzi powyzej threshold.
+    for (let i = 0; i < 10; i += 1) app.simulationTick(100);
+    expect(app._omega).toBeGreaterThan(0.01);
+    expect(document.getElementById('status-text').textContent).toBe('Aktywny');
+    expect(document.getElementById('status-dot').className).toContain('running');
+  });
+
+  it('P3: isRunning=true + speed=0 → _omega ≤ threshold → "Bezczynny (idle)" + dot.idle', () => {
+    app.ui.isRunning = true;
+    app.ui.speed = 0;
+    app._omega = 0;
+    app.simulationTick(16);
+    expect(document.getElementById('status-text').textContent).toBe('Bezczynny (idle)');
+    expect(document.getElementById('status-dot').className).toContain('idle');
+  });
+
+  it('P4: replayOpen=true → updateStatus NIE jest wolany (early-return; status-text zamarza)', () => {
+    // Ustawmy najpierw widoczny "Aktywny" stan, zeby sprawdzic czy zamarza.
+    app.ui.isRunning = true;
+    app.ui.speed = 60;
+    for (let i = 0; i < 10; i += 1) app.simulationTick(100);
+    expect(document.getElementById('status-text').textContent).toBe('Aktywny');
+
+    // Wlaczamy replay i zmieniamy ui.isRunning na false — w replay updateStatus nie powinien dzialac,
+    // wiec text-content powinien pozostac "Aktywny" (zamrozony od ostatniego live frame).
+    app.store.setState({ replayOpen: true });
+    app.ui.isRunning = false;
+    app.simulationTick(16);
+    expect(document.getElementById('status-text').textContent).toBe('Aktywny');
   });
 });
 
