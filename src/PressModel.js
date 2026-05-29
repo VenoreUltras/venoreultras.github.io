@@ -16,7 +16,7 @@ export class PressModel {
     // ==========================================
     // PARAMETRY MASZYNY (MOŻESZ ZMIENIAĆ TUTAJ)
     // ==========================================
-    this.r = 0.8;      // Promień mimośrodu (połowa skoku prasy)
+    this.r = 0.2;      // Promień mimośrodu (Phase 10 fix-up #5: 0.8→0.2 — subtle skok, mniej kołyszący rod)
     this.l = 4.0;      // Długość korbowodu
     this.shaftY = 8.0; // Wysokość wału nad podstawą
     // ==========================================
@@ -214,7 +214,9 @@ export class PressModel {
 
     // 3. Mimośród (Eccentric)
     // Tworzymy grupę mimośrodu jako dziecko wału. Kręci się razem z wałem.
-    const eccentricGeo = new THREE.CylinderGeometry(this.r + 0.3, this.r + 0.3, 1, 32);
+    // Phase 10 fix-up #5: eccentric R fixed na 0.7 (nie pochodne r) — r teraz mały (0.2),
+    // ale wizualna masa eccentric mesh ma pozostać proporcjonalna do wału (R_shaft=0.4).
+    const eccentricGeo = new THREE.CylinderGeometry(0.7, 0.7, 1, 32);
     eccentricGeo.rotateZ(Math.PI / 2);
     const eccentric = new THREE.Mesh(eccentricGeo, this.matEccentric);
     
