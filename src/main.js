@@ -43,6 +43,7 @@ import { pl } from './i18n/pl.js';
 const HC_STORAGE_KEY = 'pm300:hc-outline:v1'; // D-Phase4-09
 const DIFFICULTY_KEY = 'pm300:difficulty:v1';  // D-Phase5-04
 const AUDIO_MUTE_KEY = 'pm300:audio-mute:v1';  // D-Phase5-18
+const MODE_KEY = 'pm300:mode:v1';              // Phase 11 Plan 11-01 (FUNC-11-01)
 
 export class Application {
   constructor() {
@@ -87,7 +88,17 @@ export class Application {
       try { return localStorage.getItem(AUDIO_MUTE_KEY) === 'true'; }
       catch { return false; }
     })();
-    this.store.setState({ difficulty: difficultyInitial, audioMuted: audioMutedInitial });
+    // Phase 11 Plan 11-01 (FUNC-11-01): cold start canonical mode.
+    // 'egzamin' value w localStorage fallback do 'free' — nie chcemy startować z zablokowanym
+    // togglerem (egzamin lock w setMode wymaga aktywnej sesji, ale UX-wise świeży reload
+    // powinien dać user'owi czysty start, nie wymuszać kontynuacji egzaminu).
+    const modeInitial = (() => {
+      try {
+        const v = localStorage.getItem(MODE_KEY);
+        return (v === 'free' || v === 'nauka') ? v : 'free';
+      } catch { return 'free'; }
+    })();
+    this.store.setState({ difficulty: difficultyInitial, audioMuted: audioMutedInitial, mode: modeInitial });
 
     // Persist warstwa — store-side toggleMute/setDifficulty zmienia state, Application
     // zapisuje do localStorage. trainingStore zachowuje boundary clean (D-Phase5-26).
@@ -97,6 +108,10 @@ export class Application {
       }),
       this.store.subscribe((s) => s.audioMuted, (v) => {
         try { localStorage.setItem(AUDIO_MUTE_KEY, String(v)); } catch { /* silent */ }
+      }),
+      // Phase 11 Plan 11-01: persist mode (analog difficulty subscriber, T-04-13 graceful catch).
+      this.store.subscribe((s) => s.mode, (v) => {
+        try { localStorage.setItem(MODE_KEY, v); } catch { /* silent */ }
       }),
     );
 
