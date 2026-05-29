@@ -178,11 +178,13 @@ describe('Phase 5 — difficulty + free-roam (EDU-02, D-Phase5-01)', () => {
     expect(store.getState().mode).toBe('nauka');
     btn.click();
     expect(store.getState().mode).toBe('egzamin');
-    // Trzeci klik gdy mode=egzamin: lock zależy od finishedAt — bez aktywnej sesji finishedAt jest null/0
-    // (default session ma finishedAt: null), więc toggler jest disabled. Symulujemy zakończoną sesję.
+    // FUNC-11-06 (Plan 11-04): trzeci klik gdy mode=egzamin — lock zależy od finishedAt.
+    // Bez aktywnej sesji finishedAt: null → toggler disabled. Symulujemy ZAKOŃCZENIE sesji.
+    // UWAGA: subscriber Plan 11-04 widzi prev=null → curr=9999 w trybie 'egzamin' i AUTO
+    // wywołuje endExam() — mode reset do 'free' BEZ klika użytkownika. To poprawna semantyka
+    // FUNC-11-06 (auto-return po egzaminie). Klik użytkownika nie jest wymagany do exit z egzaminu.
     store.setState({ session: { ...store.getState().session, finishedAt: 9999 } });
-    btn.click();
-    expect(store.getState().mode).toBe('free');
+    expect(store.getState().mode).toBe('free'); // auto-endExam już zadziałał
   });
 
   it('S5 toggle label cyklotwarczo: po setMode("nauka") → button textContent === pl.ui.setModeNext.nauka (cykl → Egzamin)', () => {
@@ -305,11 +307,15 @@ describe('Phase 11 — mode toggler (Plan 11-01, FUNC-11-02)', () => {
   });
 
   it('M5: mode=egzamin + session.finishedAt!==null → button enabled, klik → setMode("free")', () => {
+    // Pre-set finishedAt PRZED zmianą mode na egzamin — by Plan 11-04 subscriber NIE wystrzelił
+    // (test sprawdza disabled-flag UI, nie auto-endExam flow; M-tests dla FUNC-11-02 lock semantyki).
+    store.setState({
+      session: { scenarioId: 's', startedAt: 1, finishedAt: 2000, attempts: [], retryCount: 0 },
+    });
     store.setState({
       mode: 'egzamin',
       difficulty: 'egzamin',
       freeRoam: false,
-      session: { scenarioId: 's', startedAt: 1, finishedAt: 2000, attempts: [], retryCount: 0 },
     });
     panel = new StatusPanel({ store });
     const btn = document.querySelector('.status-panel__difficulty-toggle');

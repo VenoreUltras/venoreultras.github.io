@@ -119,6 +119,10 @@ const FORBIDDEN_PAIRS = [
   // Boundary clean analogicznie do HelpModal: NIE THREE/gsap/training/highlight/floating-ui.
   { file: 'src/ui/ElementInfoPanel.js',
     mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/'] },
+  // Phase 11 Plan 11-04 (FUNC-11-05/06): ExamPromptModal — DOM + store + i18n.
+  // Boundary clean analogicznie do ConfirmModal: NIE THREE/gsap/training/highlight/floating-ui/state.
+  { file: 'src/ui/ExamPromptModal.js',
+    mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../state/', './state/', '../training/', './training/', '../highlight/', './highlight/'] },
 ];
 
 /** Regex: static + dynamic imports. Capturuje string specifier. */

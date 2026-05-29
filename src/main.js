@@ -23,6 +23,7 @@ import { LabelOverlay } from './education/LabelOverlay.js';
 import { HelpModal } from './ui/HelpModal.js';
 import { ConfirmModal } from './ui/ConfirmModal.js';
 import { ElementInfoPanel } from './ui/ElementInfoPanel.js';
+import { ExamPromptModal } from './ui/ExamPromptModal.js';
 // Phase 6 Plan 06-08 — replay + session overlay + persistence + export wrappers.
 import { ReplayEngine } from './replay/ReplayEngine.js';
 import { ReplayDrawer } from './ui/ReplayDrawer.js';
@@ -268,6 +269,14 @@ export class Application {
     // RaycastController wywołuje store.openElementInfo w mode='free'/'nauka' branch.
     this.elementInfoPanel = new ElementInfoPanel({ store: this.store });
 
+    // (d.4) ExamPromptModal — Phase 11 Plan 11-04 (FUNC-11-05/06): auto-prompt po SOP done w nauce.
+    // Store subscriber (trainingStore Plan 11-04) ustawia activeModal='exam-prompt';
+    // user wybiera Tak (setMode egzamin + restart) / Nie (endExam → free).
+    this.examPromptModal = new ExamPromptModal({
+      store: this.store,
+      scenarios: allScenarios,
+    });
+
     // (e) TooltipManager — PO RaycastController, by wpiąć onHoverChange callback po-hoc
     this.tooltipManager = new TooltipManager({
       store: this.store,
@@ -396,6 +405,7 @@ export class Application {
     if (this.statusPanel) this.statusPanel.dispose();
     // Phase 5 — odwrotna kolejność tworzenia
     if (this.tooltipManager) this.tooltipManager.dispose();
+    if (this.examPromptModal) this.examPromptModal.dispose();
     if (this.elementInfoPanel) this.elementInfoPanel.dispose();
     if (this.confirmModal) this.confirmModal.dispose();
     if (this.helpModal) this.helpModal.dispose();
