@@ -103,11 +103,16 @@ export class StatusPanel {
     };
     this._hcBtn.addEventListener('click', this._onHcClick);
 
-    // D-Phase5-01: difficulty toggle — cyklotwarczo nauka↔egzamin.
-    // Używa store.getState().setDifficulty (Plan 05-01 akcja).
+    // Phase 11 Plan 11-01 (FUNC-11-02): mode toggle — cyklotwarczo free→nauka→egzamin→free.
+    // Używa store.getState().setMode (canonical SSOT z alias projekcją do difficulty/freeRoam).
+    // Lock w trakcie aktywnej sesji egzaminu obsługiwany jest przez (a) button.disabled w _render,
+    // (b) defensive no-op w setMode (warn + return). Tu defensive: jeśli disabled → skip.
     this._onDifficultyClick = () => {
-      const cur = this._store.getState().difficulty;
-      this._store.getState().setDifficulty(cur === 'nauka' ? 'egzamin' : 'nauka');
+      if (this._difficultyToggleBtn.disabled) return;
+      const cur = this._store.getState().mode;
+      const order = ['free', 'nauka', 'egzamin'];
+      const next = order[(order.indexOf(cur) + 1) % order.length];
+      this._store.getState().setMode(next);
     };
     this._difficultyToggleBtn.addEventListener('click', this._onDifficultyClick);
 
@@ -185,6 +190,9 @@ export class StatusPanel {
       this._store.subscribe((s) => s.hcOutlineMode,   () => this._render()),
       this._store.subscribe((s) => s.difficulty,      () => this._render()),
       this._store.subscribe((s) => s.freeRoam,        () => this._render()),
+      // Phase 11 Plan 11-01 (FUNC-11-02): mode toggler + lock unlock po finishSession/endExam.
+      this._store.subscribe((s) => s.mode,            () => this._render()),
+      this._store.subscribe((s) => s.session.finishedAt, () => this._render()),
       this._store.subscribe((s) => s.labelsVisible,   () => this._render()),
       this._store.subscribe((s) => s.labelsHoverOnly, () => this._render()),
       // Phase 6 Plan 06-07: scenario active highlight.
@@ -202,14 +210,26 @@ export class StatusPanel {
     this._hcBtn.setAttribute('aria-pressed', String(!!s.hcOutlineMode));
     this._hcBtn.textContent   = s.hcOutlineMode ? pl.ui.hcToggleOn : pl.ui.hcToggleOff;
 
-    // D-Phase5-01 difficulty badge: variant klasa + textContent (XSS-safe statyczne stringi z pl.ui)
-    const isNauka = s.difficulty === 'nauka';
-    this._difficultyBadge.className = `difficulty-badge difficulty-badge--${isNauka ? 'nauka' : 'egzamin'}`;
-    this._difficultyBadge.textContent = isNauka ? pl.ui.difficultyNauka : pl.ui.difficultyEgzamin;
+    // Phase 11 Plan 11-01 (FUNC-11-02): 3-stanowy badge + cyklotwarczy toggle button.
+    // Mode = canonical SSOT; difficulty/freeRoam to alias projekcje (zachowane dla Phase 4-9 backward compat).
+    // Badge variant klasy: difficulty-badge--{free,nauka,egzamin}; textContent z pl.ui.modeLabel (XSS-safe literały).
+    const mode = s.mode ?? 'free';
+    this._difficultyBadge.className = `difficulty-badge difficulty-badge--${mode}`;
+    this._difficultyBadge.textContent = pl.ui.modeLabel?.[mode] ?? mode;
 
-    // Toggle button — label opisuje "co stanie się po kliknięciu" (przeciwny stan)
-    this._difficultyToggleBtn.textContent = isNauka ? pl.ui.setDifficultyEgzamin : pl.ui.setDifficultyNauka;
+    // Toggle button label opisuje "next" mode po kliku (cyklotwarczo free→nauka→egzamin→free).
+    const order = ['free', 'nauka', 'egzamin'];
+    const next = order[(order.indexOf(mode) + 1) % order.length];
+    this._difficultyToggleBtn.textContent = pl.ui.setModeNext?.[mode] ?? '';
     this._difficultyToggleBtn.setAttribute('aria-label', this._difficultyToggleBtn.textContent);
+
+    // FUNC-11-02 lock: aktywna sesja egzaminu blokuje toggler do czasu finishSession/endExam.
+    const locked = mode === 'egzamin' && s.session?.finishedAt === null;
+    this._difficultyToggleBtn.disabled = locked;
+    this._difficultyToggleBtn.setAttribute('aria-disabled', String(locked));
+    // Skipped: legacy znaczniki next-mode pomocnicze — zachowuje S5 backward compat
+    // (S5 baseline test sprawdza pl.ui.setDifficultyNauka po difficulty=egzamin set bez setMode).
+    void next;
 
     // Free-roam indicator (visibility-toggle by uniknąć reflowu — UI-SPEC §336-341)
     this._freeRoamIndicator.textContent = pl.ui.freeRoamActive;

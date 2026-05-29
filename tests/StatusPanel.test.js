@@ -136,46 +136,60 @@ describe('Phase 5 — difficulty + free-roam (EDU-02, D-Phase5-01)', () => {
     localStorage.clear();
   });
 
-  it('S1 badge initial Nauka: difficulty=nauka (default) → .difficulty-badge.difficulty-badge--nauka z textContent === pl.ui.difficultyNauka', () => {
+  // Phase 11 Plan 11-01 migration: 2-stanowy difficulty toggler został wymieniony na
+  // 3-stanowy mode toggler. S1-S5 zachowują selektory CSS (.difficulty-badge / .status-panel__difficulty-toggle)
+  // dla minimalnego CSS diff, ale semantyka jest teraz oparta o canonical s.mode (free/nauka/egzamin)
+  // — patrz "Phase 11 — mode toggler" describe block dla pełnej spec. Pozostawione testy
+  // weryfikują że alias projekcja (setMode→difficulty/freeRoam) działa nadal.
+
+  it('S1 badge initial Swobodny: cold-start mode=free → .difficulty-badge--free z textContent === pl.ui.modeLabel.free', () => {
     panel = new StatusPanel({ store });
     const badge = document.querySelector('.difficulty-badge');
     expect(badge).not.toBeNull();
-    expect(badge.classList.contains('difficulty-badge--nauka')).toBe(true);
-    expect(badge.textContent).toBe(pl.ui.difficultyNauka);
+    expect(badge.classList.contains('difficulty-badge--free')).toBe(true);
+    expect(badge.textContent).toBe(pl.ui.modeLabel.free);
   });
 
-  it('S2 badge Egzamin variant: setState({difficulty:egzamin}) → --nauka usunięta, --egzamin dodana', () => {
+  it('S2 badge Nauka variant: setMode("nauka") → badge --nauka + alias projekcja difficulty=nauka', () => {
     panel = new StatusPanel({ store });
-    store.setState({ difficulty: 'egzamin' });
+    store.getState().setMode('nauka');
     const badge = document.querySelector('.difficulty-badge');
-    expect(badge.classList.contains('difficulty-badge--egzamin')).toBe(true);
-    expect(badge.classList.contains('difficulty-badge--nauka')).toBe(false);
-    expect(badge.textContent).toBe(pl.ui.difficultyEgzamin);
+    expect(badge.classList.contains('difficulty-badge--nauka')).toBe(true);
+    expect(badge.classList.contains('difficulty-badge--free')).toBe(false);
+    expect(badge.textContent).toBe(pl.ui.modeLabel.nauka);
+    // Alias projekcja sync (FUNC-11-01 truth #2)
+    expect(store.getState().difficulty).toBe('nauka');
+    expect(store.getState().freeRoam).toBe(false);
   });
 
-  it('S3 toggle button initial: .status-panel__difficulty-toggle istnieje, textContent === pl.ui.setDifficultyEgzamin gdy difficulty=nauka', () => {
+  it('S3 toggle button initial: .status-panel__difficulty-toggle istnieje, textContent === pl.ui.setModeNext.free (cykl → Nauka)', () => {
     panel = new StatusPanel({ store });
     const btn = document.querySelector('.status-panel__difficulty-toggle');
     expect(btn).not.toBeNull();
-    expect(btn.textContent).toBe(pl.ui.setDifficultyEgzamin);
-    expect(btn.getAttribute('aria-label')).toBe(pl.ui.setDifficultyEgzamin);
+    expect(btn.textContent).toBe(pl.ui.setModeNext.free);
+    expect(btn.getAttribute('aria-label')).toBe(pl.ui.setModeNext.free);
   });
 
-  it('S4 toggle click action: klik nauka→egzamin, drugi klik→nauka', () => {
+  it('S4 toggle click cykl free→nauka→egzamin→free (3-stanowy, FUNC-11-02)', () => {
     panel = new StatusPanel({ store });
     const btn = document.querySelector('.status-panel__difficulty-toggle');
-    expect(store.getState().difficulty).toBe('nauka');
+    expect(store.getState().mode).toBe('free');
     btn.click();
-    expect(store.getState().difficulty).toBe('egzamin');
+    expect(store.getState().mode).toBe('nauka');
     btn.click();
-    expect(store.getState().difficulty).toBe('nauka');
+    expect(store.getState().mode).toBe('egzamin');
+    // Trzeci klik gdy mode=egzamin: lock zależy od finishedAt — bez aktywnej sesji finishedAt jest null/0
+    // (default session ma finishedAt: null), więc toggler jest disabled. Symulujemy zakończoną sesję.
+    store.setState({ session: { ...store.getState().session, finishedAt: 9999 } });
+    btn.click();
+    expect(store.getState().mode).toBe('free');
   });
 
-  it('S5 toggle label flip: po egzamin → button textContent === pl.ui.setDifficultyNauka', () => {
+  it('S5 toggle label cyklotwarczo: po setMode("nauka") → button textContent === pl.ui.setModeNext.nauka (cykl → Egzamin)', () => {
     panel = new StatusPanel({ store });
-    store.setState({ difficulty: 'egzamin' });
+    store.getState().setMode('nauka');
     const btn = document.querySelector('.status-panel__difficulty-toggle');
-    expect(btn.textContent).toBe(pl.ui.setDifficultyNauka);
+    expect(btn.textContent).toBe(pl.ui.setModeNext.nauka);
   });
 
   it('S6 free-roam indicator hidden default: freeRoam=false → .free-roam-indicator w DOM z visibility=hidden', () => {
