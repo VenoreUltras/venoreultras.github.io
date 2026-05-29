@@ -192,4 +192,20 @@ describe('PressModel — Phase 2 smoke (TWIN-11/12/13)', () => {
     expect(interactables.has('rod')).toBe(false);
     expect(interactables.has('slider')).toBe(false);
   });
+
+  it('TWIN-13 (Phase 10 D-10-11): nowe łączniki i wspornik NIE powiększają interactables map', () => {
+    // D-10-11 eksplicytna asercja: kołnierze, czop i wspornik dźwigni to decoration only.
+    // Mapa getInteractables() NIE może zawierać kluczy dla nowych mesh-y Phase 10.
+    const interactables = pressModel.getInteractables();
+    // Klucze których NIE może być (nowe mesh-y Phase 10 nie dostały id interactable).
+    const phase10NonInteractableKeys = [
+      'shaft-eccentric-flange-left', 'shaft-eccentric-flange-right',
+      'eccentric-rod-pin', 'lever-bracket',
+    ];
+    for (const key of phase10NonInteractableKeys) {
+      expect(interactables.has(key), `interactables NIE powinno zawierać klucza '${key}' (decoration Phase 10)`).toBe(false);
+    }
+    // Kontrakt rozmiarowy musi zostać nienaruszony.
+    expect(interactables.size).toBe(15);
+  });
 });

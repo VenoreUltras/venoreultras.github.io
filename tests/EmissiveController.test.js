@@ -246,6 +246,40 @@ describe('EmissiveController — Phase 5: warstwa hint (D-Phase5-03)', () => {
   });
 });
 
+describe('EmissiveController — Phase 10 D-10-02: transparent material flash compat', () => {
+  it('Phase 10: setLayer(state) na meshu z material.transparent=true nie crashuje i ustawia emissive Wong (D-10-02)', () => {
+    // Weryfikuje że transparent:true + opacity:0.5 (D-10-01 matGuardOrange po clonowaniu) nie psuje
+    // EmissiveController.setLayer. CRIT-6: material to clone per-mesh — test używa clonowanego.
+    // Pitfall 2: flash NIE modyfikuje opacity — test nie sprawdza opacity po setLayer.
+    const mat = new THREE.MeshStandardMaterial({
+      color: 0xC8B400,
+      emissive: 0x000000,
+      emissiveIntensity: 0,
+      transparent: true,
+      opacity: 0.5,
+    });
+    const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1, 1), mat);
+    mesh.userData = { id: 'oslona-przednia', kind: 'manipulation' };
+
+    const interactables = new Map([['oslona-przednia', mesh]]);
+    const ctrl = new EmissiveController({ interactables });
+
+    // Wywołanie setLayer state z pulse=true (analog Wong palette HighlightManager) — nie może rzucić.
+    expect(() => {
+      ctrl.setLayer('state', mesh, { color: 0xD55E00, pulse: true });
+    }).not.toThrow();
+
+    // Emissive powinien być ustawiony na kolor Wong (D-10-02).
+    expect(mesh.material.emissive.getHex()).toBe(0xD55E00);
+
+    // Opacity NIE może być zmienione przez flash (Pitfall 2 — backup nie zapisuje transparent/opacity).
+    expect(mesh.material.opacity).toBeCloseTo(0.5, 5);
+    expect(mesh.material.transparent).toBe(true);
+
+    ctrl.dispose();
+  });
+});
+
 describe('EmissiveController — CRIT-5 GSAP target = number nie Color (FEEDBACK-02)', () => {
   it('plik EmissiveController.js NIE wywołuje gsap.to z targetem mesh.material.emissive (Color obj)', () => {
     const src = readFileSync(
