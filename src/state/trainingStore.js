@@ -74,6 +74,10 @@ export function createTrainingStore(opts = {}) {
       // Phase 11 Plan 11-03 (FUNC-11-07): aktualnie wybrany mesh dla ElementInfoPanel.
       // Ustawiany przez openElementInfo(meshId); czyszczony przez closeModal.
       _elementInfoMeshId: null,
+      // Phase 11 Plan 11-04 (FUNC-11-05): idempotent flag — prompt "Przejść do egzaminu?"
+      // pokazywany tylko raz na sesję. Reset przez startScenario (świeży scenariusz =
+      // świeży flag). closeModal NIE resetuje — by ręczne re-finishedAt nie retriggerowało.
+      _examPromptShown: false,
       // Phase 6 Plan 06-04 (D-Phase6-07, EDU-04): widoczność replay drawera + indeks attemptu.
       // ReplayDrawer subskrybuje replayOpen i ładuje session.attempts[replayAttemptIdx]
       // do ReplayEngine. SessionOverlay (Plan 06-07) wywoła openReplay(attemptIdx) z button.
@@ -107,6 +111,8 @@ export function createTrainingStore(opts = {}) {
           scoring: { score: 100, criticalCount: 0, mediumCount: 0, minorCount: 0 },
           // Phase 6 Plan 06-05: reset hint na świeży scenariusz.
           bimanualHintState: 'idle',
+          // Phase 11 Plan 11-04 (FUNC-11-05): reset prompt flag — nowy scenariusz = nowa szansa na exam prompt.
+          _examPromptShown: false,
         });
         // Phase 6 Plan 06-03 Task 2: ewaluuj faultRules na initial state by initialMeshStates
         // triggujące fault rule (np. awaria) natychmiast ustawiły machineState='awaria-os-otwarta'.
@@ -434,6 +440,27 @@ export function createTrainingStore(opts = {}) {
         store.setState({ overlayOpen: true });
       }
     }
+  );
+
+  // Phase 11 Plan 11-04 (FUNC-11-05/06): exam-prompt + auto-endExam triggers.
+  // Po SOP done (finishedAt zmienia null → ts):
+  //   - mode='nauka' + !_examPromptShown → activeModal='exam-prompt' (FUNC-11-05)
+  //   - mode='egzamin' → endExam() auto-powrót do 'free' (FUNC-11-06)
+  //   - mode='free' → no-op (swobodna eksploracja, brak prompt'u)
+  // Idempotent: _examPromptShown flag chroni przed wielokrotnym otwarciem dla tej samej sesji.
+  store.subscribe(
+    (s) => s.session.finishedAt,
+    (finishedAt, prev) => {
+      if (prev !== null || finishedAt === null) return;
+      const cur = store.getState();
+      if (cur.mode === 'nauka' && !cur._examPromptShown) {
+        store.setState({ activeModal: 'exam-prompt', _examPromptShown: true });
+        return;
+      }
+      if (cur.mode === 'egzamin') {
+        cur.endExam();
+      }
+    },
   );
 
   // D-Phase6-09: finishSession auto-trigger gdy currentStepId staje się null

@@ -183,6 +183,13 @@ export const pl = {
       confirm: 'Załaduj scenariusz',
       cancel:  'Anuluj',
     },
+    // Phase 11 Plan 11-04 (FUNC-11-05/06): ExamPromptModal — auto-prompt po SOP done w nauce.
+    examPrompt: {
+      title:      'Przejść do egzaminu?',
+      body:       'Ukończyłeś procedurę w trybie Nauka. Czy chcesz teraz wykonać tę samą procedurę w trybie Egzamin (bez podpowiedzi i z oceną)?',
+      confirmYes: 'Tak, przejdź do egzaminu',
+      confirmNo:  'Nie, wróć do trybu swobodnego',
+    },
     // Phase 11 Plan 11-03 (FUNC-11-07): ElementInfoPanel section labels + fallback.
     elementInfo: {
       titleFallback:         'Nieznany element',
