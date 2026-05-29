@@ -123,6 +123,15 @@ const FORBIDDEN_PAIRS = [
   // Boundary clean analogicznie do ConfirmModal: NIE THREE/gsap/training/highlight/floating-ui/state.
   { file: 'src/ui/ExamPromptModal.js',
     mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../state/', './state/', '../training/', './training/', '../highlight/', './highlight/'] },
+
+  // Phase 11 Plan 11-05 (FUNC-11-09..12): LectorService — fetch + Blob cache + audio.
+  // Pure service layer: ../data/lectorVoices.js + browser globals (fetch, URL, Audio).
+  // NIE THREE/gsap/state/training/ui/highlight/RaycastController/education.
+  { file: 'src/lector/LectorService.js',
+    mustNotImport: ['three', 'gsap', '../state/', './state/', '../training/', './training/', '../highlight/', './highlight/', '../ui/', './ui/', '../RaycastController', '../education/', './education/'] },
+  // Phase 11 Plan 11-05: lectorVoices.js to pure data module (analog elementInfo.js).
+  { file: 'src/data/lectorVoices.js',
+    mustNotImport: ['three', 'gsap', '../state/', './state/', '../training/', './training/', '../highlight/', './highlight/', '../ui/', './ui/', '../education/', './education/'] },
 ];
 
 /** Regex: static + dynamic imports. Capturuje string specifier. */
