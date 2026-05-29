@@ -65,6 +65,11 @@ export const pl = {
     statusActive:   'Aktywny',
     statusInactive: 'Nieaktywny',
     statusIdle:     'Bezczynny (idle)',
+    // Phase 11 Plan 11-05 (FUNC-11-09..12): lektor TTS (ElevenLabs).
+    lectorMissingKeyTooltip: 'Lektor wymaga konfiguracji klucza ElevenLabs (.env: VITE_ELEVENLABS_API_KEY)',
+    lectorToggleOn:  'Lektor: WŁ',
+    lectorToggleOff: 'Lektor: WYŁ',
+    lectorVoicePickerLabel: 'Głos lektora',
   },
 
   // Komunikaty bledow PhysicsEngine (UI-06 enforcement — wczesniej inline w throw)
@@ -199,6 +204,11 @@ export const pl = {
       sectionSafety:         'BHP — ostrzeżenia',
       sectionShortDesc:      'Opis',
       lectorListenButton:    'Odsłuchaj',
+      // Phase 11 Plan 11-05 (FUNC-11-09): TTS text builder labels (concat dla speak()).
+      lectorTextFunction:    'Funkcja:',
+      lectorTextParameters:  'Parametry:',
+      lectorTextSopSteps:    'Powiązane kroki:',
+      lectorTextSafety:      'BHP:',
     },
   },
 

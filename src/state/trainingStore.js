@@ -10,6 +10,7 @@ import { createStore } from 'zustand/vanilla';
 import { subscribeWithSelector } from 'zustand/middleware';
 import { validateStep, evaluateFaultRules } from '../training/ProcedureEngine.js';
 import { faultRules } from '../training/faultRules.js';
+import { DEFAULT_LECTOR_VOICE_ID } from '../data/lectorVoices.js';
 
 /**
  * Tworzy nową instancję store'a. Phase 1 wpina go w Application;
@@ -90,6 +91,11 @@ export function createTrainingStore(opts = {}) {
       // 'idle' | 'active' | 'timeout' | 'success'. RaycastController (Plan 06-05 Task 2)
       // toggle'uje wartości; StepPanel subskrybuje i zmienia klasy CSS bez full re-render.
       bimanualHintState: 'idle',
+      // Phase 11 Plan 11-05 (FUNC-11-09/12): lektor TTS state.
+      // lectorEnabled — czy 🔊 button + voice picker są aktywne (persist 'pm300:lector:enabled').
+      // lectorVoiceId — który PL głos użyć (persist 'pm300:lector:voice'). Domyślnie DEFAULT (Damian).
+      lectorEnabled: false,
+      lectorVoiceId: DEFAULT_LECTOR_VOICE_ID,
       _now: now,
       _spinUpTimerHandle: null,
 
@@ -234,6 +240,12 @@ export function createTrainingStore(opts = {}) {
 
       /** Przełącza globalny mute audio. D-Phase5-18. */
       toggleMute: () => set(s => ({ audioMuted: !s.audioMuted })),
+
+      // Phase 11 Plan 11-05 (FUNC-11-09/12): lektor TTS akcje.
+      /** Ustawia czy lektor jest włączony (toggle on/off). Persist w Application bootstrap. */
+      setLectorEnabled: (v) => set({ lectorEnabled: !!v }),
+      /** Ustawia ID głosu (wybór z lectorVoices). Persist w Application bootstrap. */
+      setLectorVoiceId: (id) => set({ lectorVoiceId: id }),
 
       /** Przełącza widoczność etykiet 3D. D-Phase5-10. */
       toggleLabels: () => set(s => ({ labelsVisible: !s.labelsVisible })),

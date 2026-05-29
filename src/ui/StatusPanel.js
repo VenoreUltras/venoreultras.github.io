@@ -29,11 +29,14 @@ export class StatusPanel {
    * @param {{getState:Function, subscribe:Function, setState:Function}} deps.store
    * @param {string} [deps.rootElementId='status-panel']
    */
-  constructor({ store, scenarios, rootElementId = 'status-panel' }) {
+  constructor({ store, scenarios, rootElementId = 'status-panel', lectorService = null, lectorVoices = [] }) {
     this._store = store;
     // Phase 6 Plan 06-07: scenarios mapa { uruchomienie: scenario, 'cykl-pracy': ..., ... }
     // Opcjonalna — gdy nie podana, ScenarioSelector nie renderuje się.
     this._scenarios = scenarios ?? null;
+    // Phase 11 Plan 11-05 (FUNC-11-12): opcjonalny DI lektora + lista głosów. null → lector UI nie renderuje się.
+    this._lectorService = lectorService;
+    this._lectorVoices = Array.isArray(lectorVoices) ? lectorVoices : [];
     this._root = document.getElementById(rootElementId);
     if (!this._root) {
       throw new Error(`StatusPanel: brak #${rootElementId} w DOM`);
@@ -77,6 +80,8 @@ export class StatusPanel {
           <button class="status-panel__labels-toggle" type="button" aria-pressed="false"></button>
           <button class="status-panel__labels-mode" type="button" aria-pressed="false"></button>
           <button class="status-panel__hc-toggle" type="button" aria-pressed="false"></button>
+          <button class="status-panel__lector-toggle" type="button" aria-pressed="false"></button>
+          <select class="status-panel__lector-voice"></select>
         </div>
       </div>
     `;
@@ -89,6 +94,9 @@ export class StatusPanel {
     this._labelsBtn          = this._root.querySelector('.status-panel__labels-toggle');
     this._labelsModeBtn      = this._root.querySelector('.status-panel__labels-mode');
     this._hcBtn              = this._root.querySelector('.status-panel__hc-toggle');
+    // Phase 11 Plan 11-05 (FUNC-11-12): lektor toggle + voice picker.
+    this._lectorToggleBtn    = this._root.querySelector('.status-panel__lector-toggle');
+    this._lectorVoiceSelect  = this._root.querySelector('.status-panel__lector-voice');
     this._hamburgerBtn       = this._root.querySelector('.status-panel__hamburger');
     this._controlsEl         = this._root.querySelector('.status-panel__controls');
     this._scenarioSelector   = this._root.querySelector('.scenario-selector');
@@ -131,6 +139,26 @@ export class StatusPanel {
       this._hamburgerBtn.setAttribute('aria-expanded', String(!collapsed));
     };
     this._hamburgerBtn.addEventListener('click', this._onHamburgerClick);
+
+    // Phase 11 Plan 11-05 (FUNC-11-12): wypełnij voice picker + listenery.
+    for (const v of this._lectorVoices) {
+      const opt = document.createElement('option');
+      opt.value = v.id;
+      opt.textContent = v.label;
+      this._lectorVoiceSelect.appendChild(opt);
+    }
+    this._lectorVoiceSelect.setAttribute('aria-label', pl.ui.lectorVoicePickerLabel);
+
+    this._onLectorToggleClick = () => {
+      const cur = !!this._store.getState().lectorEnabled;
+      this._store.getState().setLectorEnabled(!cur);
+    };
+    this._lectorToggleBtn.addEventListener('click', this._onLectorToggleClick);
+
+    this._onLectorVoiceChange = (e) => {
+      this._store.getState().setLectorVoiceId(e.target.value);
+    };
+    this._lectorVoiceSelect.addEventListener('change', this._onLectorVoiceChange);
   }
 
   /**
@@ -197,6 +225,9 @@ export class StatusPanel {
       this._store.subscribe((s) => s.labelsHoverOnly, () => this._render()),
       // Phase 6 Plan 06-07: scenario active highlight.
       this._store.subscribe((s) => s.session.scenarioId, () => this._renderScenarioSelector()),
+      // Phase 11 Plan 11-05: lector state.
+      this._store.subscribe((s) => s.lectorEnabled, () => this._render()),
+      this._store.subscribe((s) => s.lectorVoiceId, () => this._render()),
     );
   }
 
@@ -249,6 +280,23 @@ export class StatusPanel {
 
     // Phase 6 Plan 06-07: scenario selector active state (na initial render).
     this._renderScenarioSelector();
+
+    // Phase 11 Plan 11-05 (FUNC-11-12): lector toggle + voice picker render.
+    const available = !!(this._lectorService && this._lectorService.isAvailable());
+    const enabled = !!s.lectorEnabled;
+    this._lectorToggleBtn.textContent = enabled ? pl.ui.lectorToggleOn : pl.ui.lectorToggleOff;
+    this._lectorToggleBtn.setAttribute('aria-pressed', String(enabled));
+    this._lectorToggleBtn.disabled = !available;
+    if (!available) {
+      this._lectorToggleBtn.title = pl.ui.lectorMissingKeyTooltip;
+    } else {
+      this._lectorToggleBtn.removeAttribute('title');
+    }
+    // Voice picker — synchronizuj value ze store + disable gdy brak klucza/toggled off.
+    if (this._lectorVoiceSelect.value !== s.lectorVoiceId) {
+      this._lectorVoiceSelect.value = s.lectorVoiceId ?? '';
+    }
+    this._lectorVoiceSelect.disabled = !available || !enabled;
   }
 
   /**
@@ -279,6 +327,13 @@ export class StatusPanel {
     }
     if (this._hamburgerBtn && this._onHamburgerClick) {
       this._hamburgerBtn.removeEventListener('click', this._onHamburgerClick);
+    }
+    // Phase 11 Plan 11-05: lector listenery cleanup.
+    if (this._lectorToggleBtn && this._onLectorToggleClick) {
+      this._lectorToggleBtn.removeEventListener('click', this._onLectorToggleClick);
+    }
+    if (this._lectorVoiceSelect && this._onLectorVoiceChange) {
+      this._lectorVoiceSelect.removeEventListener('change', this._onLectorVoiceChange);
     }
     for (const u of this._unsubscribers) u();
     this._unsubscribers = [];

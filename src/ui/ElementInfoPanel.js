@@ -19,13 +19,16 @@ export class ElementInfoPanel {
    * @param {{ getState: Function, subscribe: Function }} deps.store
    * @param {string} [deps.rootElementId='modal-container']
    */
-  constructor({ store, rootElementId = 'modal-container' }) {
+  constructor({ store, rootElementId = 'modal-container', lectorService = null }) {
     this._store = store;
+    // Phase 11 Plan 11-05 (FUNC-11-09): opcjonalny DI lektora. null → 🔊 button nie renderowany.
+    this._lectorService = lectorService;
     this._root = document.getElementById(rootElementId);
     if (!this._root) {
       throw new Error(`ElementInfoPanel: brak #${rootElementId} w DOM`);
     }
     this._unsubscribers = [];
+    this._currentLectorText = '';
     this._build();
     this._wireSubscribers();
     this._render();
@@ -97,7 +100,69 @@ export class ElementInfoPanel {
       this._store.subscribe((s) => s.activeModal, () => this._render()),
       this._store.subscribe((s) => s._elementInfoMeshId, () => this._render()),
       this._store.subscribe((s) => s.mode, () => this._render()),
+      // Phase 11 Plan 11-05: re-render gdy lektor on/off lub voice picker zmieni się.
+      this._store.subscribe((s) => s.lectorEnabled, () => this._render()),
+      this._store.subscribe((s) => s.lectorVoiceId, () => this._render()),
     );
+  }
+
+  /**
+   * Phase 11 Plan 11-05: renderuje 🔊 button w .element-info-panel__lector-slot.
+   * Conditional na lectorService + lectorEnabled. Disabled+tooltip gdy !isAvailable.
+   * @private
+   */
+  _renderLectorButton(meshId, entry, state) {
+    const slot = this._dialog.querySelector('.element-info-panel__lector-slot');
+    if (!slot) return;
+    slot.textContent = ''; // clear poprzedni render
+
+    if (!this._lectorService) return;
+
+    const available = this._lectorService.isAvailable();
+    // FUNC-11-09: button widoczny gdy lectorEnabled (user opt-in) ALBO gdy disabled-fallback.
+    // Disabled fallback (brak klucza) renderujemy zawsze gdy lectorService podany — info dla usera.
+    if (!available) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'element-info-panel__lector-btn';
+      btn.disabled = true;
+      btn.title = pl.ui.lectorMissingKeyTooltip;
+      btn.textContent = `🔊 ${pl.modals.elementInfo.lectorListenButton}`;
+      slot.appendChild(btn);
+      return;
+    }
+
+    if (!state.lectorEnabled) return;
+
+    // Build full text: name + sekcje (mode=nauka), albo name + description (mode=free).
+    let text = '';
+    if (entry) {
+      if (state.mode === 'free') {
+        const shortDesc = pl.parts[meshId]?.description ?? '';
+        text = `${entry.name}. ${shortDesc}`;
+      } else {
+        const L = pl.modals.elementInfo;
+        text = [
+          entry.name + '.',
+          L.lectorTextFunction, entry.function,
+          L.lectorTextParameters, entry.parameters,
+          L.lectorTextSopSteps, entry.sopSteps,
+          L.lectorTextSafety, entry.safety,
+        ].join(' ');
+      }
+    }
+    this._currentLectorText = text;
+
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'element-info-panel__lector-btn';
+    btn.textContent = `🔊 ${pl.modals.elementInfo.lectorListenButton}`;
+    btn.addEventListener('click', () => {
+      const voiceId = this._store.getState().lectorVoiceId;
+      const p = this._lectorService.speak(this._currentLectorText, voiceId);
+      if (p && typeof p.catch === 'function') p.catch(() => { /* graceful — UI nie crashuje */ });
+    });
+    slot.appendChild(btn);
   }
 
   /**
@@ -133,6 +198,12 @@ export class ElementInfoPanel {
           body.appendChild(this._createSection(pl.modals.elementInfo.sectionSafety, entry.safety));
         }
       }
+      // Phase 11 Plan 11-05: 🔊 lector button (conditional na isAvailable + lectorEnabled).
+      this._renderLectorButton(meshId, entry, state);
+    } else {
+      // Modal zamknięty — wyczyść slot lektora.
+      const slot = this._dialog.querySelector('.element-info-panel__lector-slot');
+      if (slot) slot.textContent = '';
     }
 
     this._overlay.classList.toggle('modal-overlay--visible', isOpen);

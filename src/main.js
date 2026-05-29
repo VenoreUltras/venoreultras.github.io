@@ -24,6 +24,9 @@ import { HelpModal } from './ui/HelpModal.js';
 import { ConfirmModal } from './ui/ConfirmModal.js';
 import { ElementInfoPanel } from './ui/ElementInfoPanel.js';
 import { ExamPromptModal } from './ui/ExamPromptModal.js';
+// Phase 11 Plan 11-05 (FUNC-11-09..12): ElevenLabs TTS Lektor.
+import { LectorService } from './lector/LectorService.js';
+import { LECTOR_VOICES, DEFAULT_LECTOR_VOICE_ID } from './data/lectorVoices.js';
 // Phase 6 Plan 06-08 — replay + session overlay + persistence + export wrappers.
 import { ReplayEngine } from './replay/ReplayEngine.js';
 import { ReplayDrawer } from './ui/ReplayDrawer.js';
@@ -46,6 +49,8 @@ const HC_STORAGE_KEY = 'pm300:hc-outline:v1'; // D-Phase4-09
 const DIFFICULTY_KEY = 'pm300:difficulty:v1';  // D-Phase5-04
 const AUDIO_MUTE_KEY = 'pm300:audio-mute:v1';  // D-Phase5-18
 const MODE_KEY = 'pm300:mode:v1';              // Phase 11 Plan 11-01 (FUNC-11-01)
+const LECTOR_ENABLED_KEY = 'pm300:lector:enabled'; // Phase 11 Plan 11-05 (FUNC-11-12)
+const LECTOR_VOICE_KEY   = 'pm300:lector:voice';   // Phase 11 Plan 11-05 (FUNC-11-12)
 
 export class Application {
   constructor() {
@@ -100,7 +105,26 @@ export class Application {
         return (v === 'free' || v === 'nauka') ? v : 'free';
       } catch { return 'free'; }
     })();
-    this.store.setState({ difficulty: difficultyInitial, audioMuted: audioMutedInitial, mode: modeInitial });
+    // Phase 11 Plan 11-05 (FUNC-11-12): bootstrap lector state z localStorage.
+    // Valid-value guard dla voiceId — fallback do DEFAULT gdy ID nie w LECTOR_VOICES (np. usunięty głos).
+    const lectorEnabledInitial = (() => {
+      try { return localStorage.getItem(LECTOR_ENABLED_KEY) === 'true'; }
+      catch { return false; }
+    })();
+    const lectorVoiceIdInitial = (() => {
+      try {
+        const v = localStorage.getItem(LECTOR_VOICE_KEY);
+        const valid = LECTOR_VOICES.some(voice => voice.id === v);
+        return valid ? v : DEFAULT_LECTOR_VOICE_ID;
+      } catch { return DEFAULT_LECTOR_VOICE_ID; }
+    })();
+    this.store.setState({
+      difficulty: difficultyInitial,
+      audioMuted: audioMutedInitial,
+      mode: modeInitial,
+      lectorEnabled: lectorEnabledInitial,
+      lectorVoiceId: lectorVoiceIdInitial,
+    });
 
     // Persist warstwa — store-side toggleMute/setDifficulty zmienia state, Application
     // zapisuje do localStorage. trainingStore zachowuje boundary clean (D-Phase5-26).
@@ -114,6 +138,13 @@ export class Application {
       // Phase 11 Plan 11-01: persist mode (analog difficulty subscriber, T-04-13 graceful catch).
       this.store.subscribe((s) => s.mode, (v) => {
         try { localStorage.setItem(MODE_KEY, v); } catch { /* silent */ }
+      }),
+      // Phase 11 Plan 11-05 (FUNC-11-12): persist lector on/off + voice picker.
+      this.store.subscribe((s) => s.lectorEnabled, (v) => {
+        try { localStorage.setItem(LECTOR_ENABLED_KEY, String(v)); } catch { /* silent */ }
+      }),
+      this.store.subscribe((s) => s.lectorVoiceId, (v) => {
+        try { localStorage.setItem(LECTOR_VOICE_KEY, v); } catch { /* silent */ }
       }),
     );
 
@@ -231,7 +262,16 @@ export class Application {
     // UI-01/02 (D-Phase4-03/04): DOM panele top bar + lewa kolumna.
     // Zastępują Phase 3 placeholdery (#phase3-step-readout/#phase3-attest-container) i projekcję
     // isRunning → #status-text z UI.updateStatus() (D-Phase4-02/D-Phase4-17).
-    this.statusPanel = new StatusPanel({ store: this.store });
+    // Phase 11 Plan 11-05 (FUNC-11-09..12): instantiate LectorService PRZED StatusPanel + ElementInfoPanel,
+    // by oba mogły dostać go w DI. LectorService czyta VITE_ELEVENLABS_API_KEY domyślnie;
+    // graceful gdy brak klucza (isAvailable===false → UI fallback disabled+tooltip).
+    this.lectorService = new LectorService({ store: this.store });
+
+    this.statusPanel = new StatusPanel({
+      store: this.store,
+      lectorService: this.lectorService,
+      lectorVoices: LECTOR_VOICES,
+    });
     this.stepPanel = new StepPanel({ store: this.store });
 
     // Phase 5 D-Phase5-25 — kolejność tworzenia:
@@ -267,7 +307,10 @@ export class Application {
     // (d.3) ElementInfoPanel — Phase 11 Plan 11-03 (FUNC-11-03/07): edukacyjny panel
     // dla 15 interactables. Renderuje conditional content per store.mode (free=opis, nauka=4 sekcje).
     // RaycastController wywołuje store.openElementInfo w mode='free'/'nauka' branch.
-    this.elementInfoPanel = new ElementInfoPanel({ store: this.store });
+    this.elementInfoPanel = new ElementInfoPanel({
+      store: this.store,
+      lectorService: this.lectorService,
+    });
 
     // (d.4) ExamPromptModal — Phase 11 Plan 11-04 (FUNC-11-05/06): auto-prompt po SOP done w nauce.
     // Store subscriber (trainingStore Plan 11-04) ustawia activeModal='exam-prompt';
@@ -411,6 +454,7 @@ export class Application {
     if (this.helpModal) this.helpModal.dispose();
     if (this.labelOverlay) this.labelOverlay.dispose();              // PRZED sceneSetup.dispose (CSS2DRenderer order)
     if (this.keyboardController) this.keyboardController.dispose();
+    if (this.lectorService) this.lectorService.dispose();            // Phase 11 Plan 11-05 — revokeObjectURL cache
     if (this.audioController) this.audioController.dispose();        // PRZED emissive (logiczna kolejność)
     // Phase 4 cd.
     if (this.highlightManager) this.highlightManager.dispose();

@@ -12,6 +12,11 @@ dist
 dist-ssr
 *.local
 
+# Phase 11 Plan 11-05 — env files with API keys (VITE_ELEVENLABS_API_KEY)
+.env
+.env.local
+.env.*.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
