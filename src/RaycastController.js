@@ -37,6 +37,10 @@ export class RaycastController {
     // Phase 5 D-Phase5-08 + Pitfall 7: callback (meshId|null, mesh|null) wołany w _commitHover/_commitLeave.
     // TooltipManager wstrzykuje się przez ten kanał — DI opcjonalne, domyślnie null.
     this._onHoverChange = onHoverChange;
+    // Phase 10 D-10-09: callback (meshId, mesh) wołany w _handlePointerUp dla mesh z userData.poses.
+    // InteractionAnimator wstrzykuje się przez po-hoc assign (analog _onHoverChange).
+    // Emit PRZED bimanual/attemptStep flow — wizualna animacja niezalezna od SOP.
+    this._onManipulationClick = null;
 
     this._raycaster = new THREE.Raycaster();
     this._ndc = new THREE.Vector2(); // reused per-event
@@ -177,6 +181,13 @@ export class RaycastController {
 
     const mesh = hits[0].object;
     const meshId = mesh.userData.id;
+
+    // Phase 10 D-10-09: emit klik do animatora NIEZALEZNIE od SOP flow.
+    // Animator graceful skip dla mesh bez poses (handleClick sprawdza userData?.poses).
+    // Emit PRZED bimanual branch — wizualna animacja zawsze tweenuje (nawet w trybie bimanual).
+    if (mesh.userData?.poses) {
+      this._onManipulationClick?.(meshId, mesh);
+    }
 
     // Phase 6 Plan 06-05 Task 2 (D-Phase6-04, SOP-04): bimanual branch PRZED zwyklym
     // attemptStep. Aktywny tylko gdy bieżący krok ma kind='bimanual' I meshId jest w
