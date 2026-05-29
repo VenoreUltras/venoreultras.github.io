@@ -102,9 +102,48 @@ Pozostawiony jako udokumentowany docking point dla v2 (DIFF-01..04):
 **Goal:** Doszlifowanie wizualne mechanizmu prasy + klik-driven animacje osłon: półprzezroczysta osłona przednia (mechanizm widoczny przy zamknięciu), wycentrowany shaftAxis + wizualne łączniki wał↔mimośród↔korbowód, klik-driven animator pivot.rotation (oslona-przednia + dzwignia-sprzegla) i dekoracyjny wspornik dźwigni.
 **Requirements**: D-10-01, D-10-02, D-10-03, D-10-04, D-10-05, D-10-06, D-10-07, D-10-08, D-10-09, D-10-10, D-10-11 (preserve invariants: KIN-01, ANCHOR-01, ANCHOR-02, CRIT-5, CRIT-6, CRIT-8, MAT-04, TEST-08)
 **Depends on:** Phase 9
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 10-01-PLAN.md — Material + geometry (transparent guard + shaftAxis center + shaft connectors + lever bracket + KIN-01 extension)
-- [ ] 10-02-PLAN.md — InteractionAnimator + RaycastController click channel + boundary entry
-- [ ] 10-03-PLAN.md — Application wiring + dispose order + manual smoke gate (D-10-05 + opacity tweak)
+- [x] 10-01-PLAN.md — Material + geometry (transparent guard + shaftAxis center + shaft connectors + lever bracket + KIN-01 extension)
+- [x] 10-02-PLAN.md — InteractionAnimator + RaycastController click channel + boundary entry
+- [x] 10-03-PLAN.md — Application wiring + dispose order + manual smoke gate (D-10-05 + opacity tweak)
+
+### Phase 11: Poprawki funkcjonalności trybów + lektor ElevenLabs
+
+**Goal:** Spójny flow trybów (swobodny → nauka → egzamin → swobodny z możliwością dalszego przełączania), poprawiony wskaźnik statusu urządzenia, rozbudowane etykiety klik-driven w trybie nauki, etykiety dostępne także w trybie swobodnym, oraz integracja lektora głosowego ElevenLabs dla opisów elementów i instrukcji SOP.
+
+**Depends on:** Phase 10
+
+**Requirements:**
+- FUNC-11-01 — Aplikacja startuje w trybie swobodnym (free) z aktywnymi etykietami hover; nie wymaga interakcji wstępnej
+- FUNC-11-02 — Przełącznik trybu: swobodny ⇄ nauka ⇄ egzamin dostępny zawsze (poza aktywną sesją egzaminu); state machine bez ślepych zaułków
+- FUNC-11-03 — Tryb swobodny: hover labels + klik = krótki opis elementu (1 zdanie) — bez wymogu sekwencji SOP
+- FUNC-11-04 — Wskaźnik "Status urządzenia: aktywny/nieaktywny" w panelu sterowania reaguje na Start/Stop oraz na ω≈0 (idle); fix istniejącego buga, w którym status nie odpowiada faktycznemu stanowi
+- FUNC-11-05 — Po ukończeniu trybu nauki (wszystkie kroki SOP zaliczone) modal: "Czy chcesz przejść do egzaminu?" [Tak / Nie, wróć do swobodnego]
+- FUNC-11-06 — Po ukończeniu egzaminu (pass lub fail + raport) automatyczny powrót do trybu swobodnego; przełącznik trybu znów aktywny (no lock)
+- FUNC-11-07 — Tryb nauki: klik na element otwiera rozszerzony panel informacyjny (nazwa + funkcja + parametry techniczne + powiązane kroki SOP + ostrzeżenia BHP)
+- FUNC-11-08 — Treść rozszerzonych etykiet edukacyjnych dla wszystkich 15 interactables (PL); źródło danych w jednym module (np. `src/data/elementInfo.js`)
+- FUNC-11-09 — Integracja ElevenLabs TTS API: przycisk "🔊 Odsłuchaj" w rozszerzonym panelu informacyjnym (tryb nauki) oraz dla instrukcji kroków SOP
+- FUNC-11-10 — Klucz API ElevenLabs przez `.env` (VITE_ELEVENLABS_API_KEY); nigdy zhardkodowany; graceful fallback gdy brak klucza (przycisk disabled + tooltip)
+- FUNC-11-11 — Cache audio per (text, voiceId) — jeden tekst nie generuje wielokrotnych requestów; LRU lub Map w pamięci sesji
+- FUNC-11-12 — Toggle lektora w UI (on/off) + wybór głosu (PL) z 2-3 zdefiniowanych voiceIds; preferencja persistowana w localStorage
+- FUNC-11-13 — Preserve invariants: 777 testów Phase 9 nadal zielone; boundary D-Phase7-05 (PressModel/PhysicsEngine bez DOM); getInteractables().size===15
+
+**Success Criteria:**
+1. Cold start → tryb swobodny aktywny, etykiety hover działają, brak modalu blokującego
+2. Sekwencja swobodny → nauka → (modal po SOP done) → egzamin → swobodny działa bez reload; każdy tryb można porzucić i wrócić do swobodnego
+3. Status "aktywny/nieaktywny" zsynchronizowany z faktycznym ω: Start → aktywny, Stop → nieaktywny, RPM=0 z włączonym Startem → nieaktywny (idle); test jednostkowy lub manualny QA
+4. Klik na element w trybie nauki otwiera panel z minimum 4 sekcjami (nazwa, funkcja, parametry, BHP) dla wszystkich 15 interactables
+5. Klik na "🔊 Odsłuchaj" pobiera audio z ElevenLabs (lub z cache) i odtwarza w `<audio>` lub Web Audio API; loading state widoczny
+6. Brak klucza API → przycisk disabled + tooltip "Lektor wymaga konfiguracji klucza ElevenLabs"; aplikacja nie crashuje
+7. `npm test` przechodzi (existing + nowe testy: ModeStateMachine transitions, statusIndicator vs ω, elementInfo coverage===15, TTS cache hit)
+8. `npm run build` < 850 KB main bundle (limit z v1.1 zachowany; lektor jako oddzielny chunk dynamic import jeśli to potrzebne dla budżetu)
+
+**Plans:** TBD via `/gsd:plan-phase 11` (sugerowany podział):
+- 11-01 — ModeStateMachine + start w trybie swobodnym + UI toggle trybów (FUNC-11-01..03, 11-06)
+- 11-02 — Status urządzenia fix + binding do ω (FUNC-11-04)
+- 11-03 — Rozszerzony panel informacyjny + `elementInfo.js` dla 15 elementów (FUNC-11-07, 11-08)
+- 11-04 — Modal "przejdź do egzaminu" po SOP done + powrót po egzaminie (FUNC-11-05, 11-06)
+- 11-05 — ElevenLabs TTS service + cache + UI toggle + voice picker + .env handling (FUNC-11-09..12)
+- 11-06 — Integration audit (boundary, bundle, testy, manual smoke flow przez 3 tryby)
