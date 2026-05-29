@@ -332,6 +332,11 @@ export class Application {
     const delta = desiredOmega - this._omega;
     this._omega += Math.sign(delta) * Math.min(Math.abs(delta), maxStep);
 
+    // Phase 11 FUNC-11-04 — ω-driven status indicator (orthogonal channel od StatusPanel SOP machineState).
+    // Projekcja (ui.isRunning, _omega) → #status-text/#status-dot per tick. W replay (early-return powyzej)
+    // wywolanie pomijamy — status zamarza na ostatnim live frame (acceptable: replay to historic data).
+    this.ui.updateStatus(this.ui.isRunning, this._omega);
+
     if (!integrationPaused && this._omega > 0) {
       this.currentAngle = (this.currentAngle + this._omega * dtSeconds) % (Math.PI * 2);
     }
