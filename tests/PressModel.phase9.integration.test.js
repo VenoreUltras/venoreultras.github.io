@@ -71,7 +71,7 @@ describe('PressModel — Phase 9 Integration Audit (aggregate plans 09-01..09-04
     }
   });
 
-  it('#2 Grupa B Plastik/BHP (4 materiały): metalness 0.1, roughness 0.85; matGuardOrange = 0xC8B400 BHP yellow', () => {
+  it('#2 Grupa B Plastik/BHP (4 materiały): metalness 0.1, roughness 0.85; matGuardOrange = 0xFFFFFF (Phase 10 biała szybka)', () => {
     const groupB = [
       ['matSafetyPanelGray', pressModel.matSafetyPanelGray],
       ['matSwitchBody', pressModel.matSwitchBody],
@@ -83,7 +83,7 @@ describe('PressModel — Phase 9 Integration Audit (aggregate plans 09-01..09-04
       expect(mat.metalness, `${name}.metalness`).toBe(0.1);
       expect(mat.roughness, `${name}.roughness`).toBe(0.85);
     }
-    expect(pressModel.matGuardOrange.color.getHex(), 'matGuardOrange BHP ostrzegawczy żółty').toBe(0xC8B400);
+    expect(pressModel.matGuardOrange.color.getHex(), 'matGuardOrange biała szybka półprzezroczysta (Phase 10 fix-up)').toBe(0xFFFFFF);
   });
 
   it('#3 Grupa C Beton: matFoundation 0x808080, metalness 0, roughness 0.95, normalMap DataTexture, normalScale (0.3, 0.3)', () => {

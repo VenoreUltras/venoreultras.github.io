@@ -64,8 +64,8 @@ describe('PressModel — Phase 9-01 MAT-02 Grupa B (Plastik / BHP)', () => {
     });
   }
 
-  it('#B: matGuardOrange ma BHP ostrzegawczy żółty 0xC8B400 (override z 0xE07A1F)', () => {
-    expect(pressModel.matGuardOrange.color.getHex()).toBe(0xC8B400);
+  it('#B: matGuardOrange ma biały kolor szybki 0xFFFFFF (Phase 10 fix-up — półprzezroczysta osłona)', () => {
+    expect(pressModel.matGuardOrange.color.getHex()).toBe(0xFFFFFF);
   });
 });
 

@@ -257,7 +257,7 @@ describe('PressModel — ANCHOR-02: decoration bearings (Plan 07-02 dependent)',
   // Test pełni rolę regression guard po scaleniu Plan 07-02.
   it('łożyska (decoration) istnieją po Plan 07-02 i mają worldPosition.y === shaftY', () => {
     // Phase 8 GEO-01: decoration pool rozszerzony o fundament + 4 śruby kotwowe (y<0).
-    // Łożyska identyfikujemy konkretnie: CylinderGeometry R=0.6 H=0.8 (Phase 7 _buildBearings).
+    // Phase 10 fix-up D-10-05: łożyska bumped do R=0.95 H=1.0 (masywne kotwicują wał wizualnie).
     const decorations = pressModel.group.children.filter(c => c.userData?.kind === 'decoration');
     if (decorations.length === 0) {
       // Plan 07-02 nie scalony — soft skip via early return + console hint (nie zostawiamy red).
@@ -266,8 +266,8 @@ describe('PressModel — ANCHOR-02: decoration bearings (Plan 07-02 dependent)',
     }
     const bearings = decorations.filter(d =>
       d.geometry.type === 'CylinderGeometry' &&
-      Math.abs(d.geometry.parameters.radiusTop - 0.6) < 1e-6 &&
-      Math.abs(d.geometry.parameters.height - 0.8) < 1e-6
+      Math.abs(d.geometry.parameters.radiusTop - 0.95) < 1e-6 &&
+      Math.abs(d.geometry.parameters.height - 1.0) < 1e-6
     );
     expect(bearings.length, 'oczekiwane 2 łożyska (lewe + prawe) wśród decoration meshes').toBe(2);
     const v = new THREE.Vector3();

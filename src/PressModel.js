@@ -67,12 +67,13 @@ export class PressModel {
     // Phase 4 ustawi emissive=0x009E73 + emissiveIntensity=1 przez store-driven update.
     this.matReadyLamp = new THREE.MeshStandardMaterial({ color: 0x009E73, metalness: 0.0, roughness: 0.3, emissive: 0x000000, emissiveIntensity: 0 });
 
-    // --- Phase 9 Grupa B cd. — Osłony (matGuardOrange BHP override + matGuardRearBlack) ---
-    // matGuardOrange: BHP ostrzegawczy żółty 0xC8B400 (norma BHP), zmiana z 0xE07A1F Phase 2.
+    // --- Phase 9 Grupa B cd. — Osłony (matGuardOrange biały półprzezroczysty + matGuardRearBlack) ---
+    // Phase 10 fix-up: kolor 0xC8B400 → 0xFFFFFF (biała szybka), zachowane transparent+opacity 0.5
+    // żeby mechanizm wewnątrz był widoczny przy zamkniętej osłonie (D-10-01 user override).
     // D-10-01: stała półprzezroczystość — mechanizm wewnątrz widoczny przy zamkniętej osłonie.
     // NIE zmieniać depthWrite/alphaTest (Pitfall 1 — domyślne zapewniają poprawny Z-buffer).
     // NIE animować opacity w flash (Pitfall 2 — _savePreFlash NIE zapisuje opacity/transparent).
-    this.matGuardOrange = new THREE.MeshStandardMaterial({ color: 0xC8B400, metalness: 0.1, roughness: 0.85, transparent: true, opacity: 0.5 });
+    this.matGuardOrange = new THREE.MeshStandardMaterial({ color: 0xFFFFFF, metalness: 0.1, roughness: 0.85, transparent: true, opacity: 0.5 });
     this.matGuardRearBlack = new THREE.MeshStandardMaterial({ color: 0x2a2a2a, metalness: 0.1, roughness: 0.85 });
 
     // --- Niezmieniane ---
@@ -287,9 +288,26 @@ export class PressModel {
     flywheelGroup.position.set(-2.5, 0, 0);
     this.shaftAxis.add(flywheelGroup); // KRYTYCZNE: dziecko shaftAxis (D-Phase2-05)
 
-    // Obwód koła: cylinder obracamy o 90° wokół Z tak, by obwód stał pionowo (oś X = oś wału)
-    const rimGeo = new THREE.CylinderGeometry(1.5, 1.5, 0.3, 32);
-    rimGeo.rotateZ(Math.PI / 2);
+    // Phase 10 fix-up: pełna tarcza → tarcza z 6 okrągłymi wycięciami między szprychami.
+    // ExtrudeGeometry: outer circle R=1.5 + 6 holes R=0.32 promień orbity 0.95 (offset π/6 = między szprychami).
+    // Wycięcia uwidaczniają obrót — przez dziury widać tło/szprychy obracające się razem z kołem.
+    const flywheelShape = new THREE.Shape();
+    flywheelShape.absarc(0, 0, 1.5, 0, Math.PI * 2, false);
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI / 3) * i + Math.PI / 6; // offset między szprychami
+      const cx = Math.cos(angle) * 0.95;
+      const cy = Math.sin(angle) * 0.95;
+      const hole = new THREE.Path();
+      hole.absarc(cx, cy, 0.32, 0, Math.PI * 2, true);
+      flywheelShape.holes.push(hole);
+    }
+    const rimGeo = new THREE.ExtrudeGeometry(flywheelShape, {
+      depth: 0.3,
+      bevelEnabled: false,
+      curveSegments: 32,
+    });
+    rimGeo.translate(0, 0, -0.15); // wycentruj na lokalnym Z
+    rimGeo.rotateY(Math.PI / 2);   // oś tarczy wzdłuż X (konwencja shaft/eccentric)
     const rim = new THREE.Mesh(rimGeo, this.matFlywheel);
     rim.castShadow = true;
     rim.receiveShadow = true;
@@ -356,10 +374,22 @@ export class PressModel {
    * Kolor bursztynowy (UI-SPEC visual fidelity). Statyczny, dziecko this.group.
    */
   _buildOilSightGlass() {
+    // Phase 10 fix-up: metalowy collar (oprawka) wokół szybki — wizualne mocowanie
+    // do obudowy, żeby wziernik nie wyglądał jakby wisiał w powietrzu.
+    // Pierścień R_outer=0.22 R_inner=0.15 grubość 0.08 — przylega do obudowy z tyłu (z=1.05).
+    const collarGeo = new THREE.CylinderGeometry(0.22, 0.22, 0.08, 24);
+    collarGeo.rotateX(Math.PI / 2);
+    const collar = new THREE.Mesh(collarGeo, this.matBody);
+    collar.position.set(0, 7, 1.05);
+    collar.castShadow = true;
+    collar.receiveShadow = true;
+    collar.userData = { kind: 'decoration' };
+    this.group.add(collar);
+
     const sightGeo = new THREE.CylinderGeometry(0.15, 0.15, 0.05, 24);
     sightGeo.rotateX(Math.PI / 2);
     const sight = new THREE.Mesh(sightGeo, this.matOilSightYellow);
-    sight.position.set(0, 7, 1.1);
+    sight.position.set(0, 7, 1.12);  // wysunięta lekko przed collar
     sight.castShadow = true;
     this.group.add(sight);
 
@@ -686,8 +716,11 @@ export class PressModel {
       kind: 'manipulation',
       baseMaterial: this.matGuardOrange,
       poses: {
+        // Phase 10 fix-up: open obraca w drugą stronę (rot.x=+π/2) — osłona idzie
+        // NAD mechanizm (do tyłu/góry), nie do przodu jako daszek. Bardziej intuicyjne
+        // "unoszenie" niż przewracanie do operatora.
         closed: { rot: { x: 0, y: 0, z: 0 } },
-        open:   { rot: { x: -Math.PI / 2, y: 0, z: 0 } },
+        open:   { rot: { x: Math.PI / 2, y: 0, z: 0 } },
       },
       pivotTarget: 'parent',
     });
@@ -852,8 +885,9 @@ export class PressModel {
    * Phase 9 doprecyzuje PBR. Phase 8 GEO-03 może dodać osłony nad łożyskami.
    */
   _buildBearings() {
-    // Współdzielona geometria — 2 meshe mogą reużyć (nie modyfikujemy per-instance).
-    const bearingGeo = new THREE.CylinderGeometry(0.6, 0.6, 0.8, 32);
+    // Phase 10 fix-up D-10-05: bump R 0.6 → 0.95, H 0.8 → 1.0. Masywne łożyska
+    // wizualnie kotwicują wał w ramie — eliminuje wrażenie "latającego" wału.
+    const bearingGeo = new THREE.CylinderGeometry(0.95, 0.95, 1.0, 32);
     bearingGeo.rotateZ(Math.PI / 2); // oś cylindra wzdłuż X (konwencja shaft/eccentric)
 
     const bearingLeft = new THREE.Mesh(bearingGeo, this.matBody);

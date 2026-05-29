@@ -40,23 +40,23 @@ describe('PressModel — Phase 7-02 ANCHOR-02 łożyska wału', () => {
     });
     return decorations.filter((d) =>
       d.geometry.type === 'CylinderGeometry' &&
-      Math.abs(d.geometry.parameters.radiusTop - 0.6) < 1e-6 &&
-      Math.abs(d.geometry.parameters.height - 0.8) < 1e-6
+      Math.abs(d.geometry.parameters.radiusTop - 0.95) < 1e-6 &&
+      Math.abs(d.geometry.parameters.height - 1.0) < 1e-6
     );
   }
 
-  it('dodaje DOKŁADNIE 2 łożyska (Phase 7 baseline; rozpoznawane po R=0.6 H=0.8)', () => {
+  it('dodaje DOKŁADNIE 2 łożyska (Phase 7 baseline; Phase 10 fix-up R=0.95 H=1.0)', () => {
     expect(getBearings(pressModel)).toHaveLength(2);
   });
 
-  it('każde łożysko jest CylinderGeometry z R≈0.6 i H≈0.8', () => {
+  it('każde łożysko jest CylinderGeometry z R≈0.95 i H≈1.0 (Phase 10 D-10-05 — masywne)', () => {
     const bearings = getBearings(pressModel);
     for (const bearing of bearings) {
       expect(bearing.geometry.type).toBe('CylinderGeometry');
       const p = bearing.geometry.parameters;
-      expect(p.radiusTop).toBeCloseTo(0.6, 6);
-      expect(p.radiusBottom).toBeCloseTo(0.6, 6);
-      expect(p.height).toBeCloseTo(0.8, 6);
+      expect(p.radiusTop).toBeCloseTo(0.95, 6);
+      expect(p.radiusBottom).toBeCloseTo(0.95, 6);
+      expect(p.height).toBeCloseTo(1.0, 6);
     }
   });
 
