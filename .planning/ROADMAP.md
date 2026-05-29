@@ -99,10 +99,12 @@ Pozostawiony jako udokumentowany docking point dla v2 (DIFF-01..04):
 
 ### Phase 10: Poprawki wizualne mechanizmu i animacje osłon — przezroczystość zasłaniających elementów, wyrównanie i połączenie środkowego wału z mechanizmem, animacja osłony przedniej i dźwigni sprzęgła, zakotwiczenie dźwigni sprzęgła w obudowie
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Doszlifowanie wizualne mechanizmu prasy + klik-driven animacje osłon: półprzezroczysta osłona przednia (mechanizm widoczny przy zamknięciu), wycentrowany shaftAxis + wizualne łączniki wał↔mimośród↔korbowód, klik-driven animator pivot.rotation (oslona-przednia + dzwignia-sprzegla) i dekoracyjny wspornik dźwigni.
+**Requirements**: D-10-01, D-10-02, D-10-03, D-10-04, D-10-05, D-10-06, D-10-07, D-10-08, D-10-09, D-10-10, D-10-11 (preserve invariants: KIN-01, ANCHOR-01, ANCHOR-02, CRIT-5, CRIT-6, CRIT-8, MAT-04, TEST-08)
 **Depends on:** Phase 9
-**Plans:** 0 plans
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd-plan-phase 10 to break down)
+- [ ] 10-01-PLAN.md — Material + geometry (transparent guard + shaftAxis center + shaft connectors + lever bracket + KIN-01 extension)
+- [ ] 10-02-PLAN.md — InteractionAnimator + RaycastController click channel + boundary entry
+- [ ] 10-03-PLAN.md — Application wiring + dispose order + manual smoke gate (D-10-05 + opacity tweak)
