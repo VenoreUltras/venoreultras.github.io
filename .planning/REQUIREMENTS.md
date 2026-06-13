@@ -80,13 +80,31 @@ Potwierdzone jako wartościowe, ale poza zakresem v1.2.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| _Wypełniane przez roadmappera_ | — | Pending |
+| EDU-01 | Phase 12 | Pending |
+| EDU-02 | Phase 12 | Pending |
+| EDU-03 | Phase 12 | Pending |
+| EXAM-01 | Phase 12 | Pending |
+| MENU-01 | Phase 13 (store prereq) + Phase 15 (UI) | Pending |
+| MENU-03 | Phase 13 | Pending |
+| EXAM-02 | Phase 13 | Pending |
+| EXAM-03 | Phase 13 | Pending |
+| OVL-01 | Phase 14 | Pending |
+| OVL-02 | Phase 14 | Pending |
+| OVL-03 | Phase 14 | Pending |
+| NAME-01 | Phase 14 | Pending |
+| MENU-02 | Phase 15 | Pending |
+| MED-01 | Phase 16 | Pending |
+| MED-02 | Phase 16 | Pending |
+| MED-03 | Phase 16 | Pending |
+| EXAM-04 | Phase 17 | Pending |
+| TEST-09 | Phase 17 (integration gate, criteria in all phases) | Pending |
+| TEST-10 | Phase 17 (integration gate, criteria in all phases) | Pending |
 
 **Coverage:**
 - v1.2 requirements: **19 total** (MENU×3 + OVL×3 + EDU×3 + MED×3 + NAME×1 + EXAM×4 + TEST×2)
-- Mapped to phases: 0 (przed roadmapem)
-- Unmapped: 19 ⚠️ (do zmapowania przez roadmappera)
+- Mapped to phases: 19/19 ✓
+- Unmapped: 0 ✓
 
 ---
 *Requirements defined: 2026-06-13*
-*Last updated: 2026-06-13 after initial v1.2 definition*
+*Last updated: 2026-06-13 — traceability filled by roadmapper (Phases 12–17)*
