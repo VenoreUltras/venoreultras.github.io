@@ -3,7 +3,8 @@
 // Pure data module (analog src/i18n/pl.js, src/training/scoringWeights.js).
 // Polski per CLAUDE.md.
 //
-// Każdy wpis ma 5 pól: name, function, parameters, sopSteps, safety (BHP).
+// Każdy wpis ma 7 pól: name, function, parameters, sopSteps, safety (BHP), bhp, media.
+// Pole bhp zawiera instrukcję BHP z cytowaną normą (EDU-02 Phase 12); media wypełni Phase 16.
 // sopSteps to lista "scenarioId/stepId" odwołań do kroków SOP używających mesh
 // jako targetMeshId/targetMeshIds (Phase 11 Plan 11-03 audit grep _registerInteractable).
 //
@@ -16,6 +17,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Średnica ~600 mm, masa ~180 kg, robocze obroty 250 obr/min (PM-300), moment bezwładności ~8 kg·m².',
     sopSteps: 'brak bezpośredniego targetu w SOP — element obserwowany (lampka-gotowosci sygnalizuje osiągnięcie pełnych obrotów).',
     safety: 'NIGDY nie sprzęgać prasy gdy koło nie osiągnęło pełnych obrotów (ryzyko zatrzymania w martwym punkcie i blokady wału). Obracające się koło ma dużą energię kinetyczną — utrzymywać ochronę i nie zbliżać rąk.',
+    bhp: 'Koło zamachowe prasy PM-300 magazynuje energię kinetyczną odpowiadającą ~8 kg·m² przy 250 obr/min — kontakt z obracającym się kołem grozi amputacją. Zgodnie z ISO 16092-2:2019 §5.2 oraz OSHA 1910.217(b) sprzęganie jest dozwolone wyłącznie po osiągnięciu pełnych obrotów roboczych (sygnał lampki gotowości). Przed przystąpieniem do serwisu koła bezwzględnie przeprowadzić procedurę LOTO.',
+    media: [],
   },
   'hamulec': {
     name: 'Hamulec',
@@ -23,6 +26,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Hamulec szczękowy sprężynowy, moment hamujący ~120 Nm, czas zatrzymania <0,5 s od rozsprzęgnięcia.',
     sopSteps: 'zatrzymanie/zacisnij-hamulec — operator zaciska hamulec po rozsprzęgnięciu, by zatrzymać wał w GMP.',
     safety: 'Sprawdzić skuteczność hamowania przed każdą zmianą operatora. Hamulec niesprawny = ryzyko inadvertent stroke (kategoria 4 wg EN ISO 13849). Zużyte okładziny wymienić natychmiast.',
+    bhp: 'Hamulec sprzęgłowo-hamulcowy prasy PM-300 musi zatrzymać wał w czasie <0,5 s po rozsprzęgnięciu — zgodnie z ISO 16092-2:2019 §5.3 oraz OSHA 1910.217(b). Niesprawny hamulec kwalifikuje się jako usterka kategorii bezpieczeństwa 4 i wymaga natychmiastowego wyłączenia maszyny z eksploatacji. Okładziny o zużyciu przekraczającym limit producenta należy wymienić przed kolejną zmianą.',
+    media: [],
   },
   'wziernik-smarowania': {
     name: 'Wziernik smarowania',
@@ -30,6 +35,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Wziernik szklany ø30 mm, zakres poziomu min/max ~120 ml, olej ISO VG 68, częstość kontroli: każde uruchomienie + co 8h pracy.',
     sopSteps: 'uruchomienie/sprawdz-olej — kontrola poziomu i klarowności oleju przed włączeniem zasilania.',
     safety: 'Brak oleju lub mętny olej blokuje uruchomienie (scenariusz "awaria" — awaria-brak-oleju). Nie dolewać oleju w czasie pracy — gorące powierzchnie i ruchome części.',
+    bhp: 'Inspekcja wziernika smarowania jest obowiązkowym krokiem przedrozruchowym zgodnie z ISO 16092-1:2017 §6 oraz OSHA 1910.217(e). Brak wymaganego poziomu oleju ISO VG 68 lub obecność zanieczyszczeń nakazuje wstrzymanie uruchomienia do czasu uzupełnienia lub wymiany oleju przez uprawnionego konserwatora. Dolewanie oleju w czasie pracy jest bezwzględnie zabronione — ryzyko oparzeń i kontaktu z ruchomymi częściami.',
+    media: [],
   },
   'oslona-tylna': {
     name: 'Osłona tylna',
@@ -37,6 +44,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Blacha stalowa 3 mm, mocowanie 4 śrubami M10, demontaż wyłącznie kluczem (no-tool-free per EN 953).',
     sopSteps: 'brak — osłona stała, kontrolowana przez audyt okresowy (nie w SOP operatora).',
     safety: 'Demontaż wyłącznie podczas serwisu po LOTO (wyłącznik główny zablokowany). Praca z otwartą osłoną tylną = naruszenie BHP i grozi karą inspektora pracy.',
+    bhp: 'Osłona tylna jest stałą osłoną strefy roboczej wymaganą przez ISO 16092-1:2017 §5.4, EN ISO 14120 oraz Dyrektywę Maszynową 2006/42/EC §1.4. Demontaż jest dozwolony wyłącznie po wykonaniu procedury LOTO i udokumentowaniu w dzienniku serwisowym. Praca maszyny z usuniętą osłoną tylną stanowi rażące naruszenie BHP i podlega natychmiastowemu wstrzymaniu produkcji.',
+    media: [],
   },
   'kurtyna-lewa': {
     name: 'Kurtyna świetlna (lewa)',
@@ -44,6 +53,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Rozdzielczość 14 mm (palec), wysokość pola ochronnego 600 mm, zasięg 0,3–6 m, czas reakcji <20 ms, Type 4 / PL e.',
     sopSteps: 'brak bezpośredniego targetu — kurtyna działa zawsze (passive guard); użytkownik nie klika jej w SOP.',
     safety: 'NIGDY nie obchodzić kurtyny przedmiotami (lustro, dłoń poza polem). Codzienna kontrola czystości optyk. Zabrudzona/uszkodzona kurtyna = wyłączenie prasy z eksploatacji.',
+    bhp: 'Kurtyna świetlna (lewa) jest elementem interlockowanej osłony optoelektronicznej Type 4 / PL e zgodnej z ISO 16092-1:2017 §5.4, EN ISO 14120 oraz Dyrektywą 2006/42/EC §1.4. Obchodzenie lub zasłanianie pola ochronnego jest surowo zabronione i stanowi manipulację układem bezpieczeństwa kategorii 4. Codzienna kontrola czystości optyk jest obowiązkowa — zabrudzenie optyki powoduje fałszywe wyzwolenia lub — groźniej — zanik detekcji.',
+    media: [],
   },
   'kurtyna-prawa': {
     name: 'Kurtyna świetlna (prawa)',
@@ -51,6 +62,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Synchroniczny odbiornik, identyczna rozdzielczość 14 mm i czas reakcji <20 ms jak para lewa. Sygnał wyjściowy OSSD 24V.',
     sopSteps: 'brak bezpośredniego targetu — passive guard.',
     safety: 'Regularne sprawdzanie justowania (test bar w komplecie). Po każdym uderzeniu/przesunięciu obudowy obowiązkowa rejustacja przez upoważnionego serwisanta.',
+    bhp: 'Kurtyna świetlna (prawa) tworzy parę z lewą kolumną tworząc barierę ochronną Type 4 / PL e zgodną z ISO 16092-1:2017 §5.4, EN ISO 14120 oraz Dyrektywą 2006/42/EC §1.4. Przesunięcie lub uszkodzenie kolumny prawej musi być zgłoszone natychmiast — praca z błędem justowania kurtyny jest zabroniona. Rejustacja wyłącznie przez upoważnionego serwisanta z użyciem wzorcowego test-bara.',
+    media: [],
   },
   'tabliczka-znamionowa': {
     name: 'Tabliczka znamionowa',
@@ -58,6 +71,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Tabliczka aluminiowa 100×60 mm, grawerowana, mocowana 4 nitami. Dane: model PM-300, nominalny nacisk 300 kN, masa ~1850 kg, rok produkcji, nr seryjny, CE.',
     sopSteps: 'uruchomienie/sprawdz-tabliczke — pierwszy krok każdego uruchomienia (identyfikacja maszyny i jej parametrów).',
     safety: 'Nigdy nie eksploatować prasy z nieczytelną tabliczką. W przypadku utraty zgłosić producentowi i uzyskać duplikat — to wymóg prawny, nie kosmetyka.',
+    bhp: 'Sprawdzenie czytelności tabliczki znamionowej jest obowiązkowym pierwszym krokiem procedury uruchomienia zgodnie z ISO 16092-1:2017 §6 oraz OSHA 1910.217(e). Nieczytelna lub brakująca tabliczka wyklucza maszynę z legalnej eksploatacji (Dyrektywa 2006/42/EC §1.7.3). Eksploatacja prasy bez ważnej tabliczki znamionowej stanowi naruszenie przepisów i naraża operatora oraz pracodawcę na odpowiedzialność prawną.',
+    media: [],
   },
   'panel-oburezny': {
     name: 'Panel oburęczny',
@@ -65,6 +80,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Rozstaw przycisków ~260 mm (poza zasięgiem jednej ręki), kategoria sterowania STO Cat 4 / PL e, okno synchronizacji <500 ms.',
     sopSteps: 'cykl-pracy/sprawdz-panel-oburezny — wizualna kontrola panelu przed cyklem.',
     safety: 'Zabronione modyfikacje przycisków (blokowanie taśmą, dorobione mostki). Audyt funkcjonalny okna synchronizacji co 6 miesięcy.',
+    bhp: 'Panel oburęczny realizuje sterowanie oburęczne kategorii 4 / PL e zgodne z ISO 16092-1:2017 §5.5 oraz EN ISO 13851. Jakiekolwiek modyfikacje panelu (blokowanie przycisków, obejścia elektryczne, skrócenie okna synchronizacji) są bezwzględnie zabronione i stanowią usunięcie środka ochronnego — odpowiedzialność karna. Audyt funkcjonalny okna synchronizacji (≤500 ms) przeprowadzać co 6 miesięcy.',
+    media: [],
   },
   'przycisk-start-lewy': {
     name: 'Przycisk startu (lewy)',
@@ -72,6 +89,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Przycisk Ø22 mm, kolor zielony, kontakt NC+NO, podświetlenie 24V DC, odporność IP65, kategoria PL e.',
     sopSteps: 'cykl-pracy/oburezny-start — bimanual step (parą z przycisk-start-prawy), targetMeshIds=[lewy, prawy], windowMs=500.',
     safety: 'NIGDY nie blokować przycisku (klin, taśma) — to obejście systemu bezpieczeństwa kategorii 4. Praca z zablokowanym przyciskiem = ciężki uraz w razie inadvertent stroke.',
+    bhp: 'Przycisk startu (lewy) jest integralną częścią układu sterowania oburęcznego kategorii 4 / PL e zgodnego z ISO 16092-1:2017 §5.5 oraz EN ISO 13851. Blokowanie przycisku w pozycji wciśniętej (taśma, klin, mostek elektryczny) jest surowo zabronione — eliminuje wymaganą obecność obu rąk operatora i grozi ciężkim urazem przy inadvertent stroke. Codziennie weryfikować prawidłowe działanie przycisku.',
+    media: [],
   },
   'przycisk-start-prawy': {
     name: 'Przycisk startu (prawy)',
@@ -79,6 +98,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Przycisk Ø22 mm, kolor zielony, kontakt NC+NO, podświetlenie 24V DC, odporność IP65, kategoria PL e.',
     sopSteps: 'cykl-pracy/oburezny-start — bimanual step (parą z przycisk-start-lewy).',
     safety: 'Jak lewy: brak blokad i brak modyfikacji. Codzienny test funkcjonalny (próba startu jedną ręką musi zostać odrzucona przez sterownik).',
+    bhp: 'Przycisk startu (prawy) jest integralną częścią układu sterowania oburęcznego kategorii 4 / PL e zgodnego z ISO 16092-1:2017 §5.5 oraz EN ISO 13851. Analogicznie do lewego — blokowanie przycisku jest bezwzględnie zabronione. Codzienny test funkcjonalny: próba uruchomienia jednym przyciskiem musi zostać odrzucona przez sterownik PLC w czasie <500 ms.',
+    media: [],
   },
   'lampka-gotowosci': {
     name: 'Lampka gotowości',
@@ -86,6 +107,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Lampka LED zielona Ø22 mm, 24V DC, próg aktywacji = obroty robocze ±5% (lampka zapala się gdy ω osiągnie 250 obr/min).',
     sopSteps: 'brak bezpośredniego targetu — element obserwacyjny; gate dla kroku uruchomienie/sprzegnij-po-rozpedzie.',
     safety: 'Niedziałająca lampka NIE zwalnia z obowiązku odczekania na rozpęd — w razie awarii lampki użyć przyrządu pomiarowego (tachometr) lub zgłosić maszynę do serwisu.',
+    bhp: 'Lampka gotowości jest sygnałem inspekcji przedrozruchowej wymaganej przez ISO 16092-1:2017 §6 oraz OSHA 1910.217(e) — potwierdza osiągnięcie bezpiecznych obrotów roboczych koła zamachowego. Sprzęgnięcie przed zapaleniem lampki jest błędem proceduralnym klasy A i grozi nieplanowanym zatrzymaniem wału w martwym punkcie. Niesprawna lampka nakazuje zgłoszenie maszyny do serwisu i zastosowanie tachometru jako alternatywnego wskaźnika.',
+    media: [],
   },
   'estop': {
     name: 'Wyłącznik awaryjny (E-stop)',
@@ -93,6 +116,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Grzybek Ø40 mm, samoblokujący push-pull/twist-to-release, kontakt NC z mostkiem mechanicznym, kategoria stop 0, PL e.',
     sopSteps: 'uruchomienie/odblokuj-estop — kontrola odblokowania przed startem; awaria/reakcja-na-otwarcie-oslony — wciśnięcie w sytuacji awaryjnej.',
     safety: 'Po każdym wciśnięciu obowiązkowa analiza przyczyny zanim odblokowanie. Nigdy nie odblokowywać E-stop bez sprawdzenia bezpieczeństwa strefy. Codzienny test funkcjonalny.',
+    bhp: 'Wyłącznik awaryjny E-stop realizuje funkcję zatrzymania awaryjnego kategorii 0 zgodnie z IEC 60204-1:2016 §9.2 oraz EN ISO 13850. Każde wciśnięcie E-stopu wymaga analizy przyczyny przed odblokowaniem — odblokowanie bez weryfikacji stanu maszyny i strefy roboczej jest zabronione. Codzienny test funkcjonalny (wciśnięcie i kontrola zatrzymania) jest obowiązkowy; niesprawny E-stop wyklucza maszynę z eksploatacji.',
+    media: [],
   },
   'oslona-przednia': {
     name: 'Osłona przednia',
@@ -100,6 +125,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Konstrukcja stalowa z oknem PMMA, wyłącznik bezpieczeństwa z aktuatorem kodowanym, czas reakcji interlock <15 ms.',
     sopSteps: 'uruchomienie/zamknij-oslone — zamknięcie przed włączeniem zasilania; cykl-pracy/zamknij-oslone-przednia — zamknięcie przed bimanual start; awaria — otwarcie w cyklu triggeruje fault rule (awaria-os-otwarta).',
     safety: 'Zabronione manipulowanie interlockiem (dorobione magnesy, kliny). Codzienny test funkcji bezpieczeństwa: próba uruchomienia z otwartą osłoną musi zostać odrzucona.',
+    bhp: 'Osłona przednia jest interlockowaną osłoną ruchomą kategorii PL e zgodną z ISO 16092-1:2017 §5.4, EN ISO 14120 oraz Dyrektywą Maszynową 2006/42/EC §1.4. Manipulowanie interlockiem (magnesy bypass, kliny) jest przestępstwem BHP i grozi odpowiedzialnością karną pracodawcy. Codzienny test: próba uruchomienia z otwartą osłoną musi skutkować odrzuceniem startu przez sterownik PLC.',
+    media: [],
   },
   'wylacznik-glowny': {
     name: 'Wyłącznik główny',
@@ -107,6 +134,8 @@ export const elementInfo = Object.freeze({
     parameters: 'Rozłącznik trójfazowy 3×400V/63A, kategoria użytkowania AC-23A, otwór na kłódkę LOTO Ø8 mm, czerwono-żółta rączka.',
     sopSteps: 'uruchomienie/wlacz-zasilanie — przekręcenie do pozycji ON na początku zmiany; zatrzymanie/wylacz-zasilanie — wyłączenie po cyklu; zatrzymanie/loto-attest — kontrola założenia kłódki.',
     safety: 'Przed jakimkolwiek serwisem PROCEDURA LOTO: wyłącz, zablokuj kłódką osobistą, zawieś zawieszkę z imieniem. Klucz/kłódka NIE zostawia rąk serwisanta przez cały czas naprawy.',
+    bhp: 'Wyłącznik główny jest punktem LOTO (Lock-Out Tag-Out) zgodnym z OSHA 1910.147 oraz Dyrektywą Maszynową 2006/42/EC §1.6.3. Przed każdą czynnością serwisową obowiązkowa procedura LOTO: wyłącz zasilanie, zablokuj kłódką osobistą (jeden klucz = jeden serwisant), zawieś tabliczkę ostrzegawczą. Przekazanie klucza innej osobie w trakcie serwisu jest bezwzględnie zabronione.',
+    media: [],
   },
   'dzwignia-sprzegla': {
     name: 'Dźwignia sprzęgła',
@@ -114,5 +143,7 @@ export const elementInfo = Object.freeze({
     parameters: 'Dźwignia mechaniczna, skok ~80 mm, siła sprzęgnięcia ~150 N, mechanizm cierny stożkowy, gwarantowane rozsprzęgnięcie sprężynowe.',
     sopSteps: 'uruchomienie/sprzegnij-po-rozpedzie — sprzęgnięcie po sygnale gotowości; zatrzymanie/rozsprzegnij — rozsprzęgnięcie jako pierwszy krok zatrzymania; awaria/reset-po-awarii — rozsprzęgnięcie podczas resetu po awarii.',
     safety: 'Sprzęgnięcie przed osiągnięciem pełnych obrotów = wadliwy cykl + ryzyko zablokowania wału. Rozsprzęgnięcie ZAWSZE jako pierwszy krok przed zatrzymaniem hamulcem.',
+    bhp: 'Dźwignia sprzęgła mechanizmu sprzęgłowo-hamulcowego prasy PM-300 musi być obsługiwana wyłącznie po potwierdzeniu pełnych obrotów koła zamachowego — zgodnie z ISO 16092-2:2019 §5.3 oraz OSHA 1910.217(b). Sprzęgnięcie przy niepełnych obrotach grozi zatrzymaniem wału w martwym punkcie i koniecznością ręcznego odblokowywania pod napięciem. Rozsprzęgnięcie jest zawsze pierwszą czynnością sekwencji zatrzymania — nigdy nie zaciskać hamulca przed rozsprzęgnięciem.',
+    media: [],
   },
 });

@@ -68,3 +68,33 @@ describe('elementInfo — dataset shape (FUNC-11-08)', () => {
     expect(Object.isFrozen(elementInfo)).toBe(true);
   });
 });
+
+describe('elementInfo — Phase 12 extensions (EDU-01/EDU-02)', () => {
+  it('każdy wpis ma pole bhp: string', () => {
+    for (const [id, entry] of Object.entries(elementInfo)) {
+      expect(entry.bhp, `${id}.bhp`).toBeTypeOf('string');
+    }
+  });
+
+  it('każde bhp ma length > 20 (brak placeholder)', () => {
+    for (const [id, entry] of Object.entries(elementInfo)) {
+      expect(entry.bhp.length, `${id}.bhp length`).toBeGreaterThan(20);
+    }
+  });
+
+  it('każdy wpis ma pole media: array', () => {
+    for (const [id, entry] of Object.entries(elementInfo)) {
+      expect(Array.isArray(entry.media), `${id}.media`).toBe(true);
+    }
+  });
+
+  it('media jest pustą tablicą w Phase 12 (Phase 16 go wypełni)', () => {
+    for (const [id, entry] of Object.entries(elementInfo)) {
+      expect(entry.media.length, `${id}.media length`).toBe(0);
+    }
+  });
+
+  it('elementInfo nadal jest Object.frozen po rozszerzeniu', () => {
+    expect(Object.isFrozen(elementInfo)).toBe(true);
+  });
+});
