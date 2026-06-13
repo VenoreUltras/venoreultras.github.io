@@ -39,7 +39,11 @@
   3. Nowy `src/training/quizSelection.js` eksportuje czystą funkcję `selectQuizQuestions(scenarioId)` — bez efektów ubocznych, importowalną z testów i store; pokrywa wszystkie 4 scenariusze
   4. `elementInfo.js` jest backward-compatible: istniejące konsumenty sprawdzające `entry.safety` i `entry.sopSteps` działają bez zmian; nowe pola `bhp` i `media` są opcjonalne dla konsumentów (guard `entry.bhp?.length`)
   5. `npm run build` < 850 KB (dane tekstowe nie trafiają do bundla jako embedded blobs)
-**Plans**: TBD
+**Plans**: 4 plans
+  - [ ] 12-01-PLAN.md — Extend elementInfo.js (bhp + media on 15 entries) + tests [W1, EDU-01/02/03]
+  - [ ] 12-02-PLAN.md — Create quizData.js (≥32 BHP questions, 4 scenarios, mixed types) + tests [W2, EDU-03/EXAM-01]
+  - [ ] 12-03-PLAN.md — Create quizSelection.js pure fn + tests + boundaries.test.js entries [W2, EXAM-01]
+  - [ ] 12-04-PLAN.md — Phase gate: full suite + bundle <850KB + domain-expert BHP review [W3, EDU-03]
 
 ### Phase 13: Store Extensions
 **Goal:** Zustand store posiada kompletny kontrat API dla menu startowego i egzaminu hybrydowego — UI można budować przeciwko prawdziwemu store od pierwszego dnia.
@@ -107,7 +111,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 12. Data Foundations | 0/? | Not started | - |
+| 12. Data Foundations | 0/4 | Not started | - |
 | 13. Store Extensions | 0/? | Not started | - |
 | 14. ElementInfoOverlay + Nameplate | 0/? | Not started | - |
 | 15. StartMenu | 0/? | Not started | - |
