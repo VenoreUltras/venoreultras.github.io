@@ -42,7 +42,7 @@
 **Plans**: 4 plans
   - [x] 12-01-PLAN.md — Extend elementInfo.js (bhp + media on 15 entries) + tests [W1, EDU-01/02/03]
   - [x] 12-02-PLAN.md — Create quizData.js (≥32 BHP questions, 4 scenarios, mixed types) + tests [W2, EDU-03/EXAM-01]
-  - [ ] 12-03-PLAN.md — Create quizSelection.js pure fn + tests + boundaries.test.js entries [W2, EXAM-01]
+  - [x] 12-03-PLAN.md — Create quizSelection.js pure fn + tests + boundaries.test.js entries [W2, EXAM-01]
   - [ ] 12-04-PLAN.md — Phase gate: full suite + bundle <850KB + domain-expert BHP review [W3, EDU-03]
 
 ### Phase 13: Store Extensions
@@ -111,7 +111,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 12. Data Foundations | 2/4 | In Progress|  |
+| 12. Data Foundations | 3/4 | In Progress|  |
 | 13. Store Extensions | 0/? | Not started | - |
 | 14. ElementInfoOverlay + Nameplate | 0/? | Not started | - |
 | 15. StartMenu | 0/? | Not started | - |
