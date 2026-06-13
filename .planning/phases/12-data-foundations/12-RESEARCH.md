@@ -421,7 +421,12 @@ export function calculate(events, opts = {}) {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> Resolution status (added during planning, Phase 12):
+> 1. **RESOLVED** — `src/data/` is explicitly in `boundaries.test.js` `ALLOWED_PATHS` (line 172); no scanner change needed for `quizData.js` (confirmed in 12-PATTERNS.md).
+> 2. **RESOLVED** — Phase 12 adds `bhp` additively; `safety` is preserved untouched; Phase 14 decides overlay display.
+> 3. **RESOLVED** — Domain-expert BHP review is a blocking non-autonomous checkpoint in plan 12-04 (phase-close gate, not post-phase).
 
 1. **Polish diacritics scanner scope in boundaries.test.js**
    - What we know: `src/data/elementInfo.js` currently contains Polish strings and passes tests
