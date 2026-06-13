@@ -132,6 +132,15 @@ const FORBIDDEN_PAIRS = [
   // Phase 11 Plan 11-05: lectorVoices.js to pure data module (analog elementInfo.js).
   { file: 'src/data/lectorVoices.js',
     mustNotImport: ['three', 'gsap', '../state/', './state/', '../training/', './training/', '../highlight/', './highlight/', '../ui/', './ui/', '../education/', './education/'] },
+
+  // Phase 12 (Plan 12-02): quizData.js — czysty moduł danych, zero importów (analog elementInfo.js).
+  { file: 'src/data/quizData.js',
+    mustNotImport: ['three', 'gsap', '../state/', '../training/', './state/', './training/', '../RaycastController', '../ui/', './ui/', '../highlight/', './highlight/', '../education/', './education/'] },
+
+  // Phase 12 (Plan 12-03): quizSelection.js — czysta funkcja, warstwa training.
+  // Może importować tylko ../data/quizData.js. NIE three/gsap/state/.
+  { file: 'src/training/quizSelection.js',
+    mustNotImport: ['three', 'gsap', '../state/', './state/'] },
 ];
 
 /** Regex: static + dynamic imports. Capturuje string specifier. */
