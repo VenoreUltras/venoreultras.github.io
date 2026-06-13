@@ -5,13 +5,14 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   test: {
     environment: 'node',
-    environmentMatchGlobs: [
-      ['tests/disclaimerBanner.test.js', 'jsdom'],
-      ['tests/KeyboardController.test.js', 'jsdom'],
-      ['tests/HelpModal.test.js', 'jsdom'],
-      ['tests/StatusPanel.test.js', 'jsdom'],
-      ['tests/StepPanel.test.js', 'jsdom'],
-    ],
+    // Wybór środowiska per-plik przez docblock `// @vitest-environment jsdom`.
+    // (Vitest 4 usunął `environmentMatchGlobs` — pliki DOM deklarują środowisko same.)
+    // jsdom potrzebuje origin (url), inaczej `localStorage` nie jest funkcjonalnym Storage.
+    environmentOptions: {
+      jsdom: { url: 'http://localhost' },
+    },
+    // Naprawia niefunkcjonalny natywny `localStorage` z Node ≥ 22 w testach jsdom.
+    setupFiles: ['tests/setup.webstorage.js'],
     globals: false,
     include: ['tests/**/*.test.js'],
     exclude: ['node_modules', 'dist'],
