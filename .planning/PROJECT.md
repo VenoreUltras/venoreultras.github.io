@@ -2,17 +2,23 @@
 
 ## Current State
 
-**Shipped:** ✅ v1.0 — SOP Training Layer (2026-05-28)
+**Shipped:**
+- ✅ v1.0 — SOP Training Layer (2026-05-28) — 4 scenariusze grywalne (uruchomienie / cykl-pracy / zatrzymanie / awaria), redundant visual feedback, warstwa edukacyjna, replay ze scrubberem, eksport PDF/JSON. 6 faz, 38 planów, 642/642 testów. Audit: `.planning/v1.0-MILESTONE-AUDIT.md`.
+- ✅ v1.1 — Visual Quality & Press Realism (2026-05-29) — naprawa bugów rotacji + floating, fundament/stół/wsporniki, przemysłowe detale (śruby/kable/panele), materiały PBR (fazy 7-9). Następnie fazy 10-11: półprzezroczysta osłona + łączniki mechanizmu + animacje GSAP klik (10), oraz 3 spójne tryby (swobodny/nauka/egzamin) + wskaźnik statusu + rozbudowane etykiety 15 interactables + **lektor głosowy ElevenLabs** (11). 903 testy zielone, bundle 809.94 KB / 850 KB.
 
-Pełny SOP trener PM-300 wdrożony: 4 scenariusze grywalne (uruchomienie / cykl-pracy / zatrzymanie / awaria), redundant visual feedback (color + icon + text), warstwa edukacyjna (tooltipy + audio + 3D labels + difficulty modes), replay z scrubberem, eksport sesji do polskiego PDF + JSON. 6 faz, 38 planów, 642/642 testów zielonych. Audit: `.planning/v1.0-MILESTONE-AUDIT.md`.
+## Current Milestone: v1.2 Rozbudowa edukacyjna i realizm
 
-## Next Milestone Goals
+**Goal:** Pogłębić warstwę szkoleniową PM-300 — szczegółowe instrukcje obsługi + BHP oparte na realnych materiałach (zdjęcia/filmy), egzamin sprawdzający tę wiedzę, oraz uporządkowanie wejścia do aplikacji (menu startowe) i prezentacji informacji (pełnoekranowy overlay zamiast bocznego panelu).
 
-**Active:** v1.1 — Visual Quality & Press Realism (started 2026-05-28)
+**Target features:**
+- Menu startowe z wyborem trybu (swobodny / nauka / egzamin) jako ekran wejściowy
+- Usunięcie prawego panelu (ElementInfoPanel) → pełnoekranowy overlay (lightbox) z treścią + media
+- Rozbudowany tryb edukacyjny — szczegółowe instrukcje obsługi + zasady BHP dla każdego elementu/kroku
+- Instrukcje oparte na realnych mediach — prawdziwe zdjęcia/filmy (sourcing z internetu, licencje free-use) osadzone w overlayu
+- Realistyczna płytka znamionowa — prawdziwe zdjęcie/tekstura na meshu w scenie
+- Egzamin hybrydowy — interakcja 3D w scenie + pytania kontrolne BHP na końcu scenariusza
 
-Naprawia 2 wizualne bugi z v1.0 (rotacja całego rigu zamiast kół zamachowych, floating elements bez mocowań) i nadaje prasie "feel prasy" — fundament, stół roboczy, wsporniki łożysk, śruby/kable/panele dekoracyjne, PBR materiały. SOP nietknięta — 642 testów v1.0 pozostają zielone.
-
-**Phases:** 7 (Kinematic Fix & Anchoring) → 8 (Press Body Expansion) → 9 (Detail & Material Pass). 18 requirements (KIN/ANCHOR/GEO/DEC/MAT/TEST). Szczegóły w `.planning/REQUIREMENTS.md` i `.planning/ROADMAP.md`.
+**Out of scope tego milestone:** lektor ElevenLabs (już dostarczony w Fazie 11).
 
 **Następnie (v2 docking points):** DIFF-01..04 — ExplodedViewController, randomized faults, supervisor recommendations w PDF, font scaling + high-contrast theme.
 
@@ -106,4 +112,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-05-28 after milestone v1.0 archive*
+*Last updated: 2026-06-13 — milestone v1.2 (Rozbudowa edukacyjna i realizm) started*

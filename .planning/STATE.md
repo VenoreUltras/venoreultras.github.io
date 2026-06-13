@@ -1,15 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.1
-milestone_name: milestone
-status: Phase 11 complete
-last_updated: "2026-05-29T10:20:19.826Z"
+milestone: v1.2
+milestone_name: Rozbudowa edukacyjna i realizm
+status: planning
+last_updated: "2026-06-13T09:55:51.558Z"
+last_activity: 2026-06-13
 progress:
-  total_phases: 5
-  completed_phases: 5
-  total_plans: 22
-  completed_plans: 22
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State: PM-300 Trener
@@ -32,37 +33,10 @@ progress:
 
 ## Current Position
 
-Phase: 11 — COMPLETE
-Plan: 6 of 6
-Phase 04 — COMPLETE (267 tests green; UAT 5/5 pass; +5 in-session fixes: main-switch repositioning, wrong-click flash + ordering race, spinup animation, completion overlay)
-Phase 03 — code complete (PASS-WITH-PENDING); manual checkpoint 60 FPS+hover ODROCZONY
-Next: `/gsd-discuss-phase 5` → `/gsd-plan-phase 5` → `/gsd-execute-phase 5`
-| Field | Value |
-|-------|-------|
-| Milestone | v1 — SOP Training Layer |
-| Phase | 1 — Foundation (COMPLETE) |
-| Plan | 01-01..01-05 complete |
-| Status | Phase 1 done — DisclaimerBanner + WebGL context-loss + boundaries.test.js; npm test green (133/133); coverage 98.05/93.42/96/100; 21/21 wymagań Phase 1 spełnione |
-| Mode | YOLO with parallel execution |
-| Granularity | Standard |
-
-**Progress:**
-
-[█████░░░░░] 50%
-Phase 1: Foundation                          [██████████] 100% complete (5/5 plans)
-Phase 2: Digital Twin Geometry               [██████████] 100% complete (6/6 plans)
-Phase 3: Click-to-State Pipeline             [█████████░] 95%  code complete (5/5 plans, manual checkpoint pending)
-Phase 4: Visual Feedback Layer               [█████████░] 95%  CODE COMPLETE Plan 04-01..04-06 (6/6 plans, manual deuteranopia QA pending)
-Phase 5: Educational Layer                   [          ] 0%   not started
-Phase 6: Scenarios + Replay + Retry + Export [          ] 0%   not started
-Phase 7: (v2) Differentiators                [    v2    ] —    deferred (renumber to Phase 10+)
-
-Milestone v1.1 — Visual Quality & Press Realism (COMPLETE):
-Phase 7: Kinematic Fix & Anchoring            [██████████] 100% complete (4/4 plans)
-Phase 8: Press Body Expansion                 [██████████] 100% complete (4/4 plans)
-Phase 9: Detail & Material Pass               [██████████] 100% complete (5/5 plans)
-
-```
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-13 — Milestone v1.2 started
 
 ## Performance Metrics
 
