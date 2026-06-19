@@ -114,7 +114,12 @@
   3. Pełny smoke test trybów end-to-end: zimny start → menu → swobodny (klik elementu → overlay → media → zakładki → ESC), nauka (SOP → ExamPromptModal), egzamin (SOP → quiz → wynik → export); brak błędów JS w konsoli
   4. `npm test` ≥ 903 testów baseline zielonych + nowe testy dla MENU/OVL/EDU/MED/NAME/EXAM; `getInteractables().size === 15` i maszyna stanów trybów bez regresji (TEST-09)
   5. `npm run build` < 850 KB main bundle — gate końcowy całego milestone v1.2 (TEST-10); dispose chain `Application.dispose()` obejmuje: startMenuOverlay, elementInfoOverlay, mediaManager, quizController bez wycieków
-**Plans**: TBD
+**Plans:** 4 plans
+Plans:
+- [ ] 17-01-PLAN.md — i18n keys (pl.modals.bhpQuiz + pl.pdf BHP) + .bhp-quiz__* CSS + QuizController test scaffold (Wave 0)
+- [ ] 17-02-PLAN.md — QuizController: store-driven BHP quiz modal (lifecycle, mc/tf/sequence, feedback, score screen, dispose)
+- [ ] 17-03-PLAN.md — Export: additive quiz field in JSON + BHP section in PDF
+- [ ] 17-04-PLAN.md — main.js wiring + MILESTONE GATE (suite >=903, getInteractables===15, dispose leak-free, bundle <850 KB, e2e smoke)
 **UI hint**: yes
 
 ## Progress Table
@@ -126,7 +131,7 @@
 | 14. ElementInfoOverlay + Nameplate | 0/3 | Planned | - |
 | 15. StartMenu | 0/? | Not started | - |
 | 16. Media Pipeline | 0/3 | Planned | - |
-| 17. QuizController + Application Wiring | 0/? | Not started | - |
+| 17. QuizController + Application Wiring | 0/4 | Planned | - |
 
 ## Phase Ordering Rationale
 
