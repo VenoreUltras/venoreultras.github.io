@@ -779,6 +779,116 @@ body.training-complete #status-panel {
   -webkit-backdrop-filter: blur(4px);
 }
 
+/* ── StartMenuOverlay — ekran startowy wyboru trybu (Phase 15, MENU-01/02) ─
+   <div> (NIE <dialog>) sterowany store.showStartMenu przez display.
+   z-index 200 — nad canvasem, pod #modal-container (z-index 300). */
+#start-menu-container {
+  display: none; /* nadpisywane inline przez _render() (block/none) */
+}
+
+.start-menu__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 15, 25, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.start-menu__panel {
+  width: min(720px, 92vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  color: var(--text-main);
+}
+
+.start-menu__title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--text-main);
+}
+
+.start-menu__subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0 0 24px;
+}
+
+.start-menu__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.start-menu__card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.start-menu__card:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.start-menu__card--selected {
+  border-color: var(--accent, #4f9dff);
+  background: rgba(79, 157, 255, 0.12);
+}
+
+.start-menu__card-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--text-main);
+}
+
+.start-menu__card-desc {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+
+.start-menu__last-session {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+  min-height: 1em; /* rezerwacja miejsca — brak skoku layoutu gdy brak danych */
+}
+
+.start-menu__start-btn {
+  appearance: none;
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  background: rgba(79, 157, 255, 0.2);
+  border: 1px solid var(--accent, #4f9dff);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.start-menu__start-btn:hover {
+  background: rgba(79, 157, 255, 0.35);
+}
+
 /* ── Modal card — wewnętrzne sekcje ─────────────────────── */
 .modal-card__header {
   display: flex;

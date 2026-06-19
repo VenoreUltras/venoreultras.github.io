@@ -1,4 +1,5 @@
 // tests/StartMenuOverlay.test.js
+// @vitest-environment jsdom
 // Phase 15 Plan 15-01 (MENU-01/02): unit coverage dla StartMenuOverlay.
 // Testuje klasę bezpośrednio z mock-store (DI) — bez pełnej konstrukcji Application.
 //
