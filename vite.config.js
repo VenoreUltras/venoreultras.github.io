@@ -29,6 +29,9 @@
 // import) jest przewidziany w Phase 17, gdy QuizController przejmie ładowanie pytań.
 export default {
   build: {
+    // Phase 16 (MED-01): zero = ZADEN asset nie trafia do bundla jako base64.
+    // Pliki z public/media/ pozostaja referencjami (osobne pliki), nie inline.
+    assetsInlineLimit: 0,
     rollupOptions: {
       output: {
         manualChunks(id) {
