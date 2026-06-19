@@ -4,13 +4,13 @@ milestone: v1.2
 milestone_name: Rozbudowa edukacyjna i realizm
 status: executing
 last_updated: "2026-06-19T00:00:00.000Z"
-last_activity: 2026-06-19 -- Phase 14 complete (965 tests, bundle 820.34 KB); next Phase 15
+last_activity: 2026-06-19 -- Phase 15 complete (978 tests, bundle 825.34 KB); next Phase 16
 progress:
   total_phases: 6
-  completed_phases: 3
-  total_plans: 9
-  completed_plans: 9
-  percent: 50
+  completed_phases: 4
+  total_plans: 11
+  completed_plans: 11
+  percent: 67
 ---
 
 # Project State: PM-300 Trener
@@ -30,16 +30,18 @@ progress:
 - `.planning/research/v1.2/ARCHITECTURE.md` — dependency-ordered build sequence + integration points
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 15 — StartMenu (next; UI phase)
+**Current focus:** Phase 16 — Media Pipeline (next)
 
 ## Current Position
 
-Phase: 14 (elementinfooverlay-nameplate) — COMPLETE (3/3 plans); next Phase 15
-Plan: — (14-01 overlay + 14-02 migration + 14-03 nameplate done)
-Status: Phase 14 executed + code-reviewed (1 high + fixes applied); 965 tests green, main bundle 820.34 KB < 850 KB
-Last activity: 2026-06-19 -- Phase 14 complete (fullscreen overlay migration + nameplate TextureLoader)
+Phase: 15 (startmenu) — COMPLETE (2/2 plans); next Phase 16
+Plan: — (15-01 overlay + 15-02 wiring done)
+Status: Phase 15 executed + code-reviewed (3 warnings fixed); 978 tests green, main bundle 825.34 KB < 850 KB. Manual visual checkpoint DEFERRED (user to verify start menu via npm run dev).
+Last activity: 2026-06-19 -- Phase 15 complete (StartMenuOverlay + first-launch bootstrap + last-session indicators)
 
-Progress bar: `[█████████░░░░░░░░░░░] 3 / 6 phases`
+Progress bar: `[████████████░░░░░░░░] 4 / 6 phases`
+
+⚠ **Open manual check:** Phase 15 start-menu visual verification (menu over running sim, card select, Zmień tryb, last-session indicator) — deferred by user, validate via `npm run dev`.
 
 **Bundle:** main chunk 818.24 KB / 850 KB (~32 KB headroom). Phase 13's +27 KB was resolved via Vite `manualChunks` — quizData + quizSelection now ship as a separate cacheable `quiz-data` chunk (26 KB), keeping the main bundle near the 817 KB pre-Phase-13 baseline. Full lazy-load (dynamic import) deferred to Phase 17 (QuizController owns question loading). Phase 16 (+fslightbox ~12 KB) now fits.
 

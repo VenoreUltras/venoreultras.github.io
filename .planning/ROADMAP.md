@@ -23,7 +23,7 @@
 - [x] **Phase 12: Data Foundations** — elementInfo.js rozszerzony (bhp + media pola dla 15 elementów) + quizData.js + quizSelection.js — fundament danych dla wszystkich konsumentów
 - [x] **Phase 13: Store Extensions** — trainingStore: quiz slice + showStartMenu flag + zmodyfikowany finishedAt subscriber (hybryda 3D+quiz)
 - [x] **Phase 14: ElementInfoOverlay + Nameplate** — atomiczna zamiana ElementInfoPanel → pełnoekranowy dialog.showModal() + tabliczka tekstura realistyczna
-- [ ] **Phase 15: StartMenu** — StartMenuOverlay: ekran wejścia, karty trybów, wskaźniki sesji z localStorage
+- [x] **Phase 15: StartMenu** — StartMenuOverlay: ekran wejścia, karty trybów, wskaźniki sesji z localStorage
 - [ ] **Phase 16: Media Pipeline** — MediaManager + zasoby CC-licensed w public/media/ + ATTRIBUTION.txt gate
 - [ ] **Phase 17: QuizController + Application Wiring** — QuizController + integracja main.js + eksport PDF/JSON + gate 903+ testów + bundle < 850 KB
 
@@ -86,8 +86,8 @@
   4. `StartMenuOverlay` nie interferuje z `activeModal` — istniejące modale (help, confirm, element-info, bhp-quiz) działają niezależnie
   5. `npm run build` < 850 KB
 **Plans**: 2 plans
-  - [ ] 15-01-PLAN.md — StartMenuOverlay (3 mode cards, display-toggle visibility, last-session indicators) + pl.startMenu + CSS + tests [W1, MENU-01/02]
-  - [ ] 15-02-PLAN.md — Wire into main.js (first-launch bootstrap + last-session subscriber + dispose) + StatusPanel "Zmień tryb" + application.test.js regression fix [W2, MENU-01/02/03]
+  - [x] 15-01-PLAN.md — StartMenuOverlay (3 mode cards, display-toggle visibility, last-session indicators) + pl.startMenu + CSS + tests [W1, MENU-01/02]
+  - [x] 15-02-PLAN.md — Wire into main.js (first-launch bootstrap + last-session subscriber + dispose) + StatusPanel "Zmień tryb" + application.test.js regression fix [W2, MENU-01/02/03]
 **UI hint**: yes
 
 ### Phase 16: Media Pipeline
