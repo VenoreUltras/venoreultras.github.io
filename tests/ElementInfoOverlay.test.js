@@ -145,7 +145,8 @@ describe('ElementInfoOverlay — slot mediów placeholder (Test 2d)', () => {
     store = createTrainingStore();
     overlay = new ElementInfoOverlay({ store });
     store.setState({ mode: 'nauka' });
-    store.getState().openElementInfo('kolo-zamachowe');
+    // 'oslona-przednia' nadal ma media:[] (kolo-zamachowe/hamulec wypełnione w Plan 16-02).
+    store.getState().openElementInfo('oslona-przednia');
   });
   afterEach(() => {
     if (overlay) overlay.dispose();
@@ -156,6 +157,40 @@ describe('ElementInfoOverlay — slot mediów placeholder (Test 2d)', () => {
     const media = document.querySelector('.element-info-overlay__media');
     expect(media).not.toBeNull();
     expect(media.textContent).toContain(pl.modals.elementInfo.mediaPlaceholder);
+  });
+});
+
+describe('ElementInfoOverlay — slot mediów z MediaManager (Test 2e)', () => {
+  let store, overlay;
+  // Fake MediaManager — DI odsprzęga test od realnego importu (resolveSrc → '/media/' + plik).
+  const mediaManager = { resolveSrc: (f) => '/media/' + f };
+  beforeEach(() => {
+    document.body.innerHTML = '<div id="modal-container"></div>';
+    store = createTrainingStore();
+    overlay = new ElementInfoOverlay({ store, mediaManager });
+    store.setState({ mode: 'nauka' });
+    store.getState().openElementInfo('kolo-zamachowe');
+  });
+  afterEach(() => {
+    if (overlay) overlay.dispose();
+    document.body.innerHTML = '';
+  });
+
+  it('renderuje <img> z src przez MediaManager.resolveSrc, alt i loading=lazy', () => {
+    const img = document.querySelector('.element-info-overlay__media img');
+    expect(img).not.toBeNull();
+    expect(img.getAttribute('src')).toContain('/media/');
+    expect(img.getAttribute('loading')).toBe('lazy');
+    expect(img.alt).toBe(elementInfo['kolo-zamachowe'].media[0].alt);
+  });
+
+  it('img.onerror (Event("error")) usuwa zepsuty <img> cicho — bez wyjątku', () => {
+    const img = document.querySelector('.element-info-overlay__media img');
+    expect(img).not.toBeNull();
+    expect(() => img.dispatchEvent(new Event('error'))).not.toThrow();
+    expect(document.querySelector('.element-info-overlay__media img')).toBeNull();
+    // Zawartość slotu poza usuniętym <img> pozostaje (degradacja, nie crash).
+    expect(document.querySelector('.element-info-overlay__media')).not.toBeNull();
   });
 });
 

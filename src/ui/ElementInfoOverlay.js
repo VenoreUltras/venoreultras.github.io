@@ -20,10 +20,12 @@ export class ElementInfoOverlay {
    * @param {{ getState: Function, subscribe: Function }} deps.store
    * @param {string} [deps.rootElementId='modal-container']
    * @param {{ isAvailable: Function, speak: Function }|null} [deps.lectorService=null]
+   * @param {{ resolveSrc: Function }|null} [deps.mediaManager=null]
    */
-  constructor({ store, rootElementId = 'modal-container', lectorService = null }) {
+  constructor({ store, rootElementId = 'modal-container', lectorService = null, mediaManager = null }) {
     this._store = store;
     this._lectorService = lectorService;
+    this._mediaManager = mediaManager;
     this._root = document.getElementById(rootElementId);
     if (!this._root) {
       throw new Error(`ElementInfoOverlay: brak #${rootElementId} w DOM`);
@@ -255,12 +257,35 @@ export class ElementInfoOverlay {
         this._activateTab(this._activeTab);
       }
 
-      // Slot mediów — placeholder gdy entry.media brak/pusty (Phase 16 wypełni realnymi mediami).
+      // Slot mediów — renderuje realne <img> dla wypełnionego entry.media,
+      // z miękką degradacją onerror (404/offline → cichy img.remove, bez console.error — MED-03).
+      // Czyścimy mediaEl na każdym renderze (5 subskrypcji → _render; Pitfall 3 — brak duplikatów <img>).
       if (mediaEl) {
+        mediaEl.textContent = '';
         if (!entry?.media?.length) {
           mediaEl.textContent = pl.modals.elementInfo.mediaPlaceholder;
         } else {
-          mediaEl.textContent = '';
+          entry.media.forEach((item) => {
+            // resolveSrc gdy MediaManager wstrzyknięty, inaczej fallback '/media/' + src (kompatybilność wstecz).
+            const src = this._mediaManager
+              ? this._mediaManager.resolveSrc(item.src)
+              : '/media/' + item.src;
+            // Buduj <img> WYŁĄCZNIE przez createElement + przypisanie właściwości — NIGDY innerHTML (XSS, T-16-08).
+            const img = document.createElement('img');
+            img.alt = item.alt ?? '';
+            img.setAttribute('loading', 'lazy');
+            img.className = 'element-info-overlay__media-img';
+            // onerror PRZED src (Pitfall 7) — cichy remove, bez console.error/throw (MED-03, T-16-09).
+            img.onerror = () => { img.remove(); };
+            img.src = src;
+            mediaEl.appendChild(img);
+            if (item.caption) {
+              const cap = document.createElement('p');
+              cap.className = 'element-info-overlay__media-caption';
+              cap.textContent = item.caption;
+              mediaEl.appendChild(cap);
+            }
+          });
         }
       }
 

@@ -18,7 +18,7 @@ export const elementInfo = Object.freeze({
     sopSteps: 'brak bezpośredniego targetu w SOP — element obserwowany (lampka-gotowosci sygnalizuje osiągnięcie pełnych obrotów).',
     safety: 'NIGDY nie sprzęgać prasy gdy koło nie osiągnęło pełnych obrotów (ryzyko zatrzymania w martwym punkcie i blokady wału). Obracające się koło ma dużą energię kinetyczną — utrzymywać ochronę i nie zbliżać rąk.',
     bhp: 'Koło zamachowe prasy PM-300 magazynuje energię kinetyczną odpowiadającą ~8 kg·m² przy 250 obr/min — kontakt z obracającym się kołem grozi amputacją. Zgodnie z ISO 16092-2:2019 §5.2 oraz OSHA 1910.217(b) sprzęganie jest dozwolone wyłącznie po osiągnięciu pełnych obrotów roboczych (sygnał lampki gotowości). Przed przystąpieniem do serwisu koła bezwzględnie przeprowadzić procedurę LOTO.',
-    media: [],
+    media: [{ src: 'kolo-zamachowe-placeholder.webp', alt: 'Koło zamachowe prasy PM-300 — placeholder' }],
   },
   'hamulec': {
     name: 'Hamulec',
@@ -27,7 +27,7 @@ export const elementInfo = Object.freeze({
     sopSteps: 'zatrzymanie/zacisnij-hamulec — operator zaciska hamulec po rozsprzęgnięciu, by zatrzymać wał w GMP.',
     safety: 'Sprawdzić skuteczność hamowania przed każdą zmianą operatora. Hamulec niesprawny = ryzyko inadvertent stroke (kategoria 4 wg EN ISO 13849). Zużyte okładziny wymienić natychmiast.',
     bhp: 'Hamulec sprzęgłowo-hamulcowy prasy PM-300 musi zatrzymać wał w czasie <0,5 s po rozsprzęgnięciu — zgodnie z ISO 16092-2:2019 §5.3 oraz OSHA 1910.217(b). Niesprawny hamulec kwalifikuje się jako usterka kategorii bezpieczeństwa 4 i wymaga natychmiastowego wyłączenia maszyny z eksploatacji. Okładziny o zużyciu przekraczającym limit producenta należy wymienić przed kolejną zmianą.',
-    media: [],
+    media: [{ src: 'hamulec-placeholder.webp', alt: 'Hamulec sprzęgłowo-hamulcowy PM-300 — placeholder' }],
   },
   'wziernik-smarowania': {
     name: 'Wziernik smarowania',
