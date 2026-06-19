@@ -119,6 +119,11 @@ const FORBIDDEN_PAIRS = [
   // Boundary clean analogicznie do HelpModal: NIE THREE/gsap/training/highlight/floating-ui.
   { file: 'src/ui/ElementInfoOverlay.js',
     mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/'] },
+  // Phase 15 Plan 15-01 (MENU-01/02): StartMenuOverlay — TYLKO DOM + store (DI) + i18n.
+  // Boundary clean analogicznie do ElementInfoOverlay, ale BEZ data/ (nie czyta elementInfo).
+  // NIE THREE/gsap/training/highlight/data/floating-ui.
+  { file: 'src/ui/StartMenuOverlay.js',
+    mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/', '../data/', './data/'] },
   // Phase 11 Plan 11-04 (FUNC-11-05/06): ExamPromptModal — DOM + store + i18n.
   // Boundary clean analogicznie do ConfirmModal: NIE THREE/gsap/training/highlight/floating-ui/state.
   { file: 'src/ui/ExamPromptModal.js',

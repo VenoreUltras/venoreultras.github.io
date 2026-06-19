@@ -72,6 +72,23 @@ export const pl = {
     lectorVoicePickerLabel: 'Głos lektora',
   },
 
+  // Phase 15 (MENU-01/02): ekran startowy wyboru trybu szkolenia + wskaźniki ostatniej sesji.
+  // Stringi konsumowane przez src/ui/StartMenuOverlay.js (textContent) i StatusPanel "Zmień tryb".
+  startMenu: {
+    title:             'Wybierz tryb szkolenia',
+    subtitle:          'PM-300 Trener — Symulator Prasy Mimośrodowej',
+    startButton:       'Rozpocznij',
+    changeModeButton:  'Zmień tryb',
+    freeTitle:         'Swobodny',
+    freeDesc:          'Eksploruj prasę bez oceny — klikaj elementy, oglądaj animacje, czytaj opisy.',
+    naukaTitle:        'Nauka',
+    naukaDesc:         'Przejdź procedurę uruchomienia krok po kroku z podpowiedziami i informacjami BHP.',
+    egzaminTitle:      'Egzamin',
+    egzaminDesc:       'Wykonaj procedurę bez podpowiedzi; wynik oceniany, końcowy quiz BHP.',
+    lastSessionPrefix: 'Ostatnia sesja: ',
+    lastSessionPts:    'pkt',
+  },
+
   // Komunikaty bledow PhysicsEngine (UI-06 enforcement — wczesniej inline w throw)
   physics: {
     paramsNotFinite: 'PhysicsEngine: parametry muszą być skończonymi liczbami',
