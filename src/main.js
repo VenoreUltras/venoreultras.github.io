@@ -24,6 +24,8 @@ import { HelpModal } from './ui/HelpModal.js';
 import { ConfirmModal } from './ui/ConfirmModal.js';
 import { ElementInfoOverlay } from './ui/ElementInfoOverlay.js';
 import { ExamPromptModal } from './ui/ExamPromptModal.js';
+// Phase 17 Plan 17-02 (EXAM-04): QuizController — modal końcowego quizu BHP.
+import { QuizController } from './ui/QuizController.js';
 // Phase 15 Plan 15-02 (MENU-01/02/03): ekran startowy wyboru trybu.
 import { StartMenuOverlay } from './ui/StartMenuOverlay.js';
 // Phase 11 Plan 11-05 (FUNC-11-09..12): ElevenLabs TTS Lektor.
@@ -368,6 +370,11 @@ export class Application {
       scenarios: allScenarios,
     });
 
+    // (d.5) QuizController — Phase 17: modal quizu BHP, wyzwalany przez
+    // activeModal='bhp-quiz' ustawiany przez subscriber finishedAt w trybie egzamin.
+    // Konstruowany PO examPromptModal → disposowany PRZED nim (odwrotna kolejność).
+    this.quizController = new QuizController({ store: this.store });
+
     // (e) TooltipManager — PO RaycastController, by wpiąć onHoverChange callback po-hoc
     this.tooltipManager = new TooltipManager({
       store: this.store,
@@ -502,6 +509,8 @@ export class Application {
     if (this.statusPanel) this.statusPanel.dispose();
     // Phase 5 — odwrotna kolejność tworzenia
     if (this.tooltipManager) this.tooltipManager.dispose();
+    // Phase 17 — odwrotna kolejność tworzenia: quizController PRZED examPromptModal.
+    if (this.quizController) this.quizController.dispose();
     if (this.examPromptModal) this.examPromptModal.dispose();
     if (this.elementInfoOverlay) this.elementInfoOverlay.dispose();
     // Phase 16 Plan 16-02 — odwrotna kolejność tworzenia (po overlay, przed lectorService). No-op dispose.
