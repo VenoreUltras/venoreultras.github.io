@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Rozbudowa edukacyjna i realizm
-status: executing
-last_updated: "2026-06-19T00:00:00.000Z"
-last_activity: 2026-06-19 -- Phase 16 complete (986 tests, bundle 826.62 KB); next Phase 17
+status: Phase 16 executed + code-reviewed (2 warnings fixed); 986 tests green, main bundle 826.62 KB < 850 KB. ATTRIBUTION.txt gate OK (3 files, zero CC-BY-NC).
+last_updated: "2026-06-19T20:32:33.016Z"
+last_activity: 2026-06-19 -- Phase 16 complete (MediaManager + overlay <img> render + placeholder assets)
 progress:
   total_phases: 6
-  completed_phases: 5
-  total_plans: 14
-  completed_plans: 14
-  percent: 83
+  completed_phases: 6
+  total_plans: 18
+  completed_plans: 18
+  percent: 100
 ---
 
 # Project State: PM-300 Trener
@@ -34,12 +34,12 @@ progress:
 
 ## Current Position
 
-Phase: 16 (media-pipeline) — COMPLETE (3/3 plans); next Phase 17 (final)
-Plan: — (16-01 MediaManager + 16-02 overlay media + 16-03 assets/ATTRIBUTION done)
-Status: Phase 16 executed + code-reviewed (2 warnings fixed); 986 tests green, main bundle 826.62 KB < 850 KB. ATTRIBUTION.txt gate OK (3 files, zero CC-BY-NC).
-Last activity: 2026-06-19 -- Phase 16 complete (MediaManager + overlay <img> render + placeholder assets)
+Phase: 17 (quizcontroller-application-wiring) — COMPLETE (4/4 plans); v1.2 milestone gate PASSED
+Plan: 17-04 done (QuizController wired into Application ctor + dispose chain; FINAL milestone gate)
+Status: Phase 17 executed; 1010 tests green (1 skipped, 0 failed), main bundle 834.98 KB < 850 KB. quizController disposed before examPromptModal; getInteractables().size===15 holds. Deferred: human e2e browser smoke (Task 3, non-blocking).
+Last activity: 2026-06-19 -- Phase 17 plan 04 complete (QuizController wiring + v1.2 milestone gate passed)
 
-Progress bar: `[███████████████░░░░░] 5 / 6 phases`
+Progress bar: `[████████████████████] 6 / 6 phases`
 
 ⚠ **Open manual checks (deferred):** Phase 15 start-menu visual; Phase 16 media render/404 graceful — validate via `npm run dev`. Media placeholders (kolo-zamachowe, hamulec, tabliczka) are company-owned PNG-as-webp; swap real CC assets at same URLs + update ATTRIBUTION.txt.
 
@@ -51,9 +51,9 @@ Progress bar: `[███████████████░░░░░] 5 
 |--------|--------|---------|
 | v1.2 requirements mapped | 19/19 | 19/19 ✓ |
 | Phases planned | 6/6 | 6/6 ✓ |
-| Phases complete | 6/6 | 1/6 |
-| Test suite | ≥903 green | 929/929 ✓ (+26 Phase 12) |
-| Bundle | < 850 KB | 817.26 KB ✓ |
+| Phases complete | 6/6 | 6/6 ✓ |
+| Test suite | ≥903 green | 1010/1010 ✓ (1 skipped) |
+| Bundle | < 850 KB | 834.98 KB ✓ |
 | getInteractables() invariant | === 15 | 15 ✓ |
 | FPS target | 60 FPS | maintained from v1.1 |
 

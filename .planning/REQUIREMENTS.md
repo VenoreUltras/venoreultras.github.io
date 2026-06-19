@@ -42,12 +42,12 @@ Wymagania edukacyjno-medialnego rozszerzenia. Numeracja faz kontynuowana z poprz
 - [ ] **EXAM-01**: Pytania kontrolne BHP zdefiniowane jako dane (mix scenariuszowe MC / prawda-fałsz / sekwencja), powiązane z grupami treści EDU-02
 - [ ] **EXAM-02**: Po ukończeniu interakcji 3D w trybie egzamin uruchamia się quiz BHP (`activeModal='bhp-quiz'`, symulacja pauzuje); flow podpięty do istniejącego subskrybenta `finishedAt`
 - [ ] **EXAM-03**: Scoring quizu izolowany w `scoring.quiz` (nie miesza się z `scoring.procedure`); próg zaliczenia 80%; feedback per pytanie z cytatem normy
-- [ ] **EXAM-04**: Wynik egzaminu (interakcja 3D + BHP quiz) ujęty w eksporcie PDF/JSON sesji
+- [x] **EXAM-04**: Wynik egzaminu (interakcja 3D + BHP quiz) ujęty w eksporcie PDF/JSON sesji
 
 ### Testy i regresja (TEST)
 
-- [ ] **TEST-09**: Wszystkie istniejące testy (903 baseline) pozostają zielone + nowe testy dla MENU/OVL/EDU/MED/NAME/EXAM; `getInteractables().size===15` i maszyna stanów trybów bez regresji
-- [ ] **TEST-10**: `npm run build` < 850 KB main bundle — gate w każdej fazie dodającej pliki (projekcja po fslightbox ~822 KB)
+- [x] **TEST-09**: Wszystkie istniejące testy (903 baseline) pozostają zielone + nowe testy dla MENU/OVL/EDU/MED/NAME/EXAM; `getInteractables().size===15` i maszyna stanów trybów bez regresji
+- [x] **TEST-10**: `npm run build` < 850 KB main bundle — gate w każdej fazie dodającej pliki (projekcja po fslightbox ~822 KB)
 
 ## Future Requirements (v1.3+ / P2)
 
@@ -96,9 +96,9 @@ Potwierdzone jako wartościowe, ale poza zakresem v1.2.
 | MED-01 | Phase 16 | Pending |
 | MED-02 | Phase 16 | Pending |
 | MED-03 | Phase 16 | Pending |
-| EXAM-04 | Phase 17 | Pending |
-| TEST-09 | Phase 17 (integration gate, criteria in all phases) | Pending |
-| TEST-10 | Phase 17 (integration gate, criteria in all phases) | Pending |
+| EXAM-04 | Phase 17 | Complete |
+| TEST-09 | Phase 17 (integration gate, criteria in all phases) | Complete |
+| TEST-10 | Phase 17 (integration gate, criteria in all phases) | Complete |
 
 **Coverage:**
 - v1.2 requirements: **19 total** (MENU×3 + OVL×3 + EDU×3 + MED×3 + NAME×1 + EXAM×4 + TEST×2)

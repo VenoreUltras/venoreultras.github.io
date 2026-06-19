@@ -25,7 +25,7 @@
 - [x] **Phase 14: ElementInfoOverlay + Nameplate** — atomiczna zamiana ElementInfoPanel → pełnoekranowy dialog.showModal() + tabliczka tekstura realistyczna
 - [x] **Phase 15: StartMenu** — StartMenuOverlay: ekran wejścia, karty trybów, wskaźniki sesji z localStorage
 - [x] **Phase 16: Media Pipeline** — MediaManager + zasoby CC-licensed w public/media/ + ATTRIBUTION.txt gate
-- [ ] **Phase 17: QuizController + Application Wiring** — QuizController + integracja main.js + eksport PDF/JSON + gate 903+ testów + bundle < 850 KB
+- [x] **Phase 17: QuizController + Application Wiring** — QuizController + integracja main.js + eksport PDF/JSON + gate 903+ testów + bundle < 850 KB (completed 2026-06-19)
 
 ## Phase Details
 
@@ -114,12 +114,12 @@
   3. Pełny smoke test trybów end-to-end: zimny start → menu → swobodny (klik elementu → overlay → media → zakładki → ESC), nauka (SOP → ExamPromptModal), egzamin (SOP → quiz → wynik → export); brak błędów JS w konsoli
   4. `npm test` ≥ 903 testów baseline zielonych + nowe testy dla MENU/OVL/EDU/MED/NAME/EXAM; `getInteractables().size === 15` i maszyna stanów trybów bez regresji (TEST-09)
   5. `npm run build` < 850 KB main bundle — gate końcowy całego milestone v1.2 (TEST-10); dispose chain `Application.dispose()` obejmuje: startMenuOverlay, elementInfoOverlay, mediaManager, quizController bez wycieków
-**Plans:** 4 plans
+**Plans:** 4/4 plans complete
 Plans:
-- [ ] 17-01-PLAN.md — i18n keys (pl.modals.bhpQuiz + pl.pdf BHP) + .bhp-quiz__* CSS + QuizController test scaffold (Wave 0)
-- [ ] 17-02-PLAN.md — QuizController: store-driven BHP quiz modal (lifecycle, mc/tf/sequence, feedback, score screen, dispose)
-- [ ] 17-03-PLAN.md — Export: additive quiz field in JSON + BHP section in PDF
-- [ ] 17-04-PLAN.md — main.js wiring + MILESTONE GATE (suite >=903, getInteractables===15, dispose leak-free, bundle <850 KB, e2e smoke)
+- [x] 17-01-PLAN.md — i18n keys (pl.modals.bhpQuiz + pl.pdf BHP) + .bhp-quiz__* CSS + QuizController test scaffold (Wave 0)
+- [x] 17-02-PLAN.md — QuizController: store-driven BHP quiz modal (lifecycle, mc/tf/sequence, feedback, score screen, dispose)
+- [x] 17-03-PLAN.md — Export: additive quiz field in JSON + BHP section in PDF
+- [x] 17-04-PLAN.md — main.js wiring + MILESTONE GATE (suite >=903, getInteractables===15, dispose leak-free, bundle <850 KB, e2e smoke)
 **UI hint**: yes
 
 ## Progress Table
@@ -131,7 +131,7 @@ Plans:
 | 14. ElementInfoOverlay + Nameplate | 0/3 | Planned | - |
 | 15. StartMenu | 0/? | Not started | - |
 | 16. Media Pipeline | 0/3 | Planned | - |
-| 17. QuizController + Application Wiring | 0/4 | Planned | - |
+| 17. QuizController + Application Wiring | 4/4 | Complete   | 2026-06-19 |
 
 ## Phase Ordering Rationale
 
