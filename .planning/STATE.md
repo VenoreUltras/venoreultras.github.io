@@ -3,19 +3,19 @@ gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Rozbudowa edukacyjna i realizm
 status: executing
-last_updated: "2026-06-13T10:57:40.251Z"
-last_activity: 2026-06-13 -- Phase 12 execution started
+last_updated: "2026-06-19T00:00:00.000Z"
+last_activity: 2026-06-19 -- Phase 12 complete (gate cleared); next Phase 13
 progress:
   total_phases: 6
-  completed_phases: 0
+  completed_phases: 1
   total_plans: 4
-  completed_plans: 0
-  percent: 0
+  completed_plans: 4
+  percent: 17
 ---
 
 # Project State: PM-300 Trener
 
-**Last updated:** 2026-06-13 — Milestone v1.2 roadmap created
+**Last updated:** 2026-06-19 — Phase 12 (data-foundations) complete
 
 ## Project Reference
 
@@ -30,16 +30,16 @@ progress:
 - `.planning/research/v1.2/ARCHITECTURE.md` — dependency-ordered build sequence + integration points
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 12 — data-foundations
+**Current focus:** Phase 13 — store-extensions (next to plan)
 
 ## Current Position
 
-Phase: 12 (data-foundations) — EXECUTING
-Plan: 1 of 4
-Status: Executing Phase 12
-Last activity: 2026-06-13 -- Phase 12 execution started
+Phase: 13 (store-extensions) — NOT STARTED (next)
+Plan: — (Phase 12 complete: 4/4 plans)
+Status: Phase 12 closed; ready to plan Phase 13
+Last activity: 2026-06-19 -- Phase 12 gate cleared (929 tests, 817.26 KB, BHP review accepted as-is)
 
-Progress bar: `[░░░░░░░░░░░░░░░░░░░░] 0 / 6 phases`
+Progress bar: `[███░░░░░░░░░░░░░░░░░] 1 / 6 phases`
 
 ## Performance Metrics
 
@@ -47,9 +47,9 @@ Progress bar: `[░░░░░░░░░░░░░░░░░░░░] 0 
 |--------|--------|---------|
 | v1.2 requirements mapped | 19/19 | 19/19 ✓ |
 | Phases planned | 6/6 | 6/6 ✓ |
-| Phases complete | 6/6 | 0/6 |
-| Test baseline (inherited) | 903 green | 903/903 ✓ |
-| Bundle baseline (inherited) | < 850 KB | 809.94 KB ✓ |
+| Phases complete | 6/6 | 1/6 |
+| Test suite | ≥903 green | 929/929 ✓ (+26 Phase 12) |
+| Bundle | < 850 KB | 817.26 KB ✓ |
 | getInteractables() invariant | === 15 | 15 ✓ |
 | FPS target | 60 FPS | maintained from v1.1 |
 

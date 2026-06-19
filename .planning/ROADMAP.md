@@ -20,7 +20,7 @@
 
 ### Phases
 
-- [ ] **Phase 12: Data Foundations** — elementInfo.js rozszerzony (bhp + media pola dla 15 elementów) + quizData.js + quizSelection.js — fundament danych dla wszystkich konsumentów
+- [x] **Phase 12: Data Foundations** — elementInfo.js rozszerzony (bhp + media pola dla 15 elementów) + quizData.js + quizSelection.js — fundament danych dla wszystkich konsumentów
 - [ ] **Phase 13: Store Extensions** — trainingStore: quiz slice + showStartMenu flag + zmodyfikowany finishedAt subscriber (hybryda 3D+quiz)
 - [ ] **Phase 14: ElementInfoOverlay + Nameplate** — atomiczna zamiana ElementInfoPanel → pełnoekranowy dialog.showModal() + tabliczka tekstura realistyczna
 - [ ] **Phase 15: StartMenu** — StartMenuOverlay: ekran wejścia, karty trybów, wskaźniki sesji z localStorage
@@ -43,7 +43,7 @@
   - [x] 12-01-PLAN.md — Extend elementInfo.js (bhp + media on 15 entries) + tests [W1, EDU-01/02/03]
   - [x] 12-02-PLAN.md — Create quizData.js (≥32 BHP questions, 4 scenarios, mixed types) + tests [W2, EDU-03/EXAM-01]
   - [x] 12-03-PLAN.md — Create quizSelection.js pure fn + tests + boundaries.test.js entries [W2, EXAM-01]
-  - [ ] 12-04-PLAN.md — Phase gate: full suite + bundle <850KB + domain-expert BHP review [W3, EDU-03]
+  - [x] 12-04-PLAN.md — Phase gate: full suite + bundle <850KB + domain-expert BHP review [W3, EDU-03] ✅ 929 tests, 817.26 KB, BHP review accepted as-is
 
 ### Phase 13: Store Extensions
 **Goal:** Zustand store posiada kompletny kontrat API dla menu startowego i egzaminu hybrydowego — UI można budować przeciwko prawdziwemu store od pierwszego dnia.
