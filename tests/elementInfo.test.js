@@ -88,10 +88,21 @@ describe('elementInfo — Phase 12 extensions (EDU-01/EDU-02)', () => {
     }
   });
 
-  it('media jest pustą tablicą w Phase 12 (Phase 16 go wypełni)', () => {
+  it('media: dokładnie 2 wpisy wypełnione (Phase 16 Plan 16-02), reszta pusta', () => {
+    const populated = [];
     for (const [id, entry] of Object.entries(elementInfo)) {
-      expect(entry.media.length, `${id}.media length`).toBe(0);
+      if (entry.media.length > 0) {
+        populated.push(id);
+        // Każdy element media ma poprawny kształt { src, alt }.
+        for (const item of entry.media) {
+          expect(typeof item.src, `${id}.media[].src`).toBe('string');
+          expect(item.src.length, `${id}.media[].src niepuste`).toBeGreaterThan(0);
+          expect(typeof item.alt, `${id}.media[].alt`).toBe('string');
+          expect(item.alt.length, `${id}.media[].alt niepuste`).toBeGreaterThan(0);
+        }
+      }
     }
+    expect(populated.sort()).toEqual(['hamulec', 'kolo-zamachowe']);
   });
 
   it('elementInfo nadal jest Object.frozen po rozszerzeniu', () => {

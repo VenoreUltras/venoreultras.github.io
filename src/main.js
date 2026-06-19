@@ -28,6 +28,8 @@ import { ExamPromptModal } from './ui/ExamPromptModal.js';
 import { StartMenuOverlay } from './ui/StartMenuOverlay.js';
 // Phase 11 Plan 11-05 (FUNC-11-09..12): ElevenLabs TTS Lektor.
 import { LectorService } from './lector/LectorService.js';
+// Phase 16 Plan 16-01/02 (MED-03): MediaManager — resolveSrc DI dla overlay mediów.
+import { MediaManager } from './media/MediaManager.js';
 import { LECTOR_VOICES, DEFAULT_LECTOR_VOICE_ID } from './data/lectorVoices.js';
 // Phase 6 Plan 06-08 — replay + session overlay + persistence + export wrappers.
 import { ReplayEngine } from './replay/ReplayEngine.js';
@@ -308,6 +310,10 @@ export class Application {
     // graceful gdy brak klucza (isAvailable===false → UI fallback disabled+tooltip).
     this.lectorService = new LectorService({ store: this.store });
 
+    // Phase 16 Plan 16-02 (MED-03): MediaManager (stateless, brak store DI) — wstrzykiwany
+    // do ElementInfoOverlay dla resolveSrc mediów. Tworzony PRZED overlay.
+    this.mediaManager = new MediaManager();
+
     this.statusPanel = new StatusPanel({
       store: this.store,
       lectorService: this.lectorService,
@@ -351,6 +357,7 @@ export class Application {
     this.elementInfoOverlay = new ElementInfoOverlay({
       store: this.store,
       lectorService: this.lectorService,
+      mediaManager: this.mediaManager,
     });
 
     // (d.4) ExamPromptModal — Phase 11 Plan 11-04 (FUNC-11-05/06): auto-prompt po SOP done w nauce.
@@ -497,6 +504,8 @@ export class Application {
     if (this.tooltipManager) this.tooltipManager.dispose();
     if (this.examPromptModal) this.examPromptModal.dispose();
     if (this.elementInfoOverlay) this.elementInfoOverlay.dispose();
+    // Phase 16 Plan 16-02 — odwrotna kolejność tworzenia (po overlay, przed lectorService). No-op dispose.
+    if (this.mediaManager) this.mediaManager.dispose?.();
     if (this.confirmModal) this.confirmModal.dispose();
     if (this.helpModal) this.helpModal.dispose();
     if (this.labelOverlay) this.labelOverlay.dispose();              // PRZED sceneSetup.dispose (CSS2DRenderer order)
