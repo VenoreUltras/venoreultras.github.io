@@ -194,7 +194,7 @@ describe('QuizController — finalizacja i ekran wyniku', () => {
     store.setState({ activeModal: 'bhp-quiz' });
   });
 
-  it('odpowiedź na ostatnie pytanie → finishQuiz()', () => {
+  it('ostatnie pytanie: feedback widoczny przed finishQuiz, "Dalej" finalizuje (CR-01)', () => {
     const spy = vi.spyOn(store.getState(), 'finishQuiz');
     // mc
     document.querySelectorAll('.bhp-quiz__option')[0].click();
@@ -202,9 +202,13 @@ describe('QuizController — finalizacja i ekran wyniku', () => {
     // tf
     document.querySelectorAll('.bhp-quiz__option')[1].click();
     document.querySelector('[data-action="next"]').click();
-    // sequence (ostatnie)
+    // sequence (ostatnie) — odpowiedź pokazuje feedback, NIE finalizuje od razu (CR-01).
     document.querySelector('[data-action="confirm-order"]').click();
+    expect(document.querySelector('.bhp-quiz__feedback').hidden).toBe(false);
+    expect(spy).not.toHaveBeenCalled(); // feedback najpierw — finishQuiz dopiero po "Dalej"
 
+    // "Dalej" na ostatnim pytaniu → finishQuiz (ekran wyniku).
+    document.querySelector('[data-action="next"]').click();
     expect(spy).toHaveBeenCalled();
   });
 

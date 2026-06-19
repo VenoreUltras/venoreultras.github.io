@@ -48,9 +48,11 @@ export function buildJsonPayload(state, scenarioTitlePL) {
   // (finishedAt ustawione). Tryb nauka (finishedAt===null) i stany bez quizu pomijają
   // pole — payload pozostaje identyczny jak wcześniej (CRIT-V12-5 izolacja quiz/scoring).
   if (state.quiz?.finishedAt !== null && state.quiz?.finishedAt !== undefined) {
-    const total = state.quiz.questions.length;
+    const total = state.quiz.questions?.length ?? 0; // WR-03: ?. guard na malformed state
+    // WR-02: correct rekonstruowany z zaokrąglonego score (lossy dla skrajnych N).
+    // Akceptowalne na etapie placeholdera; autorytatywny count wymagałby store'owego isCorrect.
     const correct = Math.round((state.quiz.score / 100) * total);
-    const passed = state.quiz.score >= 80; // QUIZ_PASS_THRESHOLD
+    const passed = state.quiz.score >= 80; // QUIZ_PASS_THRESHOLD (literał — exporter bez importu store, patrz 17-RESEARCH)
     result.quiz = {
       score: state.quiz.score,
       correct,

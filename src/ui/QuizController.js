@@ -294,11 +294,10 @@ export class QuizController {
     // Zapisz odpowiedź w store (synchronicznie przesuwa currentIndex).
     this._store.getState().submitAnswer(answer);
 
-    // Jeśli to było ostatnie pytanie — finalizuj od razu (test nie klika "Dalej").
-    const { quiz } = this._store.getState();
-    if (quiz.currentIndex >= quiz.questions.length) {
-      this._store.getState().finishQuiz();
-    }
+    // CR-01: NIE finalizujemy tu nawet dla ostatniego pytania — inaczej finishQuiz()
+    // synchronicznie odpaliłby subscriber finishedAt → _renderScore() i wytarł feedback
+    // ostatniego pytania, zanim user go przeczyta. "Dalej" (_onNext) finalizuje quiz
+    // (gałąź currentIndex >= length → finishQuiz), więc feedback jest najpierw widoczny.
   }
 
   /**
