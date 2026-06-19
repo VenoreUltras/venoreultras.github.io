@@ -547,7 +547,9 @@ This phase does not rename or refactor existing symbols. Omitted.
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
+
+> RESOLVED: score screen shows BHP score only (procedural is in export); root = `#modal-container`; sequence input = click-to-order. Recommendations below are the adopted decisions, implemented in 17-01/17-02.
 
 1. **Score screen "Wynik proceduryczny" source**
    - What we know: `scoring.score` is in the store and used by SessionOverlay
