@@ -58,6 +58,48 @@ describe('JsonExporter.buildJsonPayload — D-Phase6-15', () => {
   });
 });
 
+// EXAM-04 — additive quiz field (BHP). Fixture z ukończonym quizem (finishedAt ustawione).
+const mockStateWithQuiz = {
+  ...mockState,
+  quiz: {
+    questions: [{}, {}, {}, {}, {}], // 5 pytań
+    currentIndex: 5,
+    answers: [0, 1, 2, 0, 1],
+    score: 80,
+    finishedAt: 7000,
+  },
+};
+
+describe('JsonExporter.buildJsonPayload — EXAM-04 quiz (BHP) additive', () => {
+  it('dodaje pole quiz {score, correct, total, passed, finishedAt} gdy quiz ukończony', () => {
+    const r = buildJsonPayload(mockStateWithQuiz, 'Uruchomienie');
+    expect(r.quiz).toBeDefined();
+    expect(r.quiz.score).toBe(80);
+    expect(r.quiz.total).toBe(5);
+    expect(r.quiz.correct).toBe(4); // round((80/100)*5)
+    expect(r.quiz.passed).toBe(true); // 80 >= 80
+    expect(r.quiz.finishedAt).toBe(7000);
+  });
+
+  it('NIE dodaje pola quiz gdy state nie ma quizu (tryb proceduralny)', () => {
+    const r = buildJsonPayload(mockState, 'Uruchomienie');
+    expect(r.quiz).toBeUndefined();
+  });
+
+  it('NIE dodaje pola quiz gdy quiz.finishedAt === null (tryb nauka)', () => {
+    const naukaState = { ...mockState, quiz: { questions: [{}], score: 0, finishedAt: null } };
+    const r = buildJsonPayload(naukaState, 'Uruchomienie');
+    expect(r.quiz).toBeUndefined();
+  });
+
+  it('NIE zmienia istniejących pól version/session/metadata (izolacja)', () => {
+    const r = buildJsonPayload(mockStateWithQuiz, 'Uruchomienie');
+    expect(r.version).toBe('v1');
+    expect(r.session).toBeDefined();
+    expect(r.metadata).toBeDefined();
+  });
+});
+
 describe('JsonExporter.generateFilename', () => {
   it('format pm300_<scenarioId>_<yyyymmdd-hhmm>.json', () => {
     const r = generateFilename('uruchomienie', new Date('2026-05-27T14:30:00Z'));
