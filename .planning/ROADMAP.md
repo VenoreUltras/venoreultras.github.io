@@ -24,7 +24,7 @@
 - [x] **Phase 13: Store Extensions** — trainingStore: quiz slice + showStartMenu flag + zmodyfikowany finishedAt subscriber (hybryda 3D+quiz)
 - [x] **Phase 14: ElementInfoOverlay + Nameplate** — atomiczna zamiana ElementInfoPanel → pełnoekranowy dialog.showModal() + tabliczka tekstura realistyczna
 - [x] **Phase 15: StartMenu** — StartMenuOverlay: ekran wejścia, karty trybów, wskaźniki sesji z localStorage
-- [ ] **Phase 16: Media Pipeline** — MediaManager + zasoby CC-licensed w public/media/ + ATTRIBUTION.txt gate
+- [x] **Phase 16: Media Pipeline** — MediaManager + zasoby CC-licensed w public/media/ + ATTRIBUTION.txt gate
 - [ ] **Phase 17: QuizController + Application Wiring** — QuizController + integracja main.js + eksport PDF/JSON + gate 903+ testów + bundle < 850 KB
 
 ## Phase Details
@@ -99,9 +99,9 @@
   2. `public/media/ATTRIBUTION.txt` istnieje i zawiera wpis dla każdego pliku w `public/media/` z polami: filename, author/source, source URL, license (CC0 / CC BY / CC BY-SA / własność firmy) — zero wpisów CC-BY-NC; plik jest gate'em fazy (faza nie zamknięta bez kompletnego ATTRIBUTION.txt)
   3. Overlay gracefully degraduje gdy zasób niedostępny (404 / brak sieci) — pokazuje alt-text + dostępne zdjęcia + tekst treści; brak błędu JS w konsoli; `MediaManager.validateSrc()` zwraca Promise<boolean>
 **Plans**: 3 plans
-  - [ ] 16-01-PLAN.md — MediaManager.js (resolveSrc + validateSrc fetch DI) + tests + boundaries entry [W1, MED-01/03]
-  - [ ] 16-03-PLAN.md — pure-Python placeholder .webp generator + ATTRIBUTION.txt gate + vite assetsInlineLimit:0 [W1, MED-01/02]
-  - [ ] 16-02-PLAN.md — overlay <img> render + onerror degradation + elementInfo media[] + main.js DI + phase gate [W2, MED-03]
+  - [x] 16-01-PLAN.md — MediaManager.js (resolveSrc + validateSrc fetch DI) + tests + boundaries entry [W1, MED-01/03]
+  - [x] 16-03-PLAN.md — pure-Python placeholder .webp generator + ATTRIBUTION.txt gate + vite assetsInlineLimit:0 [W1, MED-01/02]
+  - [x] 16-02-PLAN.md — overlay <img> render + onerror degradation + elementInfo media[] + main.js DI + phase gate [W2, MED-03]
 **UI hint**: yes
 
 ### Phase 17: QuizController + Application Wiring

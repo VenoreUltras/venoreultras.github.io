@@ -4,13 +4,13 @@ milestone: v1.2
 milestone_name: Rozbudowa edukacyjna i realizm
 status: executing
 last_updated: "2026-06-19T00:00:00.000Z"
-last_activity: 2026-06-19 -- Phase 15 complete (978 tests, bundle 825.34 KB); next Phase 16
+last_activity: 2026-06-19 -- Phase 16 complete (986 tests, bundle 826.62 KB); next Phase 17
 progress:
   total_phases: 6
-  completed_phases: 4
-  total_plans: 11
-  completed_plans: 11
-  percent: 67
+  completed_phases: 5
+  total_plans: 14
+  completed_plans: 14
+  percent: 83
 ---
 
 # Project State: PM-300 Trener
@@ -30,18 +30,18 @@ progress:
 - `.planning/research/v1.2/ARCHITECTURE.md` — dependency-ordered build sequence + integration points
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 16 — Media Pipeline (next)
+**Current focus:** Phase 17 — QuizController + Application Wiring (FINAL phase)
 
 ## Current Position
 
-Phase: 15 (startmenu) — COMPLETE (2/2 plans); next Phase 16
-Plan: — (15-01 overlay + 15-02 wiring done)
-Status: Phase 15 executed + code-reviewed (3 warnings fixed); 978 tests green, main bundle 825.34 KB < 850 KB. Manual visual checkpoint DEFERRED (user to verify start menu via npm run dev).
-Last activity: 2026-06-19 -- Phase 15 complete (StartMenuOverlay + first-launch bootstrap + last-session indicators)
+Phase: 16 (media-pipeline) — COMPLETE (3/3 plans); next Phase 17 (final)
+Plan: — (16-01 MediaManager + 16-02 overlay media + 16-03 assets/ATTRIBUTION done)
+Status: Phase 16 executed + code-reviewed (2 warnings fixed); 986 tests green, main bundle 826.62 KB < 850 KB. ATTRIBUTION.txt gate OK (3 files, zero CC-BY-NC).
+Last activity: 2026-06-19 -- Phase 16 complete (MediaManager + overlay <img> render + placeholder assets)
 
-Progress bar: `[████████████░░░░░░░░] 4 / 6 phases`
+Progress bar: `[███████████████░░░░░] 5 / 6 phases`
 
-⚠ **Open manual check:** Phase 15 start-menu visual verification (menu over running sim, card select, Zmień tryb, last-session indicator) — deferred by user, validate via `npm run dev`.
+⚠ **Open manual checks (deferred):** Phase 15 start-menu visual; Phase 16 media render/404 graceful — validate via `npm run dev`. Media placeholders (kolo-zamachowe, hamulec, tabliczka) are company-owned PNG-as-webp; swap real CC assets at same URLs + update ATTRIBUTION.txt.
 
 **Bundle:** main chunk 818.24 KB / 850 KB (~32 KB headroom). Phase 13's +27 KB was resolved via Vite `manualChunks` — quizData + quizSelection now ship as a separate cacheable `quiz-data` chunk (26 KB), keeping the main bundle near the 817 KB pre-Phase-13 baseline. Full lazy-load (dynamic import) deferred to Phase 17 (QuizController owns question loading). Phase 16 (+fslightbox ~12 KB) now fits.
 
