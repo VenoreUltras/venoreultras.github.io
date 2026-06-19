@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.2
 milestone_name: Rozbudowa edukacyjna i realizm
-status: Phase 16 executed + code-reviewed (2 warnings fixed); 986 tests green, main bundle 826.62 KB < 850 KB. ATTRIBUTION.txt gate OK (3 files, zero CC-BY-NC).
-last_updated: "2026-06-19T20:32:33.016Z"
-last_activity: 2026-06-19 -- Phase 16 complete (MediaManager + overlay <img> render + placeholder assets)
+status: v1.2 COMPLETE — all 6 phases shipped; milestone gate passed (1010 tests, bundle 834.98 KB < 850 KB). Phase 17 code-reviewed (CR-01 blocker fixed).
+last_updated: "2026-06-19T22:40:00.000Z"
+last_activity: 2026-06-19 -- Phase 17 complete + code-review fixes; v1.2 milestone done, ready for audit
 progress:
   total_phases: 6
   completed_phases: 6
@@ -43,7 +43,7 @@ Progress bar: `[████████████████████] 6 
 
 ⚠ **Open manual checks (deferred):** Phase 15 start-menu visual; Phase 16 media render/404 graceful — validate via `npm run dev`. Media placeholders (kolo-zamachowe, hamulec, tabliczka) are company-owned PNG-as-webp; swap real CC assets at same URLs + update ATTRIBUTION.txt.
 
-**Bundle:** main chunk 818.24 KB / 850 KB (~32 KB headroom). Phase 13's +27 KB was resolved via Vite `manualChunks` — quizData + quizSelection now ship as a separate cacheable `quiz-data` chunk (26 KB), keeping the main bundle near the 817 KB pre-Phase-13 baseline. Full lazy-load (dynamic import) deferred to Phase 17 (QuizController owns question loading). Phase 16 (+fslightbox ~12 KB) now fits.
+**Bundle:** main chunk 834.98 KB / 850 KB (~15 KB headroom) at v1.2 close. quizData + quizSelection ship as a separate cacheable `quiz-data` chunk (26 KB) via Vite `manualChunks` (Phase 13); `assetsInlineLimit:0` (Phase 16) keeps media out of the JS bundle. Headroom is now tight — a future milestone should consider dynamic-import lazy-load of quizData if more main-bundle code lands.
 
 ## Performance Metrics
 
