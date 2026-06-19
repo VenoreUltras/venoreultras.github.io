@@ -452,17 +452,15 @@ startScenario: (scenario) => {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **`quiz.finishedAt` subscriber in Phase 13 or Phase 17?**
    - What we know: Phase 13 adds the `quiz` slice including `finishedAt`. Phase 17 builds QuizController which calls `endExam()` after results.
-   - What's unclear: Should Phase 13 add a `quiz.finishedAt` subscriber that auto-calls `endExam()`? Or does Phase 17 QuizController handle that imperatively?
-   - Recommendation: Leave `quiz.finishedAt` subscriber OUT of Phase 13. Phase 17 QuizController will handle post-quiz transition imperatively. Phase 13 only handles the SOP-done → quiz-start transition.
+   - **RESOLVED:** Leave `quiz.finishedAt` subscriber OUT of Phase 13. Phase 17 QuizController handles the post-quiz transition (endExam) imperatively. Phase 13 only handles the SOP-done → quiz-start transition (egzamin subscriber → startQuiz + activeModal='bhp-quiz'). Encoded in 13-02-PLAN.md Task 2 step 5/7.
 
 2. **`answers` array shape for sequence questions**
-   - What we know: `submitAnswer(answer)` pushes one answer per question. For `mc`/`tf` questions, `answer` is a number (`correctIdx`). For `sequence`, `answer` should be `number[]`.
-   - What's unclear: Does the planner need to specify the union type explicitly, or is duck-typing acceptable?
-   - Recommendation: Document in JSDoc that `answer` is `number | number[]`. The `isCorrect` helper handles both.
+   - What we know: `submitAnswer(answer)` pushes one answer per question. For `mc`/`tf` questions, `answer` is a number (`correctIdx`). For `sequence`, `answer` is `number[]`.
+   - **RESOLVED:** Duck-typed `number | number[]`, documented in JSDoc. The `isCorrect` helper compares `answer === question.correctIdx` for mc/tf and `JSON.stringify(answer) === JSON.stringify(question.correctOrder)` for sequence, returning false on type mismatch (threat T-13-03). Encoded in 13-02-PLAN.md Task 2 step 6.
 
 ---
 
