@@ -98,7 +98,10 @@
   1. `src/media/MediaManager.js` serwuje media z `public/media/` — żaden zasób graficzny/video nie jest importowany przez JS (`import img from './...'`); `vite.config.js` zawiera `assetsInlineLimit: 0`; `npm run build` < 850 KB po dodaniu wszystkich zasobów
   2. `public/media/ATTRIBUTION.txt` istnieje i zawiera wpis dla każdego pliku w `public/media/` z polami: filename, author/source, source URL, license (CC0 / CC BY / CC BY-SA / własność firmy) — zero wpisów CC-BY-NC; plik jest gate'em fazy (faza nie zamknięta bez kompletnego ATTRIBUTION.txt)
   3. Overlay gracefully degraduje gdy zasób niedostępny (404 / brak sieci) — pokazuje alt-text + dostępne zdjęcia + tekst treści; brak błędu JS w konsoli; `MediaManager.validateSrc()` zwraca Promise<boolean>
-**Plans**: TBD
+**Plans**: 3 plans
+  - [ ] 16-01-PLAN.md — MediaManager.js (resolveSrc + validateSrc fetch DI) + tests + boundaries entry [W1, MED-01/03]
+  - [ ] 16-03-PLAN.md — pure-Python placeholder .webp generator + ATTRIBUTION.txt gate + vite assetsInlineLimit:0 [W1, MED-01/02]
+  - [ ] 16-02-PLAN.md — overlay <img> render + onerror degradation + elementInfo media[] + main.js DI + phase gate [W2, MED-03]
 **UI hint**: yes
 
 ### Phase 17: QuizController + Application Wiring
@@ -122,7 +125,7 @@
 | 13. Store Extensions | 0/2 | Planned | - |
 | 14. ElementInfoOverlay + Nameplate | 0/3 | Planned | - |
 | 15. StartMenu | 0/? | Not started | - |
-| 16. Media Pipeline | 0/? | Not started | - |
+| 16. Media Pipeline | 0/3 | Planned | - |
 | 17. QuizController + Application Wiring | 0/? | Not started | - |
 
 ## Phase Ordering Rationale
