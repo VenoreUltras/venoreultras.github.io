@@ -57,7 +57,7 @@
   5. Nowe testy: przejście state machine `finishedAt → bhp-quiz → endExam` w trybie egzamin; w trybie nauka `finishedAt → ExamPromptModal` (brak regresji); `npm run build` < 850 KB
 **Plans**: 2 plans
   - [x] 13-01-PLAN.md — showStartMenu flag + showMenu/hideMenu actions [W1, MENU-01/MENU-03] ✅
-  - [x] 13-02-PLAN.md — quiz slice + finishedAt egzamin→bhp-quiz subscriber + threshold [W2, EXAM-02/EXAM-03] ✅ 945 tests, bundle 844.22 KB (⚠ +27 KB: quizData now in main bundle, ~6 KB headroom)
+  - [x] 13-02-PLAN.md — quiz slice + finishedAt egzamin→bhp-quiz subscriber + threshold [W2, EXAM-02/EXAM-03] ✅ 945 tests; main bundle 818.24 KB (quizData split into separate `quiz-data` chunk via Vite manualChunks)
 
 ### Phase 14: ElementInfoOverlay + Nameplate
 **Goal:** Klik elementu otwiera pełnoekranowy lightbox zamiast bocznego panelu — atomiczna migracja z zerem regresji; tabliczka znamionowa ma realistyczną teksturę.

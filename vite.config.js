@@ -22,4 +22,21 @@
 //   },
 // });
 
-export default {};
+// Phase 13: bank pytań BHP (quizData.js ~31 KB tekstu) + selektor trafiają do
+// osobnego chunku `quiz-data`, by nie powiększać głównego bundla (gate < 850 KB).
+// Chunk jest cache'owalny niezależnie od reszty aplikacji. Logika pozostaje
+// synchroniczna (statyczny import z trainingStore) — pełny lazy-load (dynamic
+// import) jest przewidziany w Phase 17, gdy QuizController przejmie ładowanie pytań.
+export default {
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes('src/data/quizData') || id.includes('src/training/quizSelection')) {
+            return 'quiz-data';
+          }
+        },
+      },
+    },
+  },
+};

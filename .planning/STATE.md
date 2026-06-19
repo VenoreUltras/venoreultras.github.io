@@ -36,12 +36,12 @@ progress:
 
 Phase: 13 (store-extensions) — COMPLETE (2/2 plans); next Phase 14
 Plan: — (13-01 + 13-02 done)
-Status: Phase 13 executed; 945 tests green, bundle 844.22 KB < 850 KB
-Last activity: 2026-06-19 -- Phase 13 complete (quiz slice + showStartMenu + egzamin→bhp-quiz subscriber)
+Status: Phase 13 executed; 945 tests green, main bundle 818.24 KB < 850 KB
+Last activity: 2026-06-19 -- Phase 13 complete + bundle code-split (quizData → separate chunk)
 
 Progress bar: `[██████░░░░░░░░░░░░░░] 2 / 6 phases`
 
-⚠ **Bundle watch:** main bundle 844.22 KB / 850 KB hard gate — only ~6 KB headroom. Phase 13 added +27 KB (trainingStore now imports quizSelection→quizData, pulling quiz text into the main chunk). Phase 16 (Media) + Phase 17 (+fslightbox ~12 KB) WILL exceed 850 KB unless quizData is code-split (dynamic import) or the gate is renegotiated. Address in Phase 14/16 planning.
+**Bundle:** main chunk 818.24 KB / 850 KB (~32 KB headroom). Phase 13's +27 KB was resolved via Vite `manualChunks` — quizData + quizSelection now ship as a separate cacheable `quiz-data` chunk (26 KB), keeping the main bundle near the 817 KB pre-Phase-13 baseline. Full lazy-load (dynamic import) deferred to Phase 17 (QuizController owns question loading). Phase 16 (+fslightbox ~12 KB) now fits.
 
 ## Performance Metrics
 
