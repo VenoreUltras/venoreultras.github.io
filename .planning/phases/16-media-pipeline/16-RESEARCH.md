@@ -534,21 +534,16 @@ The comment at Phase 17 dispose chain goal includes `mediaManager` explicitly in
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Which 2-3 entries get placeholder media populated?**
-   - What we know: CONTEXT.md leaves the exact set to Claude's discretion
-   - What's unclear: Whether `tabliczka-znamionowa` should get a media entry (it already has a texture in Phase 14 via THREE.TextureLoader — separate from overlay media slot)
-   - Recommendation: Populate `kolo-zamachowe` and `hamulec` (most visually important safety elements). Optionally `oslona-przednia`. Skip `tabliczka-znamionowa` for media[] (its texture is handled by PressModel separately).
+   - RESOLVED: Populate `kolo-zamachowe` and `hamulec` (most visually important safety elements). Skip `tabliczka-znamionowa` for media[] (its texture is handled by PressModel via THREE.TextureLoader, separate from the overlay media slot). `oslona-przednia` stays `media:[]` and is the Test 2d placeholder-assertion target. Encoded in 16-02 Task 1.
 
 2. **Should `MediaManager.dispose()` exist?**
-   - What we know: Application.dispose() chain in Phase 17 lists `mediaManager` explicitly
-   - What's unclear: Whether Phase 16 should add `dispose()` now (even as no-op) for Phase 17 compatibility
-   - Recommendation: Add a no-op `dispose()` method to `MediaManager` so Phase 17 can call it unconditionally.
+   - RESOLVED: Yes — add a no-op `dispose()` to MediaManager so Phase 17's Application.dispose() chain can call it unconditionally. Encoded in 16-01 Task 1.
 
 3. **Should overlay tests mock MediaManager or use the real instance?**
-   - What we know: Existing tests pass `{ store }` only — no MediaManager. The populated `elementInfo` entries will be used.
-   - Recommendation: New overlay tests pass a fake `{ resolveSrc: f => '/media/' + f }` object. No need to import real MediaManager in overlay tests (DI pattern decouples them).
+   - RESOLVED: New overlay tests pass a fake `{ resolveSrc: f => '/media/' + f }` object (DI decouples them); real MediaManager not imported in overlay tests. Encoded in 16-02 Task 1.
 
 ---
 
