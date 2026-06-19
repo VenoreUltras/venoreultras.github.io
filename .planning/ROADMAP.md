@@ -55,7 +55,9 @@
   3. `finishedAt` subscriber w `trainingStore` (tryb `egzamin`) zamiast wywołać `endExam()` bezpośrednio — wywołuje `startQuiz(questions)` + ustawia `activeModal: 'bhp-quiz'`; tryb `nauka` zachowuje poprzedni flow bez zmian
   4. Próg zaliczenia quizu 80% zakodowany jako stała testowalna; `quiz.score` jest wartością 0–100 (nie booleanem)
   5. Nowe testy: przejście state machine `finishedAt → bhp-quiz → endExam` w trybie egzamin; w trybie nauka `finishedAt → ExamPromptModal` (brak regresji); `npm run build` < 850 KB
-**Plans**: TBD
+**Plans**: 2 plans
+  - [ ] 13-01-PLAN.md — showStartMenu flag + showMenu/hideMenu actions [W1, MENU-01/MENU-03]
+  - [ ] 13-02-PLAN.md — quiz slice + finishedAt egzamin→bhp-quiz subscriber + threshold [W2, EXAM-02/EXAM-03]
 
 ### Phase 14: ElementInfoOverlay + Nameplate
 **Goal:** Klik elementu otwiera pełnoekranowy lightbox zamiast bocznego panelu — atomiczna migracja z zerem regresji; tabliczka znamionowa ma realistyczną teksturę.
@@ -112,7 +114,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 12. Data Foundations | 3/4 | In Progress|  |
-| 13. Store Extensions | 0/? | Not started | - |
+| 13. Store Extensions | 0/2 | Planned | - |
 | 14. ElementInfoOverlay + Nameplate | 0/? | Not started | - |
 | 15. StartMenu | 0/? | Not started | - |
 | 16. Media Pipeline | 0/? | Not started | - |
