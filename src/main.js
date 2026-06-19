@@ -24,6 +24,8 @@ import { HelpModal } from './ui/HelpModal.js';
 import { ConfirmModal } from './ui/ConfirmModal.js';
 import { ElementInfoOverlay } from './ui/ElementInfoOverlay.js';
 import { ExamPromptModal } from './ui/ExamPromptModal.js';
+// Phase 15 Plan 15-02 (MENU-01/02/03): ekran startowy wyboru trybu.
+import { StartMenuOverlay } from './ui/StartMenuOverlay.js';
 // Phase 11 Plan 11-05 (FUNC-11-09..12): ElevenLabs TTS Lektor.
 import { LectorService } from './lector/LectorService.js';
 import { LECTOR_VOICES, DEFAULT_LECTOR_VOICE_ID } from './data/lectorVoices.js';
@@ -51,6 +53,7 @@ const AUDIO_MUTE_KEY = 'pm300:audio-mute:v1';  // D-Phase5-18
 const MODE_KEY = 'pm300:mode:v1';              // Phase 11 Plan 11-01 (FUNC-11-01)
 const LECTOR_ENABLED_KEY = 'pm300:lector:enabled'; // Phase 11 Plan 11-05 (FUNC-11-12)
 const LECTOR_VOICE_KEY   = 'pm300:lector:voice';   // Phase 11 Plan 11-05 (FUNC-11-12)
+const START_MENU_SHOWN_KEY = 'pm300:start-menu-shown:v1'; // Phase 15 MENU-01 (first-launch flag)
 
 export class Application {
   constructor() {
@@ -131,6 +134,17 @@ export class Application {
       lectorEnabled: lectorEnabledInitial,
       lectorVoiceId: lectorVoiceIdInitial,
     });
+
+    // Phase 15 MENU-01: first-launch detection. Brak klucza → pokaż menu; 'true' → pomiń.
+    // HARD CONSTRAINT (Pitfall 1): setState({ showStartMenu }) MUSI poprzedzać konstruktor overlayu
+    // (i innych subscriberów). Silent catch — private mode/quota → false (T-15-04).
+    const startMenuShownInitial = (() => {
+      try { return localStorage.getItem(START_MENU_SHOWN_KEY) === 'true'; }
+      catch { return false; }
+    })();
+    if (!startMenuShownInitial) {
+      this.store.setState({ showStartMenu: true });
+    }
 
     // Persist warstwa — store-side toggleMute/setDifficulty zmienia state, Application
     // zapisuje do localStorage. trainingStore zachowuje boundary clean (D-Phase5-26).
@@ -227,6 +241,24 @@ export class Application {
           },
         };
         savePersistedSession(snapshot, SESSION_KEY);
+      },
+    ));
+
+    // Phase 15 MENU-02: drugi, niezależny subscriber finishedAt — zapis wskaźnika ostatniej sesji
+    // pm300:last-session:<mode>:v1 = JSON { score, date }. ORTHOGONALNY do pm300:session:v1 powyżej.
+    // Phase 17 NIE MOŻE zastąpić tego subscribera (osobna ścieżka per-mode dla kart start menu).
+    // Silent catch — quota / private mode (T-15-05).
+    this._unsubscribers.push(this.store.subscribe(
+      (s) => s.session.finishedAt,
+      (finishedAt) => {
+        if (finishedAt === null) return;
+        const state = this.store.getState();
+        const mode = state.mode; // 'free' | 'nauka' | 'egzamin'
+        const key = `pm300:last-session:${mode}:v1`;
+        const date = new Date(finishedAt).toISOString().slice(0, 10); // 'YYYY-MM-DD'
+        try {
+          localStorage.setItem(key, JSON.stringify({ score: state.scoring.score, date }));
+        } catch { /* quota / private mode — silent */ }
       },
     ));
 
@@ -352,6 +384,10 @@ export class Application {
       pdfExporter: { download: downloadPdf, generateFilename: pdfFilename },
     });
 
+    // Phase 15 (MENU-01/03): StartMenuOverlay — ekran startowy wyboru trybu.
+    // Bootstrap showStartMenu (powyżej) JUŻ wykonany → ctor odczyta poprawną widoczność (Pitfall 1).
+    this.startMenuOverlay = new StartMenuOverlay({ store: this.store });
+
     // Dev-only: expose Application na window dla manualnego QA (D-Phase5-Discretion).
     if (import.meta.env?.DEV) {
       globalThis.__app__ = this;
@@ -444,6 +480,8 @@ export class Application {
       clearTimeout(this._cycleEndHandle);
       this._cycleEndHandle = null;
     }
+    // Phase 15 — odwrotna kolejność tworzenia: StartMenuOverlay disposed jako jeden z pierwszych UI.
+    if (this.startMenuOverlay) this.startMenuOverlay.dispose();
     // Phase 6 — odwrotna kolejność tworzenia: SessionOverlay → ReplayDrawer → ReplayEngine.
     if (this.sessionOverlay) this.sessionOverlay.dispose();
     if (this.replayDrawer) this.replayDrawer.dispose();

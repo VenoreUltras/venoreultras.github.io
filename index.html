@@ -73,6 +73,10 @@
     <!-- Phase 5: kontener modali (HelpModal + ConfirmModal, z-index:300, pointer-events:none) -->
     <div id="modal-container" style="position:fixed;inset:0;z-index:300;pointer-events:none;"></div>
 
+    <!-- Phase 15 (MENU-01): mount point dla StartMenuOverlay. Brak pointer-events:none — menu jest interaktywne.
+         Styling (z-index:200, display toggle) w style.css; musi istnieć w DOM przed new StartMenuOverlay(). -->
+    <div id="start-menu-container"></div>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
