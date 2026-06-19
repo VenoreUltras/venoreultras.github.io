@@ -703,6 +703,82 @@ body.training-complete #status-panel {
   width: min(440px, 92vw);
 }
 
+/* ── ElementInfoOverlay — pełnoekranowy blokujący modal (Phase 14, OVL-01/02/03) ─
+   Zastępuje boczny dymek .element-info-tip. dialog.showModal() + natywny ::backdrop. */
+.modal-card--element-info-overlay {
+  width: min(720px, 92vw);
+  max-height: 80vh;
+}
+
+/* Wiersz zakładek */
+.element-info-overlay__tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.element-info-overlay__tab {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px 8px 0 0;
+  padding: 8px 14px;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.element-info-overlay__tab:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Aktywna zakładka — wskaźnik */
+.element-info-overlay__tab[aria-selected="true"] {
+  color: var(--text-main);
+  border-bottom: 2px solid var(--accent, #4a9eff);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Panele treści — tylko aktywny widoczny */
+.element-info-overlay__panel {
+  display: none;
+}
+
+.element-info-overlay__panel--active {
+  display: block;
+}
+
+.element-info-overlay__text {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Slot mediów */
+.element-info-overlay__media {
+  margin-top: 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Slot lektora w headerze */
+.element-info-overlay__lector-slot {
+  margin-left: auto;
+  margin-right: 8px;
+}
+
+/* ::backdrop — natywne przyciemnienie (brak .modal-overlay div) */
+.modal-card--element-info-overlay::backdrop {
+  background: rgba(11, 15, 25, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
 /* ── Element-info jako mały dymek przy kursorze (FIX) ─────────
    NIE-blokujący tooltip: brak ciemnego tła, scena 3D klikalna.
    <dialog> otwierany przez .show() (non-modal); pozycja ustawiana inline (left/top).

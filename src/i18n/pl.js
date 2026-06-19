@@ -209,6 +209,13 @@ export const pl = {
       lectorTextParameters:  'Parametry:',
       lectorTextSopSteps:    'Powiązane kroki:',
       lectorTextSafety:      'BHP:',
+      // Phase 14 Plan 14-01 (OVL-02): etykiety lektora dla sekcji BHP overlay'a.
+      lectorTextBhp:         'BHP:',
+      // Phase 14 Plan 14-01 (OVL-01/02): etykiety 3 zakładek overlay'a + placeholder mediów.
+      tabBudowa:             'Budowa',
+      tabBhp:                'BHP',
+      tabInstrukcja:         'Instrukcja obsługi',
+      mediaPlaceholder:      'Brak materiałów multimedialnych',
     },
   },
 
