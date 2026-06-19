@@ -226,18 +226,30 @@ describe('ElementInfoOverlay — ESC cancel + backdrop click (Test 4b)', () => {
     expect(store.getState().activeModal).toBeNull();
   });
 
-  it('klik poza dialogiem (poza getBoundingClientRect) → closeModal', () => {
+  it('klik w ::backdrop (target === dialog) → closeModal', () => {
     const dialog = document.querySelector('.modal-card');
-    dialog.getBoundingClientRect = () => ({ left: 100, right: 200, top: 100, bottom: 200 });
-    const evt = new MouseEvent('click', { clientX: 0, clientY: 0, bubbles: true });
+    // Natywny <dialog>: klik w ::backdrop raportuje sam element dialogu jako target.
+    const evt = new MouseEvent('click', { bubbles: true });
+    Object.defineProperty(evt, 'target', { value: dialog });
     dialog.dispatchEvent(evt);
     expect(store.getState().activeModal).toBeNull();
   });
 
-  it('klik wewnątrz dialogu (w getBoundingClientRect) NIE zamyka', () => {
+  it('klik wewnątrz dialogu (target === dziecko) NIE zamyka', () => {
     const dialog = document.querySelector('.modal-card');
-    dialog.getBoundingClientRect = () => ({ left: 100, right: 200, top: 100, bottom: 200 });
-    const evt = new MouseEvent('click', { clientX: 150, clientY: 150, bubbles: true });
+    const body = dialog.querySelector('.modal-card__body') || dialog;
+    // Klik w treść — target to dziecko, nie dialog → brak zamknięcia.
+    const evt = new MouseEvent('click', { bubbles: true });
+    Object.defineProperty(evt, 'target', { value: body });
+    dialog.dispatchEvent(evt);
+    expect(store.getState().activeModal).toBe('element-info');
+  });
+
+  it('aktywacja klawiaturą (syntetyczny click clientX/Y=0 na przycisku) NIE zamyka (HI-01)', () => {
+    const dialog = document.querySelector('.modal-card');
+    const btn = dialog.querySelector('button') || dialog;
+    const evt = new MouseEvent('click', { clientX: 0, clientY: 0, bubbles: true });
+    Object.defineProperty(evt, 'target', { value: btn });
     dialog.dispatchEvent(evt);
     expect(store.getState().activeModal).toBe('element-info');
   });

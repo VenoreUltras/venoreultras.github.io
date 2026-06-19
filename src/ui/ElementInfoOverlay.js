@@ -99,17 +99,19 @@ export class ElementInfoOverlay {
     };
     this._dialog.addEventListener('cancel', this._onCancel);
 
-    // Klik w ::backdrop (poza prostokątem dialogu) → store-driven close.
+    // Klik w ::backdrop → store-driven close.
     this._onBackdropClick = (e) => {
-      // Klik w tab/przycisk wewnątrz dialogu obsłużony niżej — tu tylko backdrop.
+      // Klik w tab/przycisk wewnątrz dialogu obsłużony tu — aktywacja zakładki.
       const tabBtn = e.target.closest && e.target.closest('.element-info-overlay__tab');
       if (tabBtn) {
         this._activateTab(tabBtn.dataset.tab);
         return;
       }
-      const rect = this._dialog.getBoundingClientRect();
-      if (e.clientX < rect.left || e.clientX > rect.right ||
-          e.clientY < rect.top  || e.clientY > rect.bottom) {
+      // Backdrop: natywny <dialog> raportuje SAM element dialogu jako target tylko gdy
+      // kliknięto w obszar ::backdrop. Klik w treść (lub aktywacja klawiaturą Enter/Space,
+      // która generuje syntetyczny click o clientX/Y=0 na przycisku) ma target = dziecko →
+      // NIE zamykamy (HI-01: wcześniejsza matematyka współrzędnych myliła klawiaturę z backdropem).
+      if (e.target === this._dialog) {
         this._store.getState().closeModal();
       }
     };
@@ -159,6 +161,7 @@ export class ElementInfoOverlay {
     const slot = this._dialog.querySelector('.element-info-overlay__lector-slot');
     if (!slot) return;
     slot.textContent = ''; // clear poprzedni render
+    this._currentLectorText = ''; // ME-02: reset, by nie odczytać tekstu poprzedniego elementu
 
     if (!this._lectorService) return;
 
@@ -274,6 +277,7 @@ export class ElementInfoOverlay {
       // Modal zamknięty — wyczyść slot lektora + close().
       const slot = this._dialog.querySelector('.element-info-overlay__lector-slot');
       if (slot) slot.textContent = '';
+      this._currentLectorText = ''; // ME-02: brak utrzymywania tekstu po zamknięciu
 
       if (typeof this._dialog.close === 'function' && this._dialog.hasAttribute('open')) {
         try { this._dialog.close(); } catch { this._dialog.removeAttribute('open'); }
