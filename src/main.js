@@ -22,7 +22,7 @@ import { KeyboardController } from './education/KeyboardController.js';
 import { LabelOverlay } from './education/LabelOverlay.js';
 import { HelpModal } from './ui/HelpModal.js';
 import { ConfirmModal } from './ui/ConfirmModal.js';
-import { ElementInfoPanel } from './ui/ElementInfoPanel.js';
+import { ElementInfoOverlay } from './ui/ElementInfoOverlay.js';
 import { ExamPromptModal } from './ui/ExamPromptModal.js';
 // Phase 11 Plan 11-05 (FUNC-11-09..12): ElevenLabs TTS Lektor.
 import { LectorService } from './lector/LectorService.js';
@@ -268,7 +268,7 @@ export class Application {
     // UI-01/02 (D-Phase4-03/04): DOM panele top bar + lewa kolumna.
     // Zastępują Phase 3 placeholdery (#phase3-step-readout/#phase3-attest-container) i projekcję
     // isRunning → #status-text z UI.updateStatus() (D-Phase4-02/D-Phase4-17).
-    // Phase 11 Plan 11-05 (FUNC-11-09..12): instantiate LectorService PRZED StatusPanel + ElementInfoPanel,
+    // Phase 11 Plan 11-05 (FUNC-11-09..12): instantiate LectorService PRZED StatusPanel + ElementInfoOverlay,
     // by oba mogły dostać go w DI. LectorService czyta VITE_ELEVENLABS_API_KEY domyślnie;
     // graceful gdy brak klucza (isAvailable===false → UI fallback disabled+tooltip).
     this.lectorService = new LectorService({ store: this.store });
@@ -310,10 +310,10 @@ export class Application {
       scenarios: allScenarios,
     });
 
-    // (d.3) ElementInfoPanel — Phase 11 Plan 11-03 (FUNC-11-03/07): edukacyjny panel
+    // (d.3) ElementInfoOverlay — Phase 14 Plan 14-01/02 (OVL-01): edukacyjny overlay
     // dla 15 interactables. Renderuje conditional content per store.mode (free=opis, nauka=4 sekcje).
     // RaycastController wywołuje store.openElementInfo w mode='free'/'nauka' branch.
-    this.elementInfoPanel = new ElementInfoPanel({
+    this.elementInfoOverlay = new ElementInfoOverlay({
       store: this.store,
       lectorService: this.lectorService,
     });
@@ -455,7 +455,7 @@ export class Application {
     // Phase 5 — odwrotna kolejność tworzenia
     if (this.tooltipManager) this.tooltipManager.dispose();
     if (this.examPromptModal) this.examPromptModal.dispose();
-    if (this.elementInfoPanel) this.elementInfoPanel.dispose();
+    if (this.elementInfoOverlay) this.elementInfoOverlay.dispose();
     if (this.confirmModal) this.confirmModal.dispose();
     if (this.helpModal) this.helpModal.dispose();
     if (this.labelOverlay) this.labelOverlay.dispose();              // PRZED sceneSetup.dispose (CSS2DRenderer order)

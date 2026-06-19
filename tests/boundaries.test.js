@@ -115,9 +115,9 @@ const FORBIDDEN_PAIRS = [
   // Zero importów: THREE/gsap/state/training/ui/highlight/RaycastController/education.
   { file: 'src/data/elementInfo.js',
     mustNotImport: ['three', 'gsap', '../state/', '../training/', './state/', './training/', '../RaycastController', '../ui/', './ui/', '../highlight/', './highlight/', '../education/', './education/'] },
-  // Phase 11 Plan 11-03 (FUNC-11-07): ElementInfoPanel — DOM + store + i18n + data.
+  // Phase 14 Plan 14-01/02 (OVL-01): ElementInfoOverlay — DOM + store + i18n + data.
   // Boundary clean analogicznie do HelpModal: NIE THREE/gsap/training/highlight/floating-ui.
-  { file: 'src/ui/ElementInfoPanel.js',
+  { file: 'src/ui/ElementInfoOverlay.js',
     mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/'] },
   // Phase 11 Plan 11-04 (FUNC-11-05/06): ExamPromptModal — DOM + store + i18n.
   // Boundary clean analogicznie do ConfirmModal: NIE THREE/gsap/training/highlight/floating-ui/state.
