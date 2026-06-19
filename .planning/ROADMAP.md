@@ -22,7 +22,7 @@
 
 - [x] **Phase 12: Data Foundations** — elementInfo.js rozszerzony (bhp + media pola dla 15 elementów) + quizData.js + quizSelection.js — fundament danych dla wszystkich konsumentów
 - [x] **Phase 13: Store Extensions** — trainingStore: quiz slice + showStartMenu flag + zmodyfikowany finishedAt subscriber (hybryda 3D+quiz)
-- [ ] **Phase 14: ElementInfoOverlay + Nameplate** — atomiczna zamiana ElementInfoPanel → pełnoekranowy dialog.showModal() + tabliczka tekstura realistyczna
+- [x] **Phase 14: ElementInfoOverlay + Nameplate** — atomiczna zamiana ElementInfoPanel → pełnoekranowy dialog.showModal() + tabliczka tekstura realistyczna
 - [ ] **Phase 15: StartMenu** — StartMenuOverlay: ekran wejścia, karty trybów, wskaźniki sesji z localStorage
 - [ ] **Phase 16: Media Pipeline** — MediaManager + zasoby CC-licensed w public/media/ + ATTRIBUTION.txt gate
 - [ ] **Phase 17: QuizController + Application Wiring** — QuizController + integracja main.js + eksport PDF/JSON + gate 903+ testów + bundle < 850 KB
@@ -70,9 +70,9 @@
   4. Mesh `tabliczka-znamionowa` (#15) wyświetla teksturę załadowaną przez `THREE.TextureLoader` z `colorSpace = THREE.SRGBColorSpace`; zasób w `public/media/tabliczka-znamionowa.webp` (nie bundlowany przez Vite); `dispose()` zwalnia teksturę przez `MaterialRegistry.trackTexture()`; `getInteractables().size === 15` i rotacja kinematyczna bez zmian
   5. `npm run build` < 850 KB
 **Plans**: 3 plans
-  - [ ] 14-01-PLAN.md — ElementInfoOverlay.js (dialog.showModal, 3 tabs, mode visibility, media slot, lector) + migrated test file [W1, OVL-01/02/03]
-  - [ ] 14-02-PLAN.md — Atomic deletion: update boundaries+phase11 refs FIRST, swap main.js wiring, delete ElementInfoPanel.js + test + tip CSS, full-suite gate [W2, OVL-01]
-  - [ ] 14-03-PLAN.md — Nameplate TextureLoader path + pure-Python placeholder webp + NAME-01 test (invariant 15 + KIN intact) [W1, NAME-01]
+  - [x] 14-01-PLAN.md — ElementInfoOverlay.js (dialog.showModal, 3 tabs, mode visibility, media slot, lector) + migrated test file [W1, OVL-01/02/03]
+  - [x] 14-02-PLAN.md — Atomic deletion: update boundaries+phase11 refs FIRST, swap main.js wiring, delete ElementInfoPanel.js + test + tip CSS, full-suite gate [W2, OVL-01]
+  - [x] 14-03-PLAN.md — Nameplate TextureLoader path + pure-Python placeholder webp + NAME-01 test (invariant 15 + KIN intact) [W1, NAME-01]
 **UI hint**: yes
 
 ### Phase 15: StartMenu

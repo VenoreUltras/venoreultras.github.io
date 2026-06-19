@@ -4,13 +4,13 @@ milestone: v1.2
 milestone_name: Rozbudowa edukacyjna i realizm
 status: executing
 last_updated: "2026-06-19T00:00:00.000Z"
-last_activity: 2026-06-19 -- Phase 13 complete (945 tests, bundle 844.22 KB); next Phase 14
+last_activity: 2026-06-19 -- Phase 14 complete (965 tests, bundle 820.34 KB); next Phase 15
 progress:
   total_phases: 6
-  completed_phases: 2
-  total_plans: 6
-  completed_plans: 6
-  percent: 33
+  completed_phases: 3
+  total_plans: 9
+  completed_plans: 9
+  percent: 50
 ---
 
 # Project State: PM-300 Trener
@@ -30,16 +30,16 @@ progress:
 - `.planning/research/v1.2/ARCHITECTURE.md` — dependency-ordered build sequence + integration points
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 14 — ElementInfoOverlay + Nameplate (next to plan; UI phase)
+**Current focus:** Phase 15 — StartMenu (next; UI phase)
 
 ## Current Position
 
-Phase: 13 (store-extensions) — COMPLETE (2/2 plans); next Phase 14
-Plan: — (13-01 + 13-02 done)
-Status: Phase 13 executed; 945 tests green, main bundle 818.24 KB < 850 KB
-Last activity: 2026-06-19 -- Phase 13 complete + bundle code-split (quizData → separate chunk)
+Phase: 14 (elementinfooverlay-nameplate) — COMPLETE (3/3 plans); next Phase 15
+Plan: — (14-01 overlay + 14-02 migration + 14-03 nameplate done)
+Status: Phase 14 executed + code-reviewed (1 high + fixes applied); 965 tests green, main bundle 820.34 KB < 850 KB
+Last activity: 2026-06-19 -- Phase 14 complete (fullscreen overlay migration + nameplate TextureLoader)
 
-Progress bar: `[██████░░░░░░░░░░░░░░] 2 / 6 phases`
+Progress bar: `[█████████░░░░░░░░░░░] 3 / 6 phases`
 
 **Bundle:** main chunk 818.24 KB / 850 KB (~32 KB headroom). Phase 13's +27 KB was resolved via Vite `manualChunks` — quizData + quizSelection now ship as a separate cacheable `quiz-data` chunk (26 KB), keeping the main bundle near the 817 KB pre-Phase-13 baseline. Full lazy-load (dynamic import) deferred to Phase 17 (QuizController owns question loading). Phase 16 (+fslightbox ~12 KB) now fits.
 
