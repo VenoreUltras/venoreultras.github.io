@@ -254,6 +254,12 @@ describe('Application — Phase 4 wiring (Plan 04-06)', () => {
     expect(app.stepPanel).toBeDefined();
   });
 
+  // Phase 17 Plan 17-04 (EXAM-04): QuizController wpięty po examPromptModal.
+  it('konstruktor instantiuje quizController (Phase 17) jako pole po examPromptModal', () => {
+    expect(app.quizController).toBeDefined();
+    expect(app.examPromptModal).toBeDefined();
+  });
+
   it('konstruktor auto-startuje scenariusz uruchomienie (D-Phase3-01)', () => {
     const s = app.store.getState();
     expect(s.activeScenario).toBeDefined();
@@ -474,6 +480,32 @@ describe('Application — Phase 5 wiring (Plan 05-07)', () => {
     expect(order(audioSpy)).toBeLessThan(order(hmSpy));
     // T-04-14: raycast PRZED emissive
     expect(order(raycastSpy)).toBeLessThan(order(emissiveSpy));
+
+    app = null;
+  });
+
+  // W6b: Phase 17 — quizController disposed PRZED examPromptModal (odwrotna kolejność tworzenia)
+  // + leak coverage: startMenuOverlay/elementInfoOverlay/mediaManager/quizController wszystkie disposowane.
+  it('W6b: dispose order — quizController przed examPromptModal; leak coverage startMenu/elementInfo/media/quiz', () => {
+    const quizSpy        = vi.spyOn(app.quizController, 'dispose');
+    const examPromptSpy  = vi.spyOn(app.examPromptModal, 'dispose');
+    const startMenuSpy   = vi.spyOn(app.startMenuOverlay, 'dispose');
+    const elementInfoSpy = vi.spyOn(app.elementInfoOverlay, 'dispose');
+    const mediaSpy       = vi.spyOn(app.mediaManager, 'dispose');
+
+    app.dispose();
+
+    const order = (spy) => spy.mock.invocationCallOrder[0];
+
+    // Odwrotna kolejność tworzenia: quizController PRZED examPromptModal
+    expect(order(quizSpy)).toBeLessThan(order(examPromptSpy));
+
+    // Leak coverage — wszystkie cztery disposowane dokładnie raz
+    expect(quizSpy).toHaveBeenCalledTimes(1);
+    expect(examPromptSpy).toHaveBeenCalledTimes(1);
+    expect(startMenuSpy).toHaveBeenCalledTimes(1);
+    expect(elementInfoSpy).toHaveBeenCalledTimes(1);
+    expect(mediaSpy).toHaveBeenCalledTimes(1);
 
     app = null;
   });
