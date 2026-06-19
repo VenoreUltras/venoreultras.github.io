@@ -21,7 +21,7 @@
 ### Phases
 
 - [x] **Phase 12: Data Foundations** — elementInfo.js rozszerzony (bhp + media pola dla 15 elementów) + quizData.js + quizSelection.js — fundament danych dla wszystkich konsumentów
-- [ ] **Phase 13: Store Extensions** — trainingStore: quiz slice + showStartMenu flag + zmodyfikowany finishedAt subscriber (hybryda 3D+quiz)
+- [x] **Phase 13: Store Extensions** — trainingStore: quiz slice + showStartMenu flag + zmodyfikowany finishedAt subscriber (hybryda 3D+quiz)
 - [ ] **Phase 14: ElementInfoOverlay + Nameplate** — atomiczna zamiana ElementInfoPanel → pełnoekranowy dialog.showModal() + tabliczka tekstura realistyczna
 - [ ] **Phase 15: StartMenu** — StartMenuOverlay: ekran wejścia, karty trybów, wskaźniki sesji z localStorage
 - [ ] **Phase 16: Media Pipeline** — MediaManager + zasoby CC-licensed w public/media/ + ATTRIBUTION.txt gate
@@ -56,8 +56,8 @@
   4. Próg zaliczenia quizu 80% zakodowany jako stała testowalna; `quiz.score` jest wartością 0–100 (nie booleanem)
   5. Nowe testy: przejście state machine `finishedAt → bhp-quiz → endExam` w trybie egzamin; w trybie nauka `finishedAt → ExamPromptModal` (brak regresji); `npm run build` < 850 KB
 **Plans**: 2 plans
-  - [ ] 13-01-PLAN.md — showStartMenu flag + showMenu/hideMenu actions [W1, MENU-01/MENU-03]
-  - [ ] 13-02-PLAN.md — quiz slice + finishedAt egzamin→bhp-quiz subscriber + threshold [W2, EXAM-02/EXAM-03]
+  - [x] 13-01-PLAN.md — showStartMenu flag + showMenu/hideMenu actions [W1, MENU-01/MENU-03] ✅
+  - [x] 13-02-PLAN.md — quiz slice + finishedAt egzamin→bhp-quiz subscriber + threshold [W2, EXAM-02/EXAM-03] ✅ 945 tests, bundle 844.22 KB (⚠ +27 KB: quizData now in main bundle, ~6 KB headroom)
 
 ### Phase 14: ElementInfoOverlay + Nameplate
 **Goal:** Klik elementu otwiera pełnoekranowy lightbox zamiast bocznego panelu — atomiczna migracja z zerem regresji; tabliczka znamionowa ma realistyczną teksturę.

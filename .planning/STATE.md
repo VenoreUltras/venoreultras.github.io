@@ -4,13 +4,13 @@ milestone: v1.2
 milestone_name: Rozbudowa edukacyjna i realizm
 status: executing
 last_updated: "2026-06-19T00:00:00.000Z"
-last_activity: 2026-06-19 -- Phase 12 complete (gate cleared); next Phase 13
+last_activity: 2026-06-19 -- Phase 13 complete (945 tests, bundle 844.22 KB); next Phase 14
 progress:
   total_phases: 6
-  completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
-  percent: 17
+  completed_phases: 2
+  total_plans: 6
+  completed_plans: 6
+  percent: 33
 ---
 
 # Project State: PM-300 Trener
@@ -30,16 +30,18 @@ progress:
 - `.planning/research/v1.2/ARCHITECTURE.md` — dependency-ordered build sequence + integration points
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 13 — store-extensions (next to plan)
+**Current focus:** Phase 14 — ElementInfoOverlay + Nameplate (next to plan; UI phase)
 
 ## Current Position
 
-Phase: 13 (store-extensions) — NOT STARTED (next)
-Plan: — (Phase 12 complete: 4/4 plans)
-Status: Phase 12 closed; ready to plan Phase 13
-Last activity: 2026-06-19 -- Phase 12 gate cleared (929 tests, 817.26 KB, BHP review accepted as-is)
+Phase: 13 (store-extensions) — COMPLETE (2/2 plans); next Phase 14
+Plan: — (13-01 + 13-02 done)
+Status: Phase 13 executed; 945 tests green, bundle 844.22 KB < 850 KB
+Last activity: 2026-06-19 -- Phase 13 complete (quiz slice + showStartMenu + egzamin→bhp-quiz subscriber)
 
-Progress bar: `[███░░░░░░░░░░░░░░░░░] 1 / 6 phases`
+Progress bar: `[██████░░░░░░░░░░░░░░] 2 / 6 phases`
+
+⚠ **Bundle watch:** main bundle 844.22 KB / 850 KB hard gate — only ~6 KB headroom. Phase 13 added +27 KB (trainingStore now imports quizSelection→quizData, pulling quiz text into the main chunk). Phase 16 (Media) + Phase 17 (+fslightbox ~12 KB) WILL exceed 850 KB unless quizData is code-split (dynamic import) or the gate is renegotiated. Address in Phase 14/16 planning.
 
 ## Performance Metrics
 
