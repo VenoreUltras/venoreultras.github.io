@@ -101,6 +101,12 @@ export function createTrainingStore(opts = {}) {
       lectorVoiceId: DEFAULT_LECTOR_VOICE_ID,
       _now: now,
       _spinUpTimerHandle: null,
+      // Phase 13 Plan 13-01 (MENU-01/MENU-03): widoczność start menu (StartMenuOverlay, Phase 15).
+      // Flaga CAŁKOWICIE oddzielna od activeModal — symulacja NIE pauzuje za menu
+      // (predykat pauzy GSAP ticker czyta tylko activeModal !== null, patrz komentarz wyżej).
+      // Default false. Flag NIE jest resetowany przez startScenario — to stan nawigacji
+      // użytkownika, nie scenario state (analogicznie do hcOutlineMode user-preference).
+      showStartMenu: false,
 
       startScenario: (scenario) => {
         set({
@@ -245,6 +251,13 @@ export function createTrainingStore(opts = {}) {
 
       /** Przełącza globalny mute audio. D-Phase5-18. */
       toggleMute: () => set(s => ({ audioMuted: !s.audioMuted })),
+
+      // Phase 13 Plan 13-01 (MENU-03): showMenu/hideMenu — flaga oddzielna od activeModal;
+      // symulacja NIE pauzuje za menu. NIGDY nie dotykają activeModal (ortogonalność).
+      /** Pokazuje start menu (MENU-01). Nie dotyka activeModal — symulacja nie pauzuje. */
+      showMenu: () => set({ showStartMenu: true }),
+      /** Chowa start menu (MENU-01). Nie dotyka activeModal. */
+      hideMenu: () => set({ showStartMenu: false }),
 
       // Phase 11 Plan 11-05 (FUNC-11-09/12): lektor TTS akcje.
       /** Ustawia czy lektor jest włączony (toggle on/off). Persist w Application bootstrap. */
