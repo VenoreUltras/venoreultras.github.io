@@ -69,7 +69,10 @@
   3. Slot mediów (`<div class="element-info-overlay__media">`) gotowy na `entry.media[]` — placeholder renderowany gdy `media` brak; tryb swobodny pokazuje zakładkę Budowa; tryb nauka pokazuje wszystkie 3 zakładki
   4. Mesh `tabliczka-znamionowa` (#15) wyświetla teksturę załadowaną przez `THREE.TextureLoader` z `colorSpace = THREE.SRGBColorSpace`; zasób w `public/media/tabliczka-znamionowa.webp` (nie bundlowany przez Vite); `dispose()` zwalnia teksturę przez `MaterialRegistry.trackTexture()`; `getInteractables().size === 15` i rotacja kinematyczna bez zmian
   5. `npm run build` < 850 KB
-**Plans**: TBD
+**Plans**: 3 plans
+  - [ ] 14-01-PLAN.md — ElementInfoOverlay.js (dialog.showModal, 3 tabs, mode visibility, media slot, lector) + migrated test file [W1, OVL-01/02/03]
+  - [ ] 14-02-PLAN.md — Atomic deletion: update boundaries+phase11 refs FIRST, swap main.js wiring, delete ElementInfoPanel.js + test + tip CSS, full-suite gate [W2, OVL-01]
+  - [ ] 14-03-PLAN.md — Nameplate TextureLoader path + pure-Python placeholder webp + NAME-01 test (invariant 15 + KIN intact) [W1, NAME-01]
 **UI hint**: yes
 
 ### Phase 15: StartMenu
@@ -115,7 +118,7 @@
 |-------|----------------|--------|-----------|
 | 12. Data Foundations | 3/4 | In Progress|  |
 | 13. Store Extensions | 0/2 | Planned | - |
-| 14. ElementInfoOverlay + Nameplate | 0/? | Not started | - |
+| 14. ElementInfoOverlay + Nameplate | 0/3 | Planned | - |
 | 15. StartMenu | 0/? | Not started | - |
 | 16. Media Pipeline | 0/? | Not started | - |
 | 17. QuizController + Application Wiring | 0/? | Not started | - |
