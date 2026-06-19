@@ -234,6 +234,25 @@ export const pl = {
       tabInstrukcja:         'Instrukcja obsługi',
       mediaPlaceholder:      'Brak materiałów multimedialnych',
     },
+    // Phase 17 Plan 17-01 (TEST-09): QuizController — modal końcowego quizu BHP.
+    // Trigger: activeModal='bhp-quiz'. Konsumowane przez QuizController (Plan 17-02) przez textContent.
+    // `closeAria` reużywa pl.modals.closeAria (nie duplikujemy).
+    bhpQuiz: {
+      title:            'Quiz BHP',
+      // Funkcja szablonu — argumenty to liczby (numer pytania / total), nie user input.
+      questionOf:       (cur, total) => `Pytanie ${cur} z ${total}`,
+      btnNext:          'Dalej',
+      btnFinish:        'Zakończ',
+      btnConfirmOrder:  'Zatwierdź kolejność',
+      labelPrawda:      'Prawda',
+      labelFalsz:       'Fałsz',
+      labelNormRef:     'Podstawa prawna:',
+      labelExplanation: 'Wyjaśnienie:',
+      scorePassed:      'Zaliczone',
+      scoreFailed:      'Niezaliczone',
+      // Funkcja szablonu — argument to wynik 0-100 (liczba), nie user input.
+      scoreOf:          (score) => `${score}/100`,
+    },
   },
 
   // D-Phase2-08: Nazwy i opisy komponentów prasy (UI-SPEC §Copywriting Contract).
@@ -365,6 +384,11 @@ export const pl = {
     severityMinor:      'Drobny',
     pageLabel:          (cur, total) => `Strona ${cur} z ${total}`,
     appVersion:         'pm300-trener v1.0',
+    // Phase 17 Plan 17-01 (TEST-09): sekcja BHP w raporcie PDF (PdfExporter — Plan 17-03).
+    sectionBhpResult:   'Wynik BHP',
+    bhpScore:           'Wynik',
+    bhpPassed:          'Zaliczone',
+    bhpFailed:          'Niezaliczone',
   },
 };
 
