@@ -17,17 +17,22 @@ export class MediaManager {
    * @param {Function} [deps.fetchImpl] - fetch override dla testów; domyślnie browser fetch.
    */
   constructor({ fetchImpl } = {}) {
-    this._fetch = fetchImpl ?? globalThis.fetch.bind(globalThis);
+    // WR-02: nie wiążemy globalnego fetcha w ctorze (boot w środowisku bez fetch
+    // by się wywalił). Zapamiętujemy override; brakujący → leniwie sięgamy po globalny.
+    this._fetchImpl = fetchImpl ?? null;
   }
 
   /**
    * Mapuje nazwę pliku na absolutny URL serwowany z public/media/.
    * Czysta, synchroniczna — bez new URL, bez baseUrl helper.
+   * WR-01: basename guard — odcina ścieżki/protokoły (../, //evil, javascript:)
+   * by nawet niezaufany filename nie wyszedł poza /media/.
    * @param {string} filename
    * @returns {string}
    */
   resolveSrc(filename) {
-    return '/media/' + filename;
+    const base = String(filename).replace(/^.*[\\/]/, ''); // tylko ostatni segment
+    return '/media/' + base;
   }
 
   /**
@@ -38,7 +43,10 @@ export class MediaManager {
    * @returns {Promise<boolean>}
    */
   validateSrc(src) {
-    return this._fetch(src, { method: 'HEAD' })
+    // WR-02: leniwe rozwiązanie fetcha — override z ctora albo globalny w czasie wywołania.
+    const fetchImpl = this._fetchImpl ?? (typeof globalThis.fetch === 'function' ? globalThis.fetch.bind(globalThis) : null);
+    if (!fetchImpl) return Promise.resolve(false); // brak fetch → graceful false, brak crashu
+    return fetchImpl(src, { method: 'HEAD' })
       .then((r) => r.ok)
       .catch(() => false);
   }
