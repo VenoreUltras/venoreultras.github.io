@@ -704,7 +704,7 @@ body.training-complete #status-panel {
 }
 
 /* ── ElementInfoOverlay — pełnoekranowy blokujący modal (Phase 14, OVL-01/02/03) ─
-   Zastępuje boczny dymek .element-info-tip. dialog.showModal() + natywny ::backdrop. */
+   Zastępuje wcześniejszy boczny dymek. dialog.showModal() + natywny ::backdrop. */
 .modal-card--element-info-overlay {
   width: min(720px, 92vw);
   max-height: 80vh;
@@ -778,72 +778,6 @@ body.training-complete #status-panel {
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
 }
-
-/* ── Element-info jako mały dymek przy kursorze (FIX) ─────────
-   NIE-blokujący tooltip: brak ciemnego tła, scena 3D klikalna.
-   <dialog> otwierany przez .show() (non-modal); pozycja ustawiana inline (left/top).
-   Zamykany klikiem poza, ✕ lub Esc. */
-.element-info-tip {
-  position: fixed;
-  margin: 0;                 /* nadpisuje UA-centering dla open dialog */
-  inset: auto;
-  width: min(300px, 80vw);
-  max-width: 300px;
-  max-height: min(60vh, 420px);
-  padding: 16px;
-  border-radius: 12px;
-  z-index: 320;              /* nad sceną/UI, pod blokującymi modalami (help/confirm = 300 overlay) */
-  box-shadow: 0 16px 40px -12px rgba(0, 0, 0, 0.7);
-  animation: element-info-tip-in 120ms ease-out;
-}
-
-/* Fallback gdy brak pozycji kliknięcia — wyśrodkuj na ekranie. */
-.element-info-tip--centered {
-  left: 50%;
-  top: 50%;
-  transform: translate(-50%, -50%);
-}
-
-.element-info-tip .modal-card__header {
-  padding-bottom: 10px;
-  margin-bottom: 10px;
-}
-
-.element-info-tip .modal-card__title {
-  font-size: 14px;
-}
-
-/* Mniejszy przycisk zamykania w trybie dymka (zachowuje touch target ≈36px). */
-.element-info-tip .modal-card__close {
-  width: 32px;
-  height: 32px;
-  font-size: 16px;
-}
-
-.element-info-tip .element-info-panel__section {
-  margin-bottom: 8px;
-}
-
-.element-info-tip .element-info-panel__heading {
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  margin-bottom: 2px;
-}
-
-.element-info-tip .element-info-panel__text {
-  font-size: 13px;
-  line-height: 1.5;
-}
-
-@keyframes element-info-tip-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* Centered fallback nie powinien być przesuwany przez keyframe translateY. */
-.element-info-tip--centered { animation: none; }
 
 /* ── Modal card — wewnętrzne sekcje ─────────────────────── */
 .modal-card__header {
