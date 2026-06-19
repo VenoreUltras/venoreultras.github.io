@@ -537,7 +537,15 @@ export function createTrainingStore(opts = {}) {
       if (cur.mode === 'egzamin') {
         // EXAM-02: zamiast endExam() — uruchom quiz BHP zamiast auto-powrotu do 'free'.
         if (!cur.session.scenarioId) return; // guard: Pitfall 2 — null scenarioId
-        const questions = selectQuizQuestions(cur.session.scenarioId);
+        // selectQuizQuestions rzuca dla nierozpoznanego scenarioId (allowlist, T-13-02).
+        // Degradacja graceful: nieznany scenariusz (np. fixtury testowe) → brak quizu,
+        // bez uncaught throw w subscriberze. endExam jest Phase 17 — tu nie wołamy.
+        let questions;
+        try {
+          questions = selectQuizQuestions(cur.session.scenarioId);
+        } catch {
+          return;
+        }
         cur.startQuiz(questions);
         store.setState({ activeModal: 'bhp-quiz' });
       }
