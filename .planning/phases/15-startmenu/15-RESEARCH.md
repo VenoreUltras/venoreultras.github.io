@@ -475,20 +475,16 @@ Step 2.6: SKIPPED — Phase 15 is a pure DOM/CSS/store overlay; no external tool
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Where does "Zmien tryb" button live?**
-   - What we know: CONTEXT.md leaves this to the planner ("w StatusPanel lub HelpModal")
-   - What's unclear: StatusPanel is always visible; HelpModal requires H keypress. StatusPanel placement is more discoverable.
-   - Recommendation: StatusPanel — single visible button call. Add to `StatusPanel._build()` as a new button calling `this._store.getState().showMenu()`. No new wiring needed.
+   - RESOLVED: StatusPanel (always visible, more discoverable than H-gated HelpModal). Button added in `StatusPanel._build()` calling `this._store.getState().showMenu()`. Encoded in 15-02 Task 2.
 
 2. **Should Phase 15 write `pm300:last-session:<mode>:v1`, or defer to Phase 17?**
-   - What we know: CONTEXT.md says "Zapis ostatniej sesji: StartMenu (lub maly subscriber) zapisuje `pm300:last-session:<mode>` przy `session.finishedAt`... Jesli to koliduje z Phase 17 wiring — planer decyduje". Phase 17 does not mention this key.
-   - What's unclear: Phase 17 adds QuizController wiring, which may also use `session.finishedAt`. No collision risk found.
-   - Recommendation: Write in Phase 15 (Application finishedAt subscriber). Phase 17 does not need to touch this key; MENU-02 reads it, and reading must work by Phase 15 gate.
+   - RESOLVED: Write in Phase 15 via an additive `session.finishedAt` subscriber in Application. No Phase 17 collision (Phase 17 does QuizController wiring, does not touch this key). MENU-02 reads it; reading + graceful-absence must work by the Phase 15 gate. Encoded in 15-02 Task 1 (with a comment warning Phase 17 not to replace it).
 
-3. **Should `pm300:start-menu-shown:v1` key name be added to the key registry comment at main.js line 48?**
-   - Recommendation: Yes — add `const START_MENU_SHOWN_KEY = 'pm300:start-menu-shown:v1';` to the key registry block (lines 48–53) for consistency with existing pattern.
+3. **Should `pm300:start-menu-shown:v1` be in the key registry comment at main.js line 48?**
+   - RESOLVED: Yes — add `const START_MENU_SHOWN_KEY = 'pm300:start-menu-shown:v1';` to the key registry block for consistency. Encoded in 15-02 Task 1.
 
 ---
 
