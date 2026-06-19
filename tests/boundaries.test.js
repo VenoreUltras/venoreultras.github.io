@@ -146,6 +146,12 @@ const FORBIDDEN_PAIRS = [
   // Może importować tylko ../data/quizData.js. NIE three/gsap/state/.
   { file: 'src/training/quizSelection.js',
     mustNotImport: ['three', 'gsap', '../state/', './state/'] },
+
+  // Phase 16 Plan 16-01 (MED-01/MED-03): MediaManager — boundary-clean serwis mediów.
+  // Zero importów (fetchImpl DI + browser fetch). resolveSrc/validateSrc/dispose.
+  // NIE three/gsap/state/ui/training/highlight/education.
+  { file: 'src/media/MediaManager.js',
+    mustNotImport: ['three', 'gsap', '../state/', './state/', '../ui/', './ui/', '../training/', './training/', '../highlight/', './highlight/', '../education/', './education/'] },
 ];
 
 /** Regex: static + dynamic imports. Capturuje string specifier. */
