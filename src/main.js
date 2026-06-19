@@ -255,7 +255,10 @@ export class Application {
         const state = this.store.getState();
         const mode = state.mode; // 'free' | 'nauka' | 'egzamin'
         const key = `pm300:last-session:${mode}:v1`;
-        const date = new Date(finishedAt).toISOString().slice(0, 10); // 'YYYY-MM-DD'
+        // WR-03: data w czasie LOKALNYM (toISOString jest w UTC → off-by-one
+        // dla użytkowników poza UTC blisko północy).
+        const d = new Date(finishedAt);
+        const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; // 'YYYY-MM-DD'
         try {
           localStorage.setItem(key, JSON.stringify({ score: state.scoring.score, date }));
         } catch { /* quota / private mode — silent */ }

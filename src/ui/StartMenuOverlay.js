@@ -96,11 +96,20 @@ export class StartMenuOverlay {
 
       card.append(titleEl, descEl, lastEl);
 
-      // Bound handler — referencja dla removeEventListener (dispose).
+      // Bound handlery — referencje dla removeEventListener (dispose).
       const onClick = () => this._selectCard(mode);
+      // WR-02: a11y — karta ma role=button + tabindex, więc musi reagować na
+      // Enter/Spację (klawiaturowy wybór), nie tylko klik myszą.
+      const onKeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+          e.preventDefault();
+          this._selectCard(mode);
+        }
+      };
       card.addEventListener('click', onClick);
+      card.addEventListener('keydown', onKeydown);
       cardsHost.appendChild(card);
-      this._cardEls.set(mode, { card, onClick });
+      this._cardEls.set(mode, { card, onClick, onKeydown });
     }
 
     // Bound handler "Rozpocznij".
@@ -187,6 +196,9 @@ export class StartMenuOverlay {
       const raw = localStorage.getItem(key);
       if (!raw) return null;
       const { score, date } = JSON.parse(raw);
+      // WR-01: walidacja kształtu — JSON poprawny składniowo, ale o złych typach
+      // (np. "42", {}, częściowo zapisany wpis) nie może wyrenderować "undefined/100".
+      if (typeof score !== 'number' || typeof date !== 'string' || !date) return null;
       return `${pl.startMenu.lastSessionPrefix}${score}/100 ${pl.startMenu.lastSessionPts}, ${date}`;
     } catch {
       return null; // uszkodzony JSON / private mode — brak wskaźnika
@@ -200,8 +212,9 @@ export class StartMenuOverlay {
     if (this._disposed) return;
     this._disposed = true;
 
-    for (const { card, onClick } of this._cardEls.values()) {
+    for (const { card, onClick, onKeydown } of this._cardEls.values()) {
       card.removeEventListener('click', onClick);
+      if (onKeydown) card.removeEventListener('keydown', onKeydown);
     }
     this._cardEls.clear();
 
