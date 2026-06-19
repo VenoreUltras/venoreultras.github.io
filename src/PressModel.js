@@ -501,62 +501,44 @@ export class PressModel {
   }
 
   /**
-   * TWIN-10: Tabliczka znamionowa z CanvasTexture renderowaną raz w buildzie.
-   * MeshBasicMaterial (nie Standard) — tekst nie powinien być oświetlony scenicznie.
-   * Texture trackowana osobno w registry dla dispose path (TWIN-11 SC5).
-   *
-   * Treść tabliczki (ASCII-clean — bez polskich diakrytyk zeby boundary scanner (UI-06)
-   * nie failowal na literalach Polish poza i18n/scenarios. CONTEXT deferred ideas: jesli
-   * BHP review wymaga producenta z diatykami, migracja do pl.parts['tabliczka-znamionowa'].canvasContent
-   * (osobny commit, deferred Phase 2)):
-   *   Linia 1: PM-300        (96px, weight 700)
-   *   Linia 2: Nr ser. 2025/0042   (56px, weight 600)
-   *   Linia 3: Producent: Demo Sp. z o.o.  (44px, weight 500)
+   * NAME-01 (Phase 14): Tabliczka znamionowa z zewnetrznym rastrem ladowanym przez
+   * THREE.TextureLoader z public/media/tabliczka-znamionowa.webp (placeholder PNG; Phase 16
+   * podmieni realne zdjecie pod tym samym URL). Wczesniej: proceduralny CanvasTexture (Phase 2).
+   * MeshBasicMaterial (nie Standard) — tabliczka nie powinna byc oswietlona scenicznie;
+   * EmissiveController guarduje na braku pola `emissive`. Texture trackowana osobno w registry
+   * dla dispose path (TWIN-11 SC5).
    */
   _buildNameplate() {
-    // 1. Canvas + 2D context — render once at build time
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 320;
-    const ctx = canvas.getContext('2d');
-
-    // Background — matt silver per UI-SPEC §Typography
-    ctx.fillStyle = '#c8c8c8';
-    ctx.fillRect(0, 0, 512, 320);
-
-    // Border — engraved bezel
-    ctx.strokeStyle = '#3a3a3a';
-    ctx.lineWidth = 4;
-    ctx.strokeRect(2, 2, 508, 316);
-
-    // Text rendering — system-ui font fallback chain (UI-SPEC §Typography)
-    ctx.fillStyle = '#1a1a1a';
-    ctx.textBaseline = 'alphabetic';
-    ctx.imageSmoothingEnabled = true;
-
-    // Line 1 — model
-    ctx.font = 'bold 96px system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText('PM-300', 32, 130);
-
-    // Line 2 — serial
-    ctx.font = '600 56px system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText('Nr ser. 2025/0042', 32, 200);
-
-    // Line 3 — producer (ASCII-clean — boundary scanner UI-06 OK)
-    ctx.font = '500 44px system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-    ctx.fillText('Producent: Demo Sp. z o.o.', 32, 260);
-
-    // 2. Texture — Three.js r0.184 explicit colorSpace dla SRGB-aware rendering
-    const texture = new THREE.CanvasTexture(canvas);
+    // 1. TextureLoader — async load zewnetrznego rastra z public/media/ (NIE bundlowany
+    //    przez Vite; referencja przez root-relative URL — Phase 16 podmieni realny asset).
+    //    Plik to placeholder PNG zapisany pod nazwa .webp (THREE/przegladarka sniffuja
+    //    zawartosc, wiec dekoduja PNG niezaleznie od rozszerzenia).
+    const loader = new THREE.TextureLoader();
+    const texture = loader.load(
+      '/media/tabliczka-znamionowa.webp',
+      (loadedTex) => {
+        // onLoad: ustaw colorSpace SRGB + LinearFilter, wymus re-render (RESEARCH Pattern 3).
+        loadedTex.colorSpace = THREE.SRGBColorSpace;
+        loadedTex.minFilter = THREE.LinearFilter;
+        loadedTex.magFilter = THREE.LinearFilter;
+        material.needsUpdate = true;
+      },
+      undefined,
+      (err) => {
+        // onError: T-14-05 — log ostrzezenia; srebrny fallback color trzyma mesh widoczny.
+        console.warn('[PressModel] tabliczka texture load failed', err);
+      },
+    );
+    // SRGB + LinearFilter ustawione SYNCHRONICZNIE przed pierwszym renderem (RESEARCH A2) —
+    // unikamy zlej gammy zanim async onLoad wystartuje.
     texture.colorSpace = THREE.SRGBColorSpace;
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
-    // Anizotropia: renderer NIE jest dostepny w PressModel ctor — accepting default 1.
-    // RESEARCH otwarte pytanie #1: rekomendacja (b) {maxAnisotropy} — ZACHOWANE NA PHASE 5/QA
-    // ze wzgledu na drobny visual-only wplyw; smoke test nie zalezy od tego.
 
-    // 3. Material + Mesh — MeshBasicMaterial (NIE Standard — tekst nie ma byc oswietlony)
-    const material = new THREE.MeshBasicMaterial({ map: texture });
+    // 2. Material — MeshBasicMaterial (NIE Standard — tabliczka nie ma byc oswietlona
+    //    scenicznie; EmissiveController guarduje na braku pola `emissive`).
+    //    color 0xc8c8c8 = srebrny fallback gdy tekstura jeszcze sie laduje (RESEARCH Pitfall 4).
+    const material = new THREE.MeshBasicMaterial({ map: texture, color: 0xc8c8c8 });
 
     // 4. Geometry per UI-SPEC §Color tabela (0.4 × 0.25 × 0.02)
     const plateGeo = new THREE.BoxGeometry(0.4, 0.25, 0.02);
@@ -580,13 +562,13 @@ export class PressModel {
     this.materialRegistry.trackMaterial('tabliczka-znamionowa', material);
 
     // 7. Register interactable — UWAGA: baseMaterial = null bo mesh JUZ ma swoje material
-    //    (MeshBasicMaterial z CanvasTexture, nie ze sklonowanego MeshStandardMaterial).
+    //    (MeshBasicMaterial z TextureLoader, nie ze sklonowanego MeshStandardMaterial).
     //    _registerInteractable z guard'em na null pominie wywolanie getCloned (plan 02-01 Task 3.4).
     this._registerInteractable({
       mesh: plate,
       id: 'tabliczka-znamionowa',
       kind: 'visual-target',
-      baseMaterial: null, // CanvasTexture path — material juz ustawiony explicit
+      baseMaterial: null, // tekstura ladowana zewnetrznie — material juz ustawiony explicit
     });
   }
 
