@@ -85,7 +85,9 @@
   3. Menu startowe można wywołać ponownie (np. przycisk "Zmień tryb" w UI) bez restartu aplikacji; `showStartMenu` flag przełącza widoczność, symulacja 3D działa normalnie pod menu (GSAP ticker nie pauzuje)
   4. `StartMenuOverlay` nie interferuje z `activeModal` — istniejące modale (help, confirm, element-info, bhp-quiz) działają niezależnie
   5. `npm run build` < 850 KB
-**Plans**: TBD
+**Plans**: 2 plans
+  - [ ] 15-01-PLAN.md — StartMenuOverlay (3 mode cards, display-toggle visibility, last-session indicators) + pl.startMenu + CSS + tests [W1, MENU-01/02]
+  - [ ] 15-02-PLAN.md — Wire into main.js (first-launch bootstrap + last-session subscriber + dispose) + StatusPanel "Zmień tryb" + application.test.js regression fix [W2, MENU-01/02/03]
 **UI hint**: yes
 
 ### Phase 16: Media Pipeline
