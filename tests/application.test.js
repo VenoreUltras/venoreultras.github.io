@@ -73,7 +73,8 @@ describe('Application.dispose() (STATE-03 smoke)', () => {
       '<span id="status-dot"></span><span id="status-text"></span>' +
       '<input id="speed-slider" value="30" />' +
       '<span id="speed-value"></span><button id="btn-toggle"></button>' +
-      '<span id="val-angle"></span><span id="val-displacement"></span>';
+      '<span id="val-angle"></span><span id="val-displacement"></span>' +
+      '<div id="start-menu-container"></div>';
   });
 
   afterEach(() => {
@@ -197,6 +198,7 @@ describe('Application — Phase 4 wiring (Plan 04-06)', () => {
       <div id="status-panel"></div>
       <aside id="step-panel"></aside>
       <div id="modal-container"></div>
+      <div id="start-menu-container"></div>
       <div id="label-overlay-container"></div>
       <div id="session-overlay" style="display:none;"></div>
       <div id="replay-drawer" style="display:none;"></div>
@@ -213,6 +215,7 @@ describe('Application — Phase 4 wiring (Plan 04-06)', () => {
       localStorage.removeItem('pm300:hc-outline:v1');
       localStorage.removeItem('pm300:difficulty:v1');
       localStorage.removeItem('pm300:audio-mute:v1');
+      localStorage.setItem('pm300:start-menu-shown:v1', 'true'); // Phase 15: suppress first-launch menu w testach niezwiązanych
     } catch { /* noop */ }
     // Stub AudioContext dla Phase 5 AudioController (jsdom nie ma Web Audio API)
     vi.stubGlobal('AudioContext', MockAudioContext);
@@ -335,6 +338,7 @@ describe('Application — Phase 5 wiring (Plan 05-07)', () => {
       <div id="status-panel"></div>
       <aside id="step-panel"></aside>
       <div id="modal-container"></div>
+      <div id="start-menu-container"></div>
       <div id="label-overlay-container"></div>
       <div id="session-overlay" style="display:none;"></div>
       <div id="replay-drawer" style="display:none;"></div>
@@ -352,6 +356,7 @@ describe('Application — Phase 5 wiring (Plan 05-07)', () => {
       localStorage.removeItem('pm300:hc-outline:v1');
       localStorage.removeItem('pm300:difficulty:v1');
       localStorage.removeItem('pm300:audio-mute:v1');
+      localStorage.setItem('pm300:start-menu-shown:v1', 'true'); // Phase 15: suppress first-launch menu w testach niezwiązanych
     } catch { /* noop */ }
 
     // Stub AudioContext globalnie (jsdom nie ma Web Audio API)
@@ -490,6 +495,16 @@ describe('Application — Phase 5 wiring (Plan 05-07)', () => {
     expect(app.currentAngle).toBe(angleBeforeModal);
   });
 
+  // Phase 15 (MENU-03): showStartMenu NIE pauzuje tickera — tylko activeModal to robi.
+  // Symulacja musi obracać się POD ekranem startowym (canvas live underneath).
+  it('MENU-03: showStartMenu===true NIE blokuje currentAngle (ticker nie pauzowany)', () => {
+    app._omega = 1; // symulujemy obrót
+    app.store.setState({ activeModal: null, showStartMenu: true });
+    const angleBefore = app.currentAngle;
+    app.simulationTick(100); // 100ms
+    expect(app.currentAngle).toBeGreaterThan(angleBefore);
+  });
+
   // W8: onHoverChange wired — wywołuje tooltipManager.onHoverEnter/onHoverLeave
   it('W8: onHoverChange wired — callback wołający tooltipManager.onHoverEnter i onHoverLeave', () => {
     const enterSpy = vi.spyOn(app.tooltipManager, 'onHoverEnter');
@@ -537,6 +552,7 @@ describe('Application — Phase 6 wiring (Plan 06-08)', () => {
       <div id="status-panel"></div>
       <aside id="step-panel"></aside>
       <div id="modal-container"></div>
+      <div id="start-menu-container"></div>
       <div id="label-overlay-container"></div>
       <div id="session-overlay" style="display:none;"></div>
       <div id="replay-drawer" style="display:none;"></div>
@@ -552,6 +568,7 @@ describe('Application — Phase 6 wiring (Plan 06-08)', () => {
       localStorage.removeItem('pm300:hc-outline:v1');
       localStorage.removeItem('pm300:difficulty:v1');
       localStorage.removeItem('pm300:audio-mute:v1');
+      localStorage.setItem('pm300:start-menu-shown:v1', 'true'); // Phase 15: suppress first-launch menu w testach niezwiązanych
       localStorage.removeItem('pm300:session:v1');
     } catch { /* noop */ }
     vi.stubGlobal('AudioContext', MockAudioContext);
@@ -704,6 +721,7 @@ describe('Application — Phase 10 InteractionAnimator wiring (D-10-06/07/08/09 
       <div id="status-panel"></div>
       <aside id="step-panel"></aside>
       <div id="modal-container"></div>
+      <div id="start-menu-container"></div>
       <div id="label-overlay-container"></div>
       <div id="session-overlay" style="display:none;"></div>
       <div id="replay-drawer" style="display:none;"></div>
@@ -719,6 +737,7 @@ describe('Application — Phase 10 InteractionAnimator wiring (D-10-06/07/08/09 
       localStorage.removeItem('pm300:hc-outline:v1');
       localStorage.removeItem('pm300:difficulty:v1');
       localStorage.removeItem('pm300:audio-mute:v1');
+      localStorage.setItem('pm300:start-menu-shown:v1', 'true'); // Phase 15: suppress first-launch menu w testach niezwiązanych
       localStorage.removeItem('pm300:session:v1');
     } catch { /* noop */ }
     vi.stubGlobal('AudioContext', MockAudioContext);
@@ -815,6 +834,7 @@ describe('Application — Phase 11 mode bootstrap (Plan 11-01)', () => {
       <div id="status-panel"></div>
       <aside id="step-panel"></aside>
       <div id="modal-container"></div>
+      <div id="start-menu-container"></div>
       <div id="label-overlay-container"></div>
       <div id="session-overlay" style="display:none;"></div>
       <div id="replay-drawer" style="display:none;"></div>
@@ -830,6 +850,7 @@ describe('Application — Phase 11 mode bootstrap (Plan 11-01)', () => {
       localStorage.removeItem('pm300:hc-outline:v1');
       localStorage.removeItem('pm300:difficulty:v1');
       localStorage.removeItem('pm300:audio-mute:v1');
+      localStorage.setItem('pm300:start-menu-shown:v1', 'true'); // Phase 15: suppress first-launch menu w testach niezwiązanych
       localStorage.removeItem('pm300:mode:v1');
     } catch { /* noop */ }
     vi.stubGlobal('AudioContext', MockAudioContext);
@@ -898,6 +919,7 @@ describe('Phase 11 status indicator binding (FUNC-11-04)', () => {
       <div id="status-panel"></div>
       <aside id="step-panel"></aside>
       <div id="modal-container"></div>
+      <div id="start-menu-container"></div>
       <div id="label-overlay-container"></div>
       <div id="session-overlay" style="display:none;"></div>
       <div id="replay-drawer" style="display:none;"></div>
@@ -913,6 +935,7 @@ describe('Phase 11 status indicator binding (FUNC-11-04)', () => {
       localStorage.removeItem('pm300:hc-outline:v1');
       localStorage.removeItem('pm300:difficulty:v1');
       localStorage.removeItem('pm300:audio-mute:v1');
+      localStorage.setItem('pm300:start-menu-shown:v1', 'true'); // Phase 15: suppress first-launch menu w testach niezwiązanych
       localStorage.removeItem('pm300:mode:v1');
     } catch { /* noop */ }
     vi.stubGlobal('AudioContext', MockAudioContext);
@@ -972,6 +995,72 @@ describe('Phase 11 status indicator binding (FUNC-11-04)', () => {
     app.ui.isRunning = false;
     app.simulationTick(16);
     expect(document.getElementById('status-text').textContent).toBe('Aktywny');
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Phase 15 Plan 15-02 (MENU-01) — first-launch bootstrap
+// Brak klucza pm300:start-menu-shown:v1 → showStartMenu===true po konstrukcji.
+// ---------------------------------------------------------------------------
+describe('Application — Phase 15 first-launch bootstrap (MENU-01)', () => {
+  let app;
+  let Application;
+
+  beforeEach(async () => {
+    document.body.innerHTML = `
+      <div id="three-canvas"></div>
+      <div id="status-panel"></div>
+      <aside id="step-panel"></aside>
+      <div id="modal-container"></div>
+      <div id="start-menu-container"></div>
+      <div id="label-overlay-container"></div>
+      <div id="session-overlay" style="display:none;"></div>
+      <div id="replay-drawer" style="display:none;"></div>
+      <span id="status-dot" class="dot stopped"></span>
+      <span id="status-text">Zatrzymana</span>
+      <input type="range" id="speed-slider" min="10" max="120" value="30">
+      <span id="speed-value">30</span>
+      <button id="btn-toggle">Start/Stop</button>
+      <span id="val-angle">0</span>
+      <span id="val-displacement">0</span>
+    `;
+    try {
+      localStorage.removeItem('pm300:hc-outline:v1');
+      localStorage.removeItem('pm300:difficulty:v1');
+      localStorage.removeItem('pm300:audio-mute:v1');
+      localStorage.removeItem('pm300:mode:v1');
+      // MENU-01: NIE ustawiamy suppression — symulujemy pierwsze uruchomienie.
+      localStorage.removeItem('pm300:start-menu-shown:v1');
+    } catch { /* noop */ }
+    vi.stubGlobal('AudioContext', MockAudioContext);
+  });
+
+  afterEach(() => {
+    if (app) {
+      try { app.dispose(); } catch { /* już zdisposed */ }
+    }
+    app = null;
+    document.body.innerHTML = '';
+    try { localStorage.removeItem('pm300:start-menu-shown:v1'); } catch { /* noop */ }
+    vi.unstubAllGlobals();
+    vi.clearAllMocks();
+  });
+
+  it('MENU-01a: brak klucza start-menu-shown → showStartMenu===true po new Application()', async () => {
+    vi.resetModules();
+    const mod = await import('../src/main.js');
+    Application = mod.Application;
+    app = new Application();
+    expect(app.store.getState().showStartMenu).toBe(true);
+  });
+
+  it('MENU-01b: klucz start-menu-shown==="true" → showStartMenu pozostaje false (returning visitor)', async () => {
+    localStorage.setItem('pm300:start-menu-shown:v1', 'true');
+    vi.resetModules();
+    const mod = await import('../src/main.js');
+    Application = mod.Application;
+    app = new Application();
+    expect(app.store.getState().showStartMenu).toBe(false);
   });
 });
 

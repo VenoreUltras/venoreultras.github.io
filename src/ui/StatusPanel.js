@@ -80,6 +80,7 @@ export class StatusPanel {
           <button class="status-panel__labels-toggle" type="button" aria-pressed="false"></button>
           <button class="status-panel__labels-mode" type="button" aria-pressed="false"></button>
           <button class="status-panel__hc-toggle" type="button" aria-pressed="false"></button>
+          <button class="status-panel__change-mode" type="button"></button>
           <button class="status-panel__lector-toggle" type="button" aria-pressed="false"></button>
           <select class="status-panel__lector-voice"></select>
         </div>
@@ -94,6 +95,8 @@ export class StatusPanel {
     this._labelsBtn          = this._root.querySelector('.status-panel__labels-toggle');
     this._labelsModeBtn      = this._root.querySelector('.status-panel__labels-mode');
     this._hcBtn              = this._root.querySelector('.status-panel__hc-toggle');
+    // Phase 15 (MENU-03): przycisk re-otwarcia ekranu startowego (Zmień tryb).
+    this._changeModeBtn      = this._root.querySelector('.status-panel__change-mode');
     // Phase 11 Plan 11-05 (FUNC-11-12): lektor toggle + voice picker.
     this._lectorToggleBtn    = this._root.querySelector('.status-panel__lector-toggle');
     this._lectorVoiceSelect  = this._root.querySelector('.status-panel__lector-voice');
@@ -110,6 +113,14 @@ export class StatusPanel {
       this._writePersisted(next);
     };
     this._hcBtn.addEventListener('click', this._onHcClick);
+
+    // Phase 15 (MENU-03): "Zmień tryb" re-otwiera ekran startowy bez reloadu.
+    // showMenu() to akcja na getState() (Zustand action), nie na store bezpośrednio.
+    this._changeModeBtn.textContent = pl.startMenu.changeModeButton;
+    this._onChangeModeClick = () => {
+      this._store.getState().showMenu();
+    };
+    this._changeModeBtn.addEventListener('click', this._onChangeModeClick);
 
     // Phase 11 Plan 11-01 (FUNC-11-02): mode toggle — cyklotwarczo free→nauka→egzamin→free.
     // Używa store.getState().setMode (canonical SSOT z alias projekcją do difficulty/freeRoam).
@@ -314,6 +325,10 @@ export class StatusPanel {
   dispose() {
     if (this._hcBtn && this._onHcClick) {
       this._hcBtn.removeEventListener('click', this._onHcClick);
+    }
+    // Phase 15 (MENU-03): odpięcie listenera "Zmień tryb".
+    if (this._changeModeBtn && this._onChangeModeClick) {
+      this._changeModeBtn.removeEventListener('click', this._onChangeModeClick);
     }
     // D-Phase5-01: odpięcie listenera difficulty toggle (T-05-06-LEAK mitigation, Test S9).
     if (this._difficultyToggleBtn && this._onDifficultyClick) {
