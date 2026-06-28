@@ -242,6 +242,73 @@ describe('QuizController — finalizacja i ekran wyniku', () => {
   });
 });
 
+describe('QUIZ-01 feedback opcji (kolor + ikona + blokada)', () => {
+  beforeEach(() => {
+    store.getState().startQuiz(makeFixture());
+    store.setState({ activeModal: 'bhp-quiz' });
+  });
+
+  it('mc — poprawna odpowiedź: przycisk ma klasę --correct + ikona z aria-label ariaCorrect', () => {
+    const { pl } = require('../src/i18n/pl.js');
+    const opts = document.querySelectorAll('.bhp-quiz__option');
+    opts[0].click(); // correctIdx=0 → poprawna
+
+    expect(opts[0].classList.contains('bhp-quiz__option--correct')).toBe(true);
+    const icon = opts[0].querySelector('.bhp-quiz__option-icon');
+    expect(icon).not.toBeNull();
+    expect(icon.getAttribute('aria-label')).toBe(pl.modals.bhpQuiz.ariaCorrect);
+  });
+
+  it('mc — błędna odpowiedź: wybrany btn ma --incorrect + ikona ariaWrong; btn[correctIdx] ma --correct + ikona ariaCorrect', () => {
+    const { pl } = require('../src/i18n/pl.js');
+    const opts = document.querySelectorAll('.bhp-quiz__option');
+    opts[1].click(); // indeks 1 → zła odpowiedź (correctIdx=0)
+
+    // Wybrany: --incorrect
+    expect(opts[1].classList.contains('bhp-quiz__option--incorrect')).toBe(true);
+    const wrongIcon = opts[1].querySelector('.bhp-quiz__option-icon');
+    expect(wrongIcon).not.toBeNull();
+    expect(wrongIcon.getAttribute('aria-label')).toBe(pl.modals.bhpQuiz.ariaWrong);
+
+    // Poprawna: --correct
+    expect(opts[0].classList.contains('bhp-quiz__option--correct')).toBe(true);
+    const correctIcon = opts[0].querySelector('.bhp-quiz__option-icon');
+    expect(correctIcon).not.toBeNull();
+    expect(correctIcon.getAttribute('aria-label')).toBe(pl.modals.bhpQuiz.ariaCorrect);
+  });
+
+  it('po odpowiedzi wszystkie opcje są zablokowane (disabled === true, aria-disabled="true")', () => {
+    const opts = document.querySelectorAll('.bhp-quiz__option');
+    opts[0].click(); // poprawna
+
+    opts.forEach(btn => {
+      expect(btn.disabled).toBe(true);
+      expect(btn.getAttribute('aria-disabled')).toBe('true');
+    });
+  });
+
+  it('tryb egzamin: te same klasy/ikony co nauka (brak gałęzi trybu)', () => {
+    // nauka (domyślnie) — poprawna odpowiedź daje --correct
+    const opts = document.querySelectorAll('.bhp-quiz__option');
+    opts[0].click();
+    expect(opts[0].classList.contains('bhp-quiz__option--correct')).toBe(true);
+
+    // reset do trybu egzamin
+    controller.dispose();
+    document.body.innerHTML = '<div id="modal-container"></div>';
+    const store2 = createTrainingStore();
+    store2.getState().setDifficulty('egzamin');
+    store2.getState().startQuiz(makeFixture());
+    store2.setState({ activeModal: 'bhp-quiz' });
+    const ctrl2 = new QuizController({ store: store2 });
+
+    const opts2 = document.querySelectorAll('.bhp-quiz__option');
+    opts2[0].click();
+    expect(opts2[0].classList.contains('bhp-quiz__option--correct')).toBe(true);
+    ctrl2.dispose();
+  });
+});
+
 describe('QuizController — IZOLACJA scoring (CRIT-V12-5)', () => {
   it('scoring.score nie jest mutowany przez cały przebieg quizu', () => {
     const before = store.getState().scoring.score;
