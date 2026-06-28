@@ -515,7 +515,8 @@ export class PressModel {
     //    zawartosc, wiec dekoduja PNG niezaleznie od rozszerzenia).
     const loader = new THREE.TextureLoader();
     const texture = loader.load(
-      '/media/tabliczka-znamionowa.webp',
+      // BASE_URL = '/' w dev/test, '/HydraulicPress/' w buildzie (GitHub Pages subpath).
+      import.meta.env.BASE_URL + 'media/tabliczka-znamionowa.webp',
       (loadedTex) => {
         // onLoad: ustaw colorSpace SRGB + LinearFilter, wymus re-render (RESEARCH Pattern 3).
         loadedTex.colorSpace = THREE.SRGBColorSpace;

@@ -32,7 +32,9 @@ export class MediaManager {
    */
   resolveSrc(filename) {
     const base = String(filename).replace(/^.*[\\/]/, ''); // tylko ostatni segment
-    return '/media/' + base;
+    // import.meta.env.BASE_URL = '/' w dev/test, '/HydraulicPress/' w produkcyjnym buildzie
+    // (GitHub Pages subpath). Bez prefiksu media ładowałyby się z roota domeny → 404.
+    return import.meta.env.BASE_URL + 'media/' + base;
   }
 
   /**

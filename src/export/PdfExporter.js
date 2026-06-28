@@ -12,7 +12,8 @@
 import { pl, pluralPL } from '../i18n/pl.js';
 
 const APP_VERSION = 'pm300-trener v1.0';
-const FONT_URL = '/fonts/NotoSans-Regular.ttf';
+// BASE_URL = '/' w dev/test, '/HydraulicPress/' w buildzie (GitHub Pages subpath).
+const FONT_URL = import.meta.env.BASE_URL + 'fonts/NotoSans-Regular.ttf';
 const FONT_VFS_NAME = 'NotoSans-Regular.ttf';
 const FONT_NAME = 'NotoSans';
 

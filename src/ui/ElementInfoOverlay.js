@@ -266,10 +266,11 @@ export class ElementInfoOverlay {
           mediaEl.textContent = pl.modals.elementInfo.mediaPlaceholder;
         } else {
           entry.media.forEach((item) => {
-            // resolveSrc gdy MediaManager wstrzyknięty, inaczej fallback '/media/' + src (kompatybilność wstecz).
+            // resolveSrc gdy MediaManager wstrzyknięty, inaczej fallback (kompatybilność wstecz).
+            // BASE_URL prefiks = '/' w dev/test, '/HydraulicPress/' w buildzie (GitHub Pages subpath).
             const src = this._mediaManager
               ? this._mediaManager.resolveSrc(item.src)
-              : '/media/' + item.src;
+              : import.meta.env.BASE_URL + 'media/' + item.src;
             // Buduj <img> WYŁĄCZNIE przez createElement + przypisanie właściwości — NIGDY innerHTML (XSS, T-16-08).
             const img = document.createElement('img');
             img.alt = item.alt ?? '';

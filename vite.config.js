@@ -27,7 +27,13 @@
 // Chunk jest cache'owalny niezależnie od reszty aplikacji. Logika pozostaje
 // synchroniczna (statyczny import z trainingStore) — pełny lazy-load (dynamic
 // import) jest przewidziany w Phase 17, gdy QuizController przejmie ładowanie pytań.
-export default {
+// GitHub Pages: aplikacja jest serwowana z subpathu https://<user>.github.io/HydraulicPress/.
+// `base` musi pasować do nazwy repo, inaczej assety (JS/CSS) ładują się z roota domeny → 404
+// i UI nie startuje (puste modale). Stosujemy base TYLKO dla `vite build` — dev (`serve`) i
+// testy (vitest, command !== 'build') zostają na '/', więc import.meta.env.BASE_URL = '/'
+// i istniejące asercje testów ('/media/...') nie pękają.
+export default ({ command }) => ({
+  base: command === 'build' ? '/HydraulicPress/' : '/',
   build: {
     // Phase 16 (MED-01): zero = ZADEN asset nie trafia do bundla jako base64.
     // Pliki z public/media/ pozostaja referencjami (osobne pliki), nie inline.
@@ -42,4 +48,4 @@ export default {
       },
     },
   },
-};
+});
