@@ -1,6 +1,6 @@
 # Roadmap: PM-300 Trener
 
-**Current milestone:** v1.2 — Rozbudowa edukacyjna i realizm
+**Current milestone:** v1.3 — Uproszczenie i dopracowanie egzaminu
 **Created:** 2026-05-28
 **Granularity:** Standard
 **Mode:** YOLO + parallel execution
@@ -10,24 +10,73 @@
 - ✅ **[v1.0: SOP Training Layer](milestones/v1.0-ROADMAP.md)** — shipped 2026-05-28 (6 phases, 38 plans, 64/64 requirements, 642/642 tests, 193 commits)
 - ✅ **v1.1: Visual Quality & Press Realism** — shipped 2026-05-28 (3 phases, 13 plans, 18/18 requirements, 777/777 tests, bundle 780.21 KB < 850 KB)
 - ✅ **v1.1 (Phases 10–11)** — shipped 2026-05-29 (2 phases, 9 plans, przezroczysta osłona + łączniki + animacje GSAP klik (10); 3 tryby + wskaźnik statusu + etykiety 15 interactables + lektor ElevenLabs (11); 903 tests, bundle 809.94 KB < 850 KB)
+- ✅ **[v1.2: Rozbudowa edukacyjna i realizm](milestones/v1.2-ROADMAP.md)** — shipped 2026-06-19 (6 phases: 12–17, menu startowe + ElementInfoOverlay + egzamin hybrydowy; 1010 tests, bundle 834.98 KB < 850 KB)
 
-## Active Milestone — v1.2: Rozbudowa edukacyjna i realizm
+## Active Milestone — v1.3: Uproszczenie i dopracowanie egzaminu
 
-**Goal:** Pogłębić warstwę szkoleniową PM-300 — szczegółowe instrukcje obsługi + BHP oparte na realnych materiałach, egzamin sprawdzający tę wiedzę, menu startowe i pełnoekranowy overlay zamiast bocznego panelu.
-**Phase numbering:** Kontynuacja z v1.1 (Phase 12, 13, 14, …)
-**Coverage:** 19/19 requirements mapped (MENU×3 + OVL×3 + EDU×3 + MED×3 + NAME×1 + EXAM×4 + TEST×2)
-**Bundle baseline:** 809.94 KB / 850 KB hard gate (~40 KB headroom; +fslightbox ~12 KB projected → ~822 KB)
+**Goal:** Odchudzić aplikację z funkcji eksportu i zbędnego UI oraz dopracować doświadczenie egzaminu/quizu — jeden spójny wynik (SOP + BHP) i czytelny, natychmiastowy feedback odpowiedzi. Mniejszy bundle po usunięciu jspdf + html2canvas.
+**Phase numbering:** Kontynuacja z v1.2 (Phase 18, 19, 20)
+**Coverage:** 9/9 requirements mapped (CLEAN×3 + EXAM×2 + QUIZ×2 + TEST×2)
+**Bundle baseline:** 834.98 KB — musi ZMALEĆ po tym milestone (usunięcie jspdf + html2canvas)
 
 ### Phases
 
-- [x] **Phase 12: Data Foundations** — elementInfo.js rozszerzony (bhp + media pola dla 15 elementów) + quizData.js + quizSelection.js — fundament danych dla wszystkich konsumentów
-- [x] **Phase 13: Store Extensions** — trainingStore: quiz slice + showStartMenu flag + zmodyfikowany finishedAt subscriber (hybryda 3D+quiz)
-- [x] **Phase 14: ElementInfoOverlay + Nameplate** — atomiczna zamiana ElementInfoPanel → pełnoekranowy dialog.showModal() + tabliczka tekstura realistyczna
-- [x] **Phase 15: StartMenu** — StartMenuOverlay: ekran wejścia, karty trybów, wskaźniki sesji z localStorage
-- [x] **Phase 16: Media Pipeline** — MediaManager + zasoby CC-licensed w public/media/ + ATTRIBUTION.txt gate
-- [x] **Phase 17: QuizController + Application Wiring** — QuizController + integracja main.js + eksport PDF/JSON + gate 903+ testów + bundle < 850 KB (completed 2026-06-19)
+- [ ] **Phase 18: Usunięcia i sprzątanie** — eksport PDF/JSON wycofany (PdfExporter, JsonExporter, jspdf, html2canvas), panel Parametry Układu usunięty z index.html + UI.js, HUM silnika wycięty z AudioController
+- [ ] **Phase 19: Egzamin — połączony wynik i feedback quizu** — jeden łączny wynik procentowy SOP+BHP w SessionOverlay, kolorowy feedback odpowiedzi (zielony/czerwony + ikona), responsywne okno quizu bez ucinania treści
+- [ ] **Phase 20: Gate — testy i bundle** — suite testów odzwierciedla usunięte i dodane funkcje; bundle < 834.98 KB; getInteractables===15; maszyna trybów bez regresji
 
 ## Phase Details
+
+### Phase 18: Usunięcia i sprzątanie
+**Goal:** Aplikacja działa bez kodu eksportu, panelu parametrów i dźwięku HUM — mniejszy bundle, czystszy interfejs, wynik egzaminu prezentowany wyłącznie na ekranie.
+**Depends on:** Phase 17 (shipped baseline)
+**Requirements:** CLEAN-01, CLEAN-02, CLEAN-03, EXAM-06
+**Success Criteria** (what must be TRUE):
+  1. Przyciski "Eksportuj PDF" i "Eksportuj JSON" zniknęły z SessionOverlay; pliki `src/export/PdfExporter.js` i `src/export/JsonExporter.js` nie istnieją w repozytorium; `jspdf` i `html2canvas` usunięte z `package.json` i `package-lock.json` — `npm run build` nie bundluje tych bibliotek
+  2. Blok "Parametry Układu" (`#info-panel`) nie jest renderowany w DOM; `UI.js` nie aktualizuje `val-angle` / `val-displacement`; pętla animacji (GSAP ticker) działa bez regresji kinematycznej — kąt i wychylenie obliczane poprawnie, tylko telemetria widziana przez użytkownika znika
+  3. Dźwięk HUM silnika nie gra podczas pracy prasy w żadnym trybie; dźwięki alarmu (awaria) i confirm (potwierdzenie kroku) brzmią normalnie po odpowiednich zdarzeniach
+  4. Po ukończeniu egzaminu `SessionOverlay` wyświetla wynik wyłącznie na ekranie — brak przycisku eksportu, brak referencji do `/fonts/NotoSans` w kodzie
+**Plans**: TBD
+
+### Phase 19: Egzamin — połączony wynik i feedback quizu
+**Goal:** Uczeń widzi jeden spójny wynik egzaminu i natychmiastowy, dostępny feedback po każdej odpowiedzi — doświadczenie egzaminu jest czytelne dla wszystkich użytkowników.
+**Depends on:** Phase 18
+**Requirements:** EXAM-05, QUIZ-01, QUIZ-02
+**Success Criteria** (what must be TRUE):
+  1. Po ukończeniu egzaminu `SessionOverlay` wyświetla jeden łączny wynik procentowy (SOP + BHP proporcjonalnie do maksimum), np. "Wynik egzaminu: 87%"; obie części widoczne osobno poniżej (np. "SOP: 12/15 kroków | BHP: 7/8 pytań"); scoring proceduryczny i quiz nigdy nie są mieszane w Zustand store
+  2. Po zaznaczeniu odpowiedzi w quizie opcja zmienia kolor: zielony gdy poprawna, czerwony gdy błędna — zarówno w trybie nauka jak i egzamin; obok koloru widoczna ikona symboliczna (np. ✓ / ✗) tak, że użytkownik z daltonizmem może odróżnić odpowiedź bez polegania wyłącznie na kolorze
+  3. Feedback odpowiedzi pojawia się natychmiast po wyborze opcji — bez dodatkowego kliknięcia "Sprawdź" i bez opóźnienia
+  4. Żadne pytanie ani zestaw odpowiedzi nie jest ucięty na rozdzielczości desktop ≥ 1280×720; długa treść przewija się wewnątrz modala quizu zamiast wychodzić poza obszar widoku; modal nie wymaga powiększenia strony ani poziomego scrollowania
+**Plans**: TBD
+**UI hint**: yes
+
+### Phase 20: Gate — testy i bundle
+**Goal:** Suite testów odzwierciedla wycofane i dodane funkcje; bundle jest mniejszy niż baseline v1.2; invarianty systemowe utrzymane.
+**Depends on:** Phase 19
+**Requirements:** TEST-11, TEST-12
+**Success Criteria** (what must be TRUE):
+  1. `npm test` przechodzi: testy PdfExporter, JsonExporter, HUM i info-panel usunięte lub zaktualizowane (brak "pending" dla nieistniejących modułów); nowe testy pokrywają połączoną punktację (EXAM-05) i feedback odpowiedzi (QUIZ-01); `getInteractables().size === 15` i maszyna stanów trybów bez regresji
+  2. `npm run build` przechodzi bez błędów i main bundle jest mniejszy niż 834.98 KB (zysk z usunięcia jspdf + html2canvas); brak referencji do `/fonts/NotoSans` w zbudowanym output; dispose chain `Application.dispose()` obejmuje wszystkie komponenty bez wycieków
+**Plans**: TBD
+
+## Progress Table
+
+| Phase | Plans Complete | Status | Completed |
+|-------|----------------|--------|-----------|
+| 18. Usunięcia i sprzątanie | 0/? | Not started | - |
+| 19. Egzamin — połączony wynik i feedback quizu | 0/? | Not started | - |
+| 20. Gate — testy i bundle | 0/? | Not started | - |
+
+## Phase Ordering Rationale
+
+- **Usunięcia przed dodaniami.** Kod eksportu (PdfExporter, JsonExporter) i panel parametrów są usuwane w pierwszej kolejności — eliminuje martwy kod i zależności przed budową nowych funkcji. Mniejsza baza = mniej ryzyka kolizji.
+- **SessionOverlay czysty przed scoring.** EXAM-05 (połączony wynik) wymaga SessionOverlay bez przycisków eksportu — Phase 18 musi zamknąć CLEAN-01/EXAM-06 zanim Phase 19 rozbuduje ekran wyników.
+- **Feedback quizu razem ze scoring (Phase 19).** QUIZ-01 (kolorowy feedback) i QUIZ-02 (responsywny modal) są zmianami w QuizController/CSS — logicznie tworzą jeden spójny blok UX quizu, budowany po czystym usunięciu eksportu.
+- **Gate ostatni (Phase 20).** Zgodnie z konwencją v1.2 (Phase 17 był gate'em) — weryfikacja suite + bundle po zakończeniu pracy nad kodem; TEST-11/TEST-12 są kryteriami integracyjnymi całego milestone.
+
+---
+
+## Shipped v1.2 Phase Details (archiwum)
 
 ### Phase 12: Data Foundations
 **Goal:** Stabilne kontrakty danych dla wszystkich konsumentów — overlay, quiz, store — zanim cokolwiek zostanie zbudowane.
@@ -39,11 +88,7 @@
   3. Nowy `src/training/quizSelection.js` eksportuje czystą funkcję `selectQuizQuestions(scenarioId)` — bez efektów ubocznych, importowalną z testów i store; pokrywa wszystkie 4 scenariusze
   4. `elementInfo.js` jest backward-compatible: istniejące konsumenty sprawdzające `entry.safety` i `entry.sopSteps` działają bez zmian; nowe pola `bhp` i `media` są opcjonalne dla konsumentów (guard `entry.bhp?.length`)
   5. `npm run build` < 850 KB (dane tekstowe nie trafiają do bundla jako embedded blobs)
-**Plans**: 4 plans
-  - [x] 12-01-PLAN.md — Extend elementInfo.js (bhp + media on 15 entries) + tests [W1, EDU-01/02/03]
-  - [x] 12-02-PLAN.md — Create quizData.js (≥32 BHP questions, 4 scenarios, mixed types) + tests [W2, EDU-03/EXAM-01]
-  - [x] 12-03-PLAN.md — Create quizSelection.js pure fn + tests + boundaries.test.js entries [W2, EXAM-01]
-  - [x] 12-04-PLAN.md — Phase gate: full suite + bundle <850KB + domain-expert BHP review [W3, EDU-03] ✅ 929 tests, 817.26 KB, BHP review accepted as-is
+**Plans**: 4/4 complete
 
 ### Phase 13: Store Extensions
 **Goal:** Zustand store posiada kompletny kontrat API dla menu startowego i egzaminu hybrydowego — UI można budować przeciwko prawdziwemu store od pierwszego dnia.
@@ -54,91 +99,33 @@
   2. `trainingStore` zawiera izolowany `quiz` slice (`questions`, `currentIndex`, `answers`, `score`, `finishedAt`) z akcjami `startQuiz/submitAnswer/finishQuiz` — `submitAnswer()` nigdy nie dotyka `scoring.score`
   3. `finishedAt` subscriber w `trainingStore` (tryb `egzamin`) zamiast wywołać `endExam()` bezpośrednio — wywołuje `startQuiz(questions)` + ustawia `activeModal: 'bhp-quiz'`; tryb `nauka` zachowuje poprzedni flow bez zmian
   4. Próg zaliczenia quizu 80% zakodowany jako stała testowalna; `quiz.score` jest wartością 0–100 (nie booleanem)
-  5. Nowe testy: przejście state machine `finishedAt → bhp-quiz → endExam` w trybie egzamin; w trybie nauka `finishedAt → ExamPromptModal` (brak regresji); `npm run build` < 850 KB
-**Plans**: 2 plans
-  - [x] 13-01-PLAN.md — showStartMenu flag + showMenu/hideMenu actions [W1, MENU-01/MENU-03] ✅
-  - [x] 13-02-PLAN.md — quiz slice + finishedAt egzamin→bhp-quiz subscriber + threshold [W2, EXAM-02/EXAM-03] ✅ 945 tests; main bundle 818.24 KB (quizData split into separate `quiz-data` chunk via Vite manualChunks)
+  5. Nowe testy: przejście state machine `finishedAt → bhp-quiz → endExam` w trybie egzamin; `npm run build` < 850 KB
+**Plans**: 2/2 complete
 
 ### Phase 14: ElementInfoOverlay + Nameplate
 **Goal:** Klik elementu otwiera pełnoekranowy lightbox zamiast bocznego panelu — atomiczna migracja z zerem regresji; tabliczka znamionowa ma realistyczną teksturę.
 **Depends on:** Phase 13
 **Requirements:** OVL-01, OVL-02, OVL-03, NAME-01
-**Success Criteria** (what must be TRUE):
-  1. Atomiczna migracja: `ElementInfoPanel.js` usunięty, `ElementInfoOverlay.js` przejął kontrakt store (`activeModal==='element-info'`, `openElementInfo`, `_elementInfoMeshId`), DI lektora (`{store, lectorService}`) i przycisk `🔊` — wszystkie 903 testy przechodzą bez modyfikacji logiki biznesowej; `getInteractables().size === 15` zachowane
-  2. Overlay otwiera się przez `dialog.showModal()` — natywny focus-trap, zamykanie klawiszem ESC i kliknięciem poza; wyświetla treść w 3 tabach (Budowa / BHP / Instrukcja obsługi) z polami `function`, `bhp`, `sopSteps` z `elementInfo.js`
-  3. Slot mediów (`<div class="element-info-overlay__media">`) gotowy na `entry.media[]` — placeholder renderowany gdy `media` brak; tryb swobodny pokazuje zakładkę Budowa; tryb nauka pokazuje wszystkie 3 zakładki
-  4. Mesh `tabliczka-znamionowa` (#15) wyświetla teksturę załadowaną przez `THREE.TextureLoader` z `colorSpace = THREE.SRGBColorSpace`; zasób w `public/media/tabliczka-znamionowa.webp` (nie bundlowany przez Vite); `dispose()` zwalnia teksturę przez `MaterialRegistry.trackTexture()`; `getInteractables().size === 15` i rotacja kinematyczna bez zmian
-  5. `npm run build` < 850 KB
-**Plans**: 3 plans
-  - [x] 14-01-PLAN.md — ElementInfoOverlay.js (dialog.showModal, 3 tabs, mode visibility, media slot, lector) + migrated test file [W1, OVL-01/02/03]
-  - [x] 14-02-PLAN.md — Atomic deletion: update boundaries+phase11 refs FIRST, swap main.js wiring, delete ElementInfoPanel.js + test + tip CSS, full-suite gate [W2, OVL-01]
-  - [x] 14-03-PLAN.md — Nameplate TextureLoader path + pure-Python placeholder webp + NAME-01 test (invariant 15 + KIN intact) [W1, NAME-01]
+**Plans**: 3/3 complete
 **UI hint**: yes
 
 ### Phase 15: StartMenu
 **Goal:** Aplikacja wita użytkownika ekranem wyboru trybu — nie wchodzi bezpośrednio do symulatora; można przełączyć tryb bez restartu.
 **Depends on:** Phase 13
 **Requirements:** MENU-01, MENU-02, MENU-03
-**Success Criteria** (what must be TRUE):
-  1. Przy pierwszym uruchomieniu (brak klucza `pm300:start-menu-shown:v1` w localStorage) wyświetla się ekran startowy z 3 kartami trybów (Swobodny / Nauka / Egzamin) z krótkim opisem każdego; po wybraniu trybu i kliknięciu "Rozpocznij" menu znika i symulator staje się aktywny
-  2. Karty trybów pokazują wskaźnik ostatniej sesji ("Ostatnia sesja: 85/100 pkt, 2026-06-12") gdy `localStorage` zawiera dane poprzedniej sesji dla tego trybu; gdy brak danych — karta bez wskaźnika (nie błąd)
-  3. Menu startowe można wywołać ponownie (np. przycisk "Zmień tryb" w UI) bez restartu aplikacji; `showStartMenu` flag przełącza widoczność, symulacja 3D działa normalnie pod menu (GSAP ticker nie pauzuje)
-  4. `StartMenuOverlay` nie interferuje z `activeModal` — istniejące modale (help, confirm, element-info, bhp-quiz) działają niezależnie
-  5. `npm run build` < 850 KB
-**Plans**: 2 plans
-  - [x] 15-01-PLAN.md — StartMenuOverlay (3 mode cards, display-toggle visibility, last-session indicators) + pl.startMenu + CSS + tests [W1, MENU-01/02]
-  - [x] 15-02-PLAN.md — Wire into main.js (first-launch bootstrap + last-session subscriber + dispose) + StatusPanel "Zmień tryb" + application.test.js regression fix [W2, MENU-01/02/03]
+**Plans**: 2/2 complete
 **UI hint**: yes
 
 ### Phase 16: Media Pipeline
 **Goal:** Realne zdjęcia prasy mimośrodowej wyświetlają się w overlayach bez naruszania budżetu bundla ani licencji.
 **Depends on:** Phase 14
 **Requirements:** MED-01, MED-02, MED-03
-**Success Criteria** (what must be TRUE):
-  1. `src/media/MediaManager.js` serwuje media z `public/media/` — żaden zasób graficzny/video nie jest importowany przez JS (`import img from './...'`); `vite.config.js` zawiera `assetsInlineLimit: 0`; `npm run build` < 850 KB po dodaniu wszystkich zasobów
-  2. `public/media/ATTRIBUTION.txt` istnieje i zawiera wpis dla każdego pliku w `public/media/` z polami: filename, author/source, source URL, license (CC0 / CC BY / CC BY-SA / własność firmy) — zero wpisów CC-BY-NC; plik jest gate'em fazy (faza nie zamknięta bez kompletnego ATTRIBUTION.txt)
-  3. Overlay gracefully degraduje gdy zasób niedostępny (404 / brak sieci) — pokazuje alt-text + dostępne zdjęcia + tekst treści; brak błędu JS w konsoli; `MediaManager.validateSrc()` zwraca Promise<boolean>
-**Plans**: 3 plans
-  - [x] 16-01-PLAN.md — MediaManager.js (resolveSrc + validateSrc fetch DI) + tests + boundaries entry [W1, MED-01/03]
-  - [x] 16-03-PLAN.md — pure-Python placeholder .webp generator + ATTRIBUTION.txt gate + vite assetsInlineLimit:0 [W1, MED-01/02]
-  - [x] 16-02-PLAN.md — overlay <img> render + onerror degradation + elementInfo media[] + main.js DI + phase gate [W2, MED-03]
+**Plans**: 3/3 complete
 **UI hint**: yes
 
 ### Phase 17: QuizController + Application Wiring
 **Goal:** Egzamin hybrydowy działa end-to-end — 3D interakcja + quiz BHP → wspólny wynik w PDF/JSON; wszystkie komponenty v1.2 zintegrowane w Application.
 **Depends on:** Phase 16, Phase 15
 **Requirements:** EXAM-04, TEST-09, TEST-10
-**Success Criteria** (what must be TRUE):
-  1. Po ukończeniu SOP w trybie egzamin (`finishedAt` set) wyświetla się `QuizController` (`activeModal='bhp-quiz'`): pytania BHP z opcjami MC/T-F/sekwencja, per-pytanie feedback z cytatem normy po błędnej odpowiedzi, ekran końcowy z wynikiem; 80% próg zaliczenia; symulacja 3D pauzuje podczas quizu (natywne zachowanie `activeModal !== null`)
-  2. Eksport PDF/JSON zawiera oddzielne sekcje "Wynik proceduryczny: X/Y kroków" i "Wynik BHP: A/B pytań" — scoring.quiz nigdy nie modyfikuje scoring.procedure; import JSON/PDF weryfikowalny manualnie
-  3. Pełny smoke test trybów end-to-end: zimny start → menu → swobodny (klik elementu → overlay → media → zakładki → ESC), nauka (SOP → ExamPromptModal), egzamin (SOP → quiz → wynik → export); brak błędów JS w konsoli
-  4. `npm test` ≥ 903 testów baseline zielonych + nowe testy dla MENU/OVL/EDU/MED/NAME/EXAM; `getInteractables().size === 15` i maszyna stanów trybów bez regresji (TEST-09)
-  5. `npm run build` < 850 KB main bundle — gate końcowy całego milestone v1.2 (TEST-10); dispose chain `Application.dispose()` obejmuje: startMenuOverlay, elementInfoOverlay, mediaManager, quizController bez wycieków
-**Plans:** 4/4 plans complete
-Plans:
-- [x] 17-01-PLAN.md — i18n keys (pl.modals.bhpQuiz + pl.pdf BHP) + .bhp-quiz__* CSS + QuizController test scaffold (Wave 0)
-- [x] 17-02-PLAN.md — QuizController: store-driven BHP quiz modal (lifecycle, mc/tf/sequence, feedback, score screen, dispose)
-- [x] 17-03-PLAN.md — Export: additive quiz field in JSON + BHP section in PDF
-- [x] 17-04-PLAN.md — main.js wiring + MILESTONE GATE (suite >=903, getInteractables===15, dispose leak-free, bundle <850 KB, e2e smoke)
+**Plans:** 4/4 complete (completed 2026-06-19)
 **UI hint**: yes
-
-## Progress Table
-
-| Phase | Plans Complete | Status | Completed |
-|-------|----------------|--------|-----------|
-| 12. Data Foundations | 3/4 | In Progress|  |
-| 13. Store Extensions | 0/2 | Planned | - |
-| 14. ElementInfoOverlay + Nameplate | 0/3 | Planned | - |
-| 15. StartMenu | 0/? | Not started | - |
-| 16. Media Pipeline | 0/3 | Planned | - |
-| 17. QuizController + Application Wiring | 4/4 | Complete   | 2026-06-19 |
-
-## Phase Ordering Rationale
-
-- **Dane przed konsumentami.** `elementInfo.js` i `quizData.js` definiują kontrakty, od których zależą overlay, quiz i store. Zmiana kształtu danych po zbudowaniu konsumentów powoduje kaskadowy rework.
-- **Store przed UI.** Akcje Zustand są API wywoływanym przez klasy UI. Budowanie UI przeciwko prawdziwemu store od początku wyłapuje błędy integracji wcześnie.
-- **Overlay przed media.** Shell overlaya można zbudować i przetestować z placeholder danymi. Dodawanie prawdziwych zdjęć i treści BHP to oddzielne zadanie, które nie powinno blokować pracy strukturalnej.
-- **Nameplate razem z Overlayem (Phase 14).** `_buildNameplate()` to izolowana zmiana w `PressModel.js` bez zależności między-komponentowych — można ją równolegle do budowy overlaya; zmapowana do tej samej fazy żeby zamknąć wszystkie ryzyka regresji naraz (903 testów green gate).
-- **StartMenu po Store (Phase 15).** `StartMenuOverlay` jest wyłącznie konsumentem store (Phase 13). Może być budowane równolegle z Phase 14 (overlay nie zależy od menu); w planie serialnym idzie po Phase 14 żeby skrócić ryzyko integracji.
-- **Media po Overlayzie (Phase 16).** `MediaManager` potrzebuje gotowego slotu mediów w overlayzie (Phase 14) i pola `elementInfo.media` (Phase 12). Sourcing zasobów CC-licensed to zadanie treściowe oddzielne od pracy strukturalnej — nie powinno blokować faz kodu.
-- **Wiring ostatni (Phase 17).** Dotykanie `src/main.js` ryzykuje destabilizację działającej aplikacji; zostaje jako finalny krok integracji po tym, jak wszystkie komponenty są indywidualnie zielone.

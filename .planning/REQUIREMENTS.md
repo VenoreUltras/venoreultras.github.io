@@ -62,13 +62,22 @@ Potwierdzone jako wartościowe, ale poza zakresem v1.3.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| _(uzupełni roadmapper)_ | — | Pending |
+| CLEAN-01 | Phase 18 | Pending |
+| CLEAN-02 | Phase 18 | Pending |
+| CLEAN-03 | Phase 18 | Pending |
+| EXAM-06 | Phase 18 | Pending |
+| EXAM-05 | Phase 19 | Pending |
+| QUIZ-01 | Phase 19 | Pending |
+| QUIZ-02 | Phase 19 | Pending |
+| TEST-11 | Phase 20 | Pending |
+| TEST-12 | Phase 20 | Pending |
 
 **Coverage:**
 - v1.3 requirements: **9 total** (CLEAN×3 + EXAM×2 + QUIZ×2 + TEST×2)
 
   _(EXAM-06 jest wymaganiem walidacyjnym domykającym inwalidację EXAM-04 z v1.2)_
-- Mapped to phases: 0/9 (przed roadmapem)
+- Mapped to phases: **9/9** ✓
 
 ---
 *Requirements defined: 2026-06-28*
+*Traceability filled: 2026-06-28*

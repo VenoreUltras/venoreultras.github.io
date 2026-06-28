@@ -3,10 +3,10 @@ gsd_state_version: 1.0
 milestone: v1.3
 milestone_name: Uproszczenie i dopracowanie egzaminu
 status: planning
-last_updated: "2026-06-28T09:28:33.215Z"
+last_updated: "2026-06-28"
 last_activity: 2026-06-28
 progress:
-  total_phases: 0
+  total_phases: 3
   completed_phases: 0
   total_plans: 0
   completed_plans: 0
@@ -15,7 +15,7 @@ progress:
 
 # Project State: PM-300 Trener
 
-**Last updated:** 2026-06-19 — Phase 12 (data-foundations) complete
+**Last updated:** 2026-06-28 — Roadmap v1.3 created (Phases 18–20)
 
 ## Project Reference
 
@@ -24,90 +24,79 @@ progress:
 **Project documents:**
 
 - `.planning/PROJECT.md` — vision, constraints, key decisions
-- `.planning/REQUIREMENTS.md` — v1.2 requirements (19 total) with phase traceability
-- `.planning/ROADMAP.md` — shipped milestones (v1.0, v1.1, Phases 7-11) + active v1.2 (Phases 12-17)
-- `.planning/research/v1.2/SUMMARY.md` — synthesis stack/features/architecture/pitfalls v1.2
-- `.planning/research/v1.2/ARCHITECTURE.md` — dependency-ordered build sequence + integration points
+- `.planning/REQUIREMENTS.md` — v1.3 requirements (9 total) with phase traceability
+- `.planning/ROADMAP.md` — shipped milestones (v1.0, v1.1, v1.2) + active v1.3 (Phases 18–20)
+- `.planning/research/v1.2/` — stack/features/architecture/pitfalls (referencja historyczna)
 - `.planning/codebase/` — brownfield codebase map (architecture, structure, conventions, concerns)
 
-**Current focus:** Phase 17 — QuizController + Application Wiring (FINAL phase)
+**Current focus:** Phase 18 — Usunięcia i sprzątanie (pierwsze zadanie)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
+Phase: 18 (Not started)
 Plan: —
-Status: Defining requirements
-Last activity: 2026-06-28 — Milestone v1.3 started
+Status: Roadmap created, ready for plan-phase 18
+Last activity: 2026-06-28 — Roadmap v1.3 created
 
 ## Performance Metrics
 
 | Metric | Target | Current |
 |--------|--------|---------|
-| v1.2 requirements mapped | 19/19 | 19/19 ✓ |
-| Phases planned | 6/6 | 6/6 ✓ |
-| Phases complete | 6/6 | 6/6 ✓ |
-| Test suite | ≥903 green | 1010/1010 ✓ (1 skipped) |
-| Bundle | < 850 KB | 834.98 KB ✓ |
+| v1.3 requirements mapped | 9/9 | 9/9 ✓ |
+| Phases planned | 3/3 | 3/3 ✓ |
+| Phases complete | 3/3 | 0/3 |
+| Test suite | ≥1010 zielone (po dostosowaniu) | 1010/1010 (baseline v1.2) |
+| Bundle | < 834.98 KB (zmniejszony) | 834.98 KB (baseline v1.2) |
 | getInteractables() invariant | === 15 | 15 ✓ |
-| FPS target | 60 FPS | maintained from v1.1 |
+| FPS target | 60 FPS | maintained |
 
 ## Accumulated Context
 
-### Roadmap Shape (v1.2)
+### Roadmap Shape (v1.3)
 
-6 phases, Phase 12–17. Derived from research 8-step build order with nameplate (isolated) merged into Phase 14 (Overlay) to reduce phase count to standard granularity.
+3 phases, Phase 18–20. Zakres mały — głównie usunięcia i dopracowanie istniejącego kodu.
 
 | Phase | Name | Key Deliverable | Requirements |
 |-------|------|----------------|--------------|
-| 12 | Data Foundations | elementInfo.js bhp+media + quizData.js + quizSelection.js | EDU-01, EDU-02, EDU-03, EXAM-01 |
-| 13 | Store Extensions | quiz slice + showStartMenu + finishedAt hybrid branch | MENU-01(prereq), MENU-03, EXAM-02, EXAM-03 |
-| 14 | ElementInfoOverlay + Nameplate | atomic panel→overlay swap + tabliczka texture | OVL-01, OVL-02, OVL-03, NAME-01 |
-| 15 | StartMenu | StartMenuOverlay, mode cards, localStorage badges | MENU-01, MENU-02, MENU-03 |
-| 16 | Media Pipeline | MediaManager + CC assets + ATTRIBUTION.txt gate | MED-01, MED-02, MED-03 |
-| 17 | QuizController + Wiring | QuizController + main.js + PDF/JSON + 903+ tests + bundle gate | EXAM-04, TEST-09, TEST-10 |
+| 18 | Usunięcia i sprzątanie | Wycofanie eksportu PDF/JSON + info-panel + HUM | CLEAN-01, CLEAN-02, CLEAN-03, EXAM-06 |
+| 19 | Egzamin — połączony wynik i feedback quizu | Combined score + kolorowy feedback + responsywny modal | EXAM-05, QUIZ-01, QUIZ-02 |
+| 20 | Gate — testy i bundle | Suite testów zaktualizowany + bundle < 834.98 KB | TEST-11, TEST-12 |
 
-### Critical Risks (from research)
+### Critical Invariants (inherited from v1.2, must hold throughout v1.3)
 
-1. **CRIT-V12-4 (HIGH)** — Atomic swap ElementInfoPanel → ElementInfoOverlay: must preserve `activeModal==='element-info'`, DI signature `{store, lectorService}`, lector button injection, `getInteractables().size===15`; 4 test files need updates; never delete `ElementInfoPanel.js` before replacement is green in all 903 tests
-2. **CRIT-V12-1 (HIGH)** — Media nie mogą wejść do bundla JS: wszystkie pliki w `public/media/`, nigdy `import img from './...'`; `assetsInlineLimit: 0` w vite.config.js; bundle check przy każdej fazie dodającej pliki
-3. **CRIT-V12-2 (HIGH)** — Licencje CC-BY-NC zabronione (szkolenie wewnętrzne = użycie komercyjne); tylko CC0/CC BY/CC BY-SA/własność firmy; ATTRIBUTION.txt gate zamyka Phase 16
-4. **CRIT-V12-5 (MEDIUM)** — Quiz scoring izolowany od procedure scoring: `submitAnswer()` nigdy nie modyfikuje `scoring.score`; PDF/JSON eksport etykietuje oddzielnie
-5. **CRIT-V12-3 (MEDIUM)** — YouTube: wyłącznie embed-only (`youtube-nocookie.com`), nigdy download; graceful offline fallback
+1. **getInteractables().size === 15** — każda faza weryfikuje ten inwariant; usunięcia CLEAN-01/02/03 nie dotykają interactables (eksport i panel parametrów to osobne UI, nie interactables 3D)
+2. **npm run build musi przejść** — bundle MA SIĘ ZMNIEJSZYĆ (baseline 834.98 KB); zysk pochodzi z usunięcia jspdf + html2canvas
+3. **Dispose chain Application** — CLEAN-01 usuwa PdfExporter/JsonExporter z dispose łańcucha; CLEAN-03 usuwa HUM subscriber; po wszystkich usunięciach dispose nadal musi być pełny i bez wycieków
+4. **Język polski** — wszystkie nowe stringi, komunikaty, JSDoc po polsku; angielskie identyfikatory (klasy, funkcje, zmienne)
+5. **Boundary D-Phase7-05** — PressModel importuje tylko THREE, bez DOM/store/training; CLEAN-02 (usunięcie info-panel) nie narusza tej granicy
 
-### Key Architectural Decisions (v1.2)
+### Key Decisions for v1.3
 
-- `showStartMenu: boolean` — oddzielna flaga od `activeModal`, symulacja nie pauzuje za menu (GSAP ticker działa)
-- `dialog.showModal()` — natywny focus-trap dla ElementInfoOverlay i QuizController (nie DIY)
-- `quiz` slice całkowicie oddzielony od `scoring` w Zustand store
-- Tabliczka: `THREE.TextureLoader` + `colorSpace = THREE.SRGBColorSpace` + `generateMipmaps = false` + POT wymiary (512x256 WebP)
-- Media w `public/media/`, referencja przez string URL — Vite nie bundluje `public/`
-- fslightbox opcjonalny — overlay oparty o natywny `<dialog>`, fslightbox jako potencjalne ulepszenie
-- `ElementInfoPanel.js` usuniemy dopiero gdy `ElementInfoOverlay.js` jest green w 903 testach
+- **EXAM-06 razem z CLEAN-01 (Phase 18):** Inwalidacja EXAM-04 i usunięcie ścieżki eksportu to jedna atomiczna operacja — SessionOverlay traci przyciski eksportu i staje się screen-only w tym samym commicie
+- **Połączony wynik proporcjonalny (EXAM-05):** Suma punktów = (scoreSOp / maxSOP + scoreQuiz / maxQuiz) / 2 × 100% — lub waga produktowa decyzją użytkownika przed zamknięciem Phase 19; obie wartości składowe widoczne osobno
+- **QUIZ-01 dostępność:** Ikona ✓/✗ obok koloru jest wymagana (nie optional) — daltonista musi odróżnić feedback bez koloru
+- **TEST gate jako ostatnia faza (Phase 20):** Zgodne z konwencją v1.2 (Phase 17 był gate'em); testy i bundle sprawdzone po zakończeniu wszystkich zmian kodu
 
-### Cross-Cutting Invariants (inherited, must hold throughout v1.2)
+### Cross-Cutting Invariants (v1.3 additions)
 
-- `getInteractables().size === 15` — każda faza weryfikuje ten inwariant
-- `npm run build` < 850 KB — gate każdej fazy dodającej pliki
-- 903 testy baseline zielone — żaden istniejący test nie może zregresować
-- Boundary D-Phase7-05: PressModel importuje tylko THREE, bez DOM/store/training
-- Zustand store jest jedynym mutowalnym stanem; `userData` trzyma tylko tożsamość
-- Dispose chain: każdy subscriber zwraca unsub; Application.dispose() wired do Vite HMR
+- PdfExporter i JsonExporter usunięte — żadna referencja nie może zostać w `import` lub dynamic `require()`
+- `val-angle` i `val-displacement` zniknięte z DOM — żaden kod nie może próbować `querySelector` tych ID po Phase 18
+- HUM: `AudioController` nie może inicjalizować ani odtwarzać dźwięku silnika — alarm i confirm muszą działać niezależnie od HUM
+- `/fonts/NotoSans` — brak referencji w zbudowanym output (gate Phase 20)
 
-### Open Questions (v1.2)
+### Open Questions (v1.3)
 
 | # | Question | Defer until |
 |---|---|---|
-| 1 | Wagi combined score: SOP 60% + BHP 40% (lub inna proporcja) — decyzja produktowa | Przed zamknięciem Phase 17 |
-| 2 | CC-licensed YouTube videos of eccentric press operation — konkretne URL nie zweryfikowane | Phase 16 content authoring task |
-| 3 | Adaptacyjny dobór pytań quizu wg błędów SOP (EX-D1) | v1.3 / po zebraniu danych pilotażowych |
-| 4 | EU Machinery Regulation 2023/1230 vs Directive 2006/42/EC — zastosowanie do 2026 | Deployment check; 2006/42/EC applies now |
+| 1 | Wagi combined score: równe (50%/50%) vs produktowe (SOP 60%/BHP 40%) — decyzja produktowa | Przed zamknięciem Phase 19 |
+| 2 | Feedback quizu w trybie nauka: czy pokazać explanation po KAŻDEJ odpowiedzi (nawet poprawnej) czy tylko po błędnej? | Przed impl. Phase 19 |
 
 ### Todos / Next Actions
 
-- [ ] Run `/gsd:plan-phase 12` — Data Foundations (elementInfo.js + quizData.js + quizSelection.js)
-- [ ] Phase 12: review BHP content accuracy with domain expert before phase close (ISO 16092-1/2 citations)
-- [ ] Phase 16: content authoring — verify CC YouTube videos via YouTube Advanced Search → CC filter
-- [ ] Phase 17: product decision on combined score weights before PDF/JSON format freeze
+- [ ] Run `/gsd:plan-phase 18` — Usunięcia i sprzątanie (PdfExporter, JsonExporter, info-panel, HUM)
+- [ ] Phase 18: zweryfikować listę wszystkich referencji do PdfExporter/JsonExporter przed usunięciem (grep w repo)
+- [ ] Phase 19: decyzja produktowa: wagi combined score (równe vs 60/40) przed impl.
+- [ ] Phase 20: bundle gate — zmierzyć rozmiar po Phase 18 jako pośredni checkpoint
 
 ### Blockers
 
@@ -115,17 +104,18 @@ None.
 
 ## Session Continuity
 
-**Last session ended after:** Roadmap creation for v1.2 (Phases 12–17, 19/19 requirements mapped).
+**Last session ended after:** Roadmap creation for v1.3 (Phases 18–20, 9/9 requirements mapped).
 
 **Files written:**
 
-- `.planning/ROADMAP.md` — v1.2 Active Milestone appended (Phases 12–17); Shipped Milestones preserved
-- `.planning/STATE.md` — reset to v1.2 planning state
-- `.planning/REQUIREMENTS.md` — Traceability table filled (19/19 requirements → phases)
+- `.planning/ROADMAP.md` — v1.3 Active Milestone appended (Phases 18–20); v1.2 przeniesiony do Shipped Milestones; archiwalne Phase Details v1.2 zachowane na dole
+- `.planning/STATE.md` — reset to v1.3 planning state
+- `.planning/REQUIREMENTS.md` — Traceability table filled (9/9 requirements → phases)
 
-**Next session should:** `/gsd:plan-phase 12` to decompose Phase 12 into executable plans.
+**Next session should:** `/gsd:plan-phase 18` to decompose Phase 18 into executable plans.
 
 ---
 
 *State initialized: 2026-05-05*
 *v1.2 roadmap added: 2026-06-13*
+*v1.3 roadmap added: 2026-06-28*
