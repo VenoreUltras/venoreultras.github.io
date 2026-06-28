@@ -21,7 +21,7 @@
 
 ### Phases
 
-- [ ] **Phase 18: Usunięcia i sprzątanie** — eksport PDF/JSON wycofany (PdfExporter, JsonExporter, jspdf, html2canvas), panel Parametry Układu usunięty z index.html + UI.js, HUM silnika wycięty z AudioController
+- [x] **Phase 18: Usunięcia i sprzątanie** — eksport PDF/JSON wycofany (PdfExporter, JsonExporter, jspdf, html2canvas), panel Parametry Układu usunięty z index.html + UI.js, HUM silnika wycięty z AudioController (completed 2026-06-28)
 - [ ] **Phase 19: Egzamin — połączony wynik i feedback quizu** — jeden łączny wynik procentowy SOP+BHP w SessionOverlay, kolorowy feedback odpowiedzi (zielony/czerwony + ikona), responsywne okno quizu bez ucinania treści
 - [ ] **Phase 20: Gate — testy i bundle** — suite testów odzwierciedla usunięte i dodane funkcje; bundle < 834.98 KB; getInteractables===15; maszyna trybów bez regresji
 
@@ -39,7 +39,7 @@
 **Plans** (3 plans, 3 waves):
 - [x] 18-01-PLAN.md — CLEAN-01 + EXAM-06: usunięcie eksportu PDF/JSON (moduły, zależność jspdf/html2canvas, przyciski SessionOverlay, plik czcionki), screen-only wynik
 - [x] 18-02-PLAN.md — CLEAN-02: usunięcie panelu Parametry Układu (index.html) + martwej telemetrii (UI.js, main.js)
-- [ ] 18-03-PLAN.md — CLEAN-03: usunięcie ścieżki HUM z AudioController + main.js + testy audio
+- [x] 18-03-PLAN.md — CLEAN-03: usunięcie ścieżki HUM z AudioController + main.js + testy audio
 
 ### Phase 19: Egzamin — połączony wynik i feedback quizu
 **Goal:** Uczeń widzi jeden spójny wynik egzaminu i natychmiastowy, dostępny feedback po każdej odpowiedzi — doświadczenie egzaminu jest czytelne dla wszystkich użytkowników.
@@ -66,7 +66,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 18. Usunięcia i sprzątanie | 2/3 | In Progress|  |
+| 18. Usunięcia i sprzątanie | 3/3 | Complete   | 2026-06-28 |
 | 19. Egzamin — połączony wynik i feedback quizu | 0/? | Not started | - |
 | 20. Gate — testy i bundle | 0/? | Not started | - |
 
