@@ -1656,6 +1656,42 @@ body.training-complete #status-panel {
   background: rgba(59, 130, 246, 0.15);
 }
 
+/* QUIZ-01 (Phase 19-01): feedback kolorowy po wyborze odpowiedzi.
+   Kontrast WCAG AA zachowany: tekst --text-main (#e2e8f0) na tle z 18% alpha +
+   wyraźna kolorowa obwódka jako wtórny sygnał. Zielony/czerwony spójny z istniejącą
+   paletą glassmorphism (--feedback--wrong używa #ef4444). */
+.bhp-quiz__option--correct {
+  border-color: #22c55e;
+  background: rgba(34, 197, 94, 0.18);
+}
+
+.bhp-quiz__option--incorrect {
+  border-color: #ef4444;
+  background: rgba(239, 68, 68, 0.18);
+}
+
+/* Ikona ✓/✗ wyrównana do prawej strony przycisku.
+   .bhp-quiz__option jako flex — tekst po lewej, ikona po prawej. */
+.bhp-quiz__option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.bhp-quiz__option-icon {
+  margin-left: 12px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Zablokowany przycisk po wyborze: nie wygaszaj feedbacku (opacity:1).
+   cursor:default zamiast not-allowed, by nie dezorientować użytkownika. */
+.bhp-quiz__option:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
 .bhp-quiz__steps {
   display: flex;
   flex-direction: column;
