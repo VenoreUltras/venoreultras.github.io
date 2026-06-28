@@ -415,10 +415,11 @@ export class Application {
       const replayAngle = state._currentAngle ?? 0;
       this.currentAngle = replayAngle;
       this.pressModel.update(replayAngle);
+      // Wychylenie liczone jako inwariant kinematyczny (prezentacja telemetrii usunięta w Fazie 18).
       const displacement = PhysicsEngine.calculateSliderPosition(
         replayAngle, this.pressModel.r, this.pressModel.l,
       );
-      this.ui.updateTelemetry(replayAngle, displacement);
+      void displacement; // inwariant kinematyczny — obliczenie zachowane, prezentacja usunięta
       return;
     }
 
@@ -457,13 +458,11 @@ export class Application {
     // Aktualizujemy pozycję elementów modelu prasy
     this.pressModel.update(this.currentAngle);
 
-    // Wyliczamy przesunięcie do wyświetlenia w UI
+    // Wychylenie liczone jako inwariant kinematyczny (prezentacja telemetrii usunięta w Fazie 18).
     const displacement = PhysicsEngine.calculateSliderPosition(
       this.currentAngle, this.pressModel.r, this.pressModel.l,
     );
-
-    // Aktualizujemy dane w UI
-    this.ui.updateTelemetry(this.currentAngle, displacement);
+    void displacement; // inwariant kinematyczny — obliczenie zachowane, prezentacja usunięta
 
     // D-Phase5-17: AudioController hum freq/gain proporcjonalny do effective RPM.
     const rpmEffective = (this._omega / (Math.PI * 2)) * 60;
