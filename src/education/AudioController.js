@@ -1,5 +1,5 @@
 // src/education/AudioController.js
-// Phase 5 — EDU-03: WebAudio synthesis (alarm/confirm/hum) + mute.
+// Phase 5 — EDU-03: WebAudio synthesis (alarm/confirm) + mute.
 // D-Phase5-13/14: pure OscillatorNode + masterGain; zero audio assets.
 // Boundary (boundaries.test.js, D-Phase5-26): może importować TYLKO store przez DI.
 // NIE THREE, NIE gsap, NIE DOM, NIE @floating-ui/dom.
@@ -22,25 +22,16 @@ const CONFIRM_DURATION_S = 0.2;
 /** Szczytowa głośność potwierdzenia (0–1) */
 const CONFIRM_PEAK_GAIN = 0.25;
 
-/** Bazowa częstotliwość humu (silnik idle) — D-Phase5-17 */
-const HUM_FREQ_BASE = 80;
-/** Współczynnik skalowania częstotliwości humu względem RPM */
-const HUM_FREQ_SLOPE = 1.2;
-/** Próg RPM poniżej którego hum jest wyciszany */
-const HUM_RPM_THRESHOLD = 5;
 /** Czas rampy wyciszenia/przywrócenia masterGain w sekundach */
 const MUTE_RAMP_S = 0.05;
-/** Czas rampy zmiany parametrów humu w sekundach */
-const HUM_RAMP_S = 0.05;
 
 /**
  * Kontroler dźwięku WebAudio dla warstwy edukacyjnej (EDU-03).
  *
  * Subskrybuje store (machineState / steps / audioMuted) i syntezuje
- * trzy rodzaje dźwięków:
+ * dwa rodzaje dźwięków:
  * - alarm  — 2× burst square 600 Hz przy przejściu do stanu 'awaria'
  * - confirm — sine 880 Hz/200ms przy każdym kroku zmieniającym status na 'done'
- * - hum    — ciągły sawtooth skalowany liniowo wg RPM (80 + 1.2×RPM)
  *
  * Klasa nie importuje THREE, gsap ani żadnych globali DOM — wyłącznie DI przez konstruktor.
  */
@@ -54,8 +45,6 @@ export class AudioController {
     // Lazy AudioContext (Pitfall 1 — user-gesture gate)
     this._ctx = null;
     this._masterGain = null;
-    this._humOsc = null;
-    this._humGain = null;
 
     // Zapamiętany stan machineState — do ochrony przed wielokrotnym alarmem bez przejścia
     this._lastMachineState = store.getState().machineState;
@@ -128,16 +117,6 @@ export class AudioController {
     const { audioMuted } = this._store.getState();
     this._masterGain.gain.setValueAtTime(audioMuted ? 0 : 1, this._ctx.currentTime);
     this._masterGain.connect(this._ctx.destination);
-
-    // humOsc — długożyjący oscylator sawtooth (silnik pracujący)
-    this._humOsc = this._ctx.createOscillator();
-    this._humGain = this._ctx.createGain();
-    this._humOsc.type = 'sawtooth';
-    this._humOsc.frequency.setValueAtTime(HUM_FREQ_BASE, this._ctx.currentTime);
-    this._humGain.gain.setValueAtTime(0, this._ctx.currentTime);
-    this._humOsc.connect(this._humGain);
-    this._humGain.connect(this._masterGain);
-    this._humOsc.start();
 
     // Jeśli przeglądarka wstrzymała kontekst (policy) — wznów
     if (this._ctx.state === 'suspended') {
@@ -239,26 +218,6 @@ export class AudioController {
     osc.stop(ctx.currentTime + CONFIRM_DURATION_S + 0.05);
   }
 
-  /**
-   * Aktualizuje parametry oscylatora humu na podstawie aktualnego RPM.
-   * Wywoływany per-tick lub debounced z Application tickera.
-   * Guard lazy: bez aktywnego ctx — no-op (bezpieczne do wywołania przed inicjalizacją).
-   *
-   * @param {number} rpmEffective — efektywna prędkość obrotowa wału [RPM]
-   */
-  updateHum(rpmEffective) {
-    if (!this._ctx || !this._humOsc) return;
-    const now = this._ctx.currentTime;
-    if (rpmEffective < HUM_RPM_THRESHOLD) {
-      this._humGain.gain.linearRampToValueAtTime(0, now + HUM_RAMP_S);
-    } else {
-      const freq = HUM_FREQ_BASE + HUM_FREQ_SLOPE * rpmEffective;
-      const gainVal = Math.min(0.05 + 0.005 * rpmEffective, 0.3);
-      this._humOsc.frequency.linearRampToValueAtTime(freq, now + HUM_RAMP_S);
-      this._humGain.gain.linearRampToValueAtTime(gainVal, now + HUM_RAMP_S);
-    }
-  }
-
   // ------------------------------------------------------------------
   // Publiczne: lifecycle
   // ------------------------------------------------------------------
@@ -271,9 +230,6 @@ export class AudioController {
     for (const u of this._unsubscribers) u();
     this._unsubscribers = [];
 
-    if (this._humOsc) {
-      try { this._humOsc.stop(); } catch (_e) { /* oscylator już zatrzymany */ }
-    }
     if (this._ctx) {
       try { this._ctx.close(); } catch (_e) { /* ignoruj */ }
     }
