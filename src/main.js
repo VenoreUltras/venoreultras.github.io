@@ -22,10 +22,16 @@ import { KeyboardController } from './education/KeyboardController.js';
 import { LabelOverlay } from './education/LabelOverlay.js';
 import { HelpModal } from './ui/HelpModal.js';
 import { ConfirmModal } from './ui/ConfirmModal.js';
-import { ElementInfoPanel } from './ui/ElementInfoPanel.js';
+import { ElementInfoOverlay } from './ui/ElementInfoOverlay.js';
 import { ExamPromptModal } from './ui/ExamPromptModal.js';
+// Phase 17 Plan 17-02 (EXAM-04): QuizController — modal końcowego quizu BHP.
+import { QuizController } from './ui/QuizController.js';
+// Phase 15 Plan 15-02 (MENU-01/02/03): ekran startowy wyboru trybu.
+import { StartMenuOverlay } from './ui/StartMenuOverlay.js';
 // Phase 11 Plan 11-05 (FUNC-11-09..12): ElevenLabs TTS Lektor.
 import { LectorService } from './lector/LectorService.js';
+// Phase 16 Plan 16-01/02 (MED-03): MediaManager — resolveSrc DI dla overlay mediów.
+import { MediaManager } from './media/MediaManager.js';
 import { LECTOR_VOICES, DEFAULT_LECTOR_VOICE_ID } from './data/lectorVoices.js';
 // Phase 6 Plan 06-08 — replay + session overlay + persistence + export wrappers.
 import { ReplayEngine } from './replay/ReplayEngine.js';
@@ -51,6 +57,7 @@ const AUDIO_MUTE_KEY = 'pm300:audio-mute:v1';  // D-Phase5-18
 const MODE_KEY = 'pm300:mode:v1';              // Phase 11 Plan 11-01 (FUNC-11-01)
 const LECTOR_ENABLED_KEY = 'pm300:lector:enabled'; // Phase 11 Plan 11-05 (FUNC-11-12)
 const LECTOR_VOICE_KEY   = 'pm300:lector:voice';   // Phase 11 Plan 11-05 (FUNC-11-12)
+const START_MENU_SHOWN_KEY = 'pm300:start-menu-shown:v1'; // Phase 15 MENU-01 (first-launch flag)
 
 export class Application {
   constructor() {
@@ -120,11 +127,28 @@ export class Application {
     })();
     this.store.setState({
       difficulty: difficultyInitial,
+      // Phase 11 FIX: mode jest canonical SSOT — bootstrap MUSI rzutować alias freeRoam
+      // tak jak robi setMode (free → freeRoam=true). Bez tego cold-start 'free' zostawał
+      // z freeRoam=false (default store'a), więc HighlightManager traktował scenę jak 'nauka'
+      // (podświetlał kroki SOP) a wskaźnik "tryb swobodny" był ukryty — tryb swobodny
+      // efektywnie "nie startował" mimo mode==='free'.
+      freeRoam: modeInitial === 'free',
       audioMuted: audioMutedInitial,
       mode: modeInitial,
       lectorEnabled: lectorEnabledInitial,
       lectorVoiceId: lectorVoiceIdInitial,
     });
+
+    // Phase 15 MENU-01: first-launch detection. Brak klucza → pokaż menu; 'true' → pomiń.
+    // HARD CONSTRAINT (Pitfall 1): setState({ showStartMenu }) MUSI poprzedzać konstruktor overlayu
+    // (i innych subscriberów). Silent catch — private mode/quota → false (T-15-04).
+    const startMenuShownInitial = (() => {
+      try { return localStorage.getItem(START_MENU_SHOWN_KEY) === 'true'; }
+      catch { return false; }
+    })();
+    if (!startMenuShownInitial) {
+      this.store.setState({ showStartMenu: true });
+    }
 
     // Persist warstwa — store-side toggleMute/setDifficulty zmienia state, Application
     // zapisuje do localStorage. trainingStore zachowuje boundary clean (D-Phase5-26).
@@ -224,6 +248,27 @@ export class Application {
       },
     ));
 
+    // Phase 15 MENU-02: drugi, niezależny subscriber finishedAt — zapis wskaźnika ostatniej sesji
+    // pm300:last-session:<mode>:v1 = JSON { score, date }. ORTHOGONALNY do pm300:session:v1 powyżej.
+    // Phase 17 NIE MOŻE zastąpić tego subscribera (osobna ścieżka per-mode dla kart start menu).
+    // Silent catch — quota / private mode (T-15-05).
+    this._unsubscribers.push(this.store.subscribe(
+      (s) => s.session.finishedAt,
+      (finishedAt) => {
+        if (finishedAt === null) return;
+        const state = this.store.getState();
+        const mode = state.mode; // 'free' | 'nauka' | 'egzamin'
+        const key = `pm300:last-session:${mode}:v1`;
+        // WR-03: data w czasie LOKALNYM (toISOString jest w UTC → off-by-one
+        // dla użytkowników poza UTC blisko północy).
+        const d = new Date(finishedAt);
+        const date = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; // 'YYYY-MM-DD'
+        try {
+          localStorage.setItem(key, JSON.stringify({ score: state.scoring.score, date }));
+        } catch { /* quota / private mode — silent */ }
+      },
+    ));
+
     // D-Phase4-14: EmissiveController PRZED RaycastController (RaycastController potrzebuje go w DI dla warstwy 'hover').
     this.emissiveController = new EmissiveController({
       interactables: this.pressModel.getInteractables(),
@@ -262,10 +307,14 @@ export class Application {
     // UI-01/02 (D-Phase4-03/04): DOM panele top bar + lewa kolumna.
     // Zastępują Phase 3 placeholdery (#phase3-step-readout/#phase3-attest-container) i projekcję
     // isRunning → #status-text z UI.updateStatus() (D-Phase4-02/D-Phase4-17).
-    // Phase 11 Plan 11-05 (FUNC-11-09..12): instantiate LectorService PRZED StatusPanel + ElementInfoPanel,
+    // Phase 11 Plan 11-05 (FUNC-11-09..12): instantiate LectorService PRZED StatusPanel + ElementInfoOverlay,
     // by oba mogły dostać go w DI. LectorService czyta VITE_ELEVENLABS_API_KEY domyślnie;
     // graceful gdy brak klucza (isAvailable===false → UI fallback disabled+tooltip).
     this.lectorService = new LectorService({ store: this.store });
+
+    // Phase 16 Plan 16-02 (MED-03): MediaManager (stateless, brak store DI) — wstrzykiwany
+    // do ElementInfoOverlay dla resolveSrc mediów. Tworzony PRZED overlay.
+    this.mediaManager = new MediaManager();
 
     this.statusPanel = new StatusPanel({
       store: this.store,
@@ -304,12 +353,13 @@ export class Application {
       scenarios: allScenarios,
     });
 
-    // (d.3) ElementInfoPanel — Phase 11 Plan 11-03 (FUNC-11-03/07): edukacyjny panel
+    // (d.3) ElementInfoOverlay — Phase 14 Plan 14-01/02 (OVL-01): edukacyjny overlay
     // dla 15 interactables. Renderuje conditional content per store.mode (free=opis, nauka=4 sekcje).
     // RaycastController wywołuje store.openElementInfo w mode='free'/'nauka' branch.
-    this.elementInfoPanel = new ElementInfoPanel({
+    this.elementInfoOverlay = new ElementInfoOverlay({
       store: this.store,
       lectorService: this.lectorService,
+      mediaManager: this.mediaManager,
     });
 
     // (d.4) ExamPromptModal — Phase 11 Plan 11-04 (FUNC-11-05/06): auto-prompt po SOP done w nauce.
@@ -319,6 +369,11 @@ export class Application {
       store: this.store,
       scenarios: allScenarios,
     });
+
+    // (d.5) QuizController — Phase 17: modal quizu BHP, wyzwalany przez
+    // activeModal='bhp-quiz' ustawiany przez subscriber finishedAt w trybie egzamin.
+    // Konstruowany PO examPromptModal → disposowany PRZED nim (odwrotna kolejność).
+    this.quizController = new QuizController({ store: this.store });
 
     // (e) TooltipManager — PO RaycastController, by wpiąć onHoverChange callback po-hoc
     this.tooltipManager = new TooltipManager({
@@ -345,6 +400,10 @@ export class Application {
       jsonExporter: { build: buildJsonPayload, download: downloadJson, generateFilename: jsonFilename },
       pdfExporter: { download: downloadPdf, generateFilename: pdfFilename },
     });
+
+    // Phase 15 (MENU-01/03): StartMenuOverlay — ekran startowy wyboru trybu.
+    // Bootstrap showStartMenu (powyżej) JUŻ wykonany → ctor odczyta poprawną widoczność (Pitfall 1).
+    this.startMenuOverlay = new StartMenuOverlay({ store: this.store });
 
     // Dev-only: expose Application na window dla manualnego QA (D-Phase5-Discretion).
     if (import.meta.env?.DEV) {
@@ -438,6 +497,8 @@ export class Application {
       clearTimeout(this._cycleEndHandle);
       this._cycleEndHandle = null;
     }
+    // Phase 15 — odwrotna kolejność tworzenia: StartMenuOverlay disposed jako jeden z pierwszych UI.
+    if (this.startMenuOverlay) this.startMenuOverlay.dispose();
     // Phase 6 — odwrotna kolejność tworzenia: SessionOverlay → ReplayDrawer → ReplayEngine.
     if (this.sessionOverlay) this.sessionOverlay.dispose();
     if (this.replayDrawer) this.replayDrawer.dispose();
@@ -448,8 +509,12 @@ export class Application {
     if (this.statusPanel) this.statusPanel.dispose();
     // Phase 5 — odwrotna kolejność tworzenia
     if (this.tooltipManager) this.tooltipManager.dispose();
+    // Phase 17 — odwrotna kolejność tworzenia: quizController PRZED examPromptModal.
+    if (this.quizController) this.quizController.dispose();
     if (this.examPromptModal) this.examPromptModal.dispose();
-    if (this.elementInfoPanel) this.elementInfoPanel.dispose();
+    if (this.elementInfoOverlay) this.elementInfoOverlay.dispose();
+    // Phase 16 Plan 16-02 — odwrotna kolejność tworzenia (po overlay, przed lectorService). No-op dispose.
+    if (this.mediaManager) this.mediaManager.dispose?.();
     if (this.confirmModal) this.confirmModal.dispose();
     if (this.helpModal) this.helpModal.dispose();
     if (this.labelOverlay) this.labelOverlay.dispose();              // PRZED sceneSetup.dispose (CSS2DRenderer order)

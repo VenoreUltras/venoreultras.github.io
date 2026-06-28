@@ -72,6 +72,23 @@ export const pl = {
     lectorVoicePickerLabel: 'Głos lektora',
   },
 
+  // Phase 15 (MENU-01/02): ekran startowy wyboru trybu szkolenia + wskaźniki ostatniej sesji.
+  // Stringi konsumowane przez src/ui/StartMenuOverlay.js (textContent) i StatusPanel "Zmień tryb".
+  startMenu: {
+    title:             'Wybierz tryb szkolenia',
+    subtitle:          'PM-300 Trener — Symulator Prasy Mimośrodowej',
+    startButton:       'Rozpocznij',
+    changeModeButton:  'Zmień tryb',
+    freeTitle:         'Swobodny',
+    freeDesc:          'Eksploruj prasę bez oceny — klikaj elementy, oglądaj animacje, czytaj opisy.',
+    naukaTitle:        'Nauka',
+    naukaDesc:         'Przejdź procedurę uruchomienia krok po kroku z podpowiedziami i informacjami BHP.',
+    egzaminTitle:      'Egzamin',
+    egzaminDesc:       'Wykonaj procedurę bez podpowiedzi; wynik oceniany, końcowy quiz BHP.',
+    lastSessionPrefix: 'Ostatnia sesja: ',
+    lastSessionPts:    'pkt',
+  },
+
   // Komunikaty bledow PhysicsEngine (UI-06 enforcement — wczesniej inline w throw)
   physics: {
     paramsNotFinite: 'PhysicsEngine: parametry muszą być skończonymi liczbami',
@@ -209,6 +226,32 @@ export const pl = {
       lectorTextParameters:  'Parametry:',
       lectorTextSopSteps:    'Powiązane kroki:',
       lectorTextSafety:      'BHP:',
+      // Phase 14 Plan 14-01 (OVL-02): etykiety lektora dla sekcji BHP overlay'a.
+      lectorTextBhp:         'BHP:',
+      // Phase 14 Plan 14-01 (OVL-01/02): etykiety 3 zakładek overlay'a + placeholder mediów.
+      tabBudowa:             'Budowa',
+      tabBhp:                'BHP',
+      tabInstrukcja:         'Instrukcja obsługi',
+      mediaPlaceholder:      'Brak materiałów multimedialnych',
+    },
+    // Phase 17 Plan 17-01 (TEST-09): QuizController — modal końcowego quizu BHP.
+    // Trigger: activeModal='bhp-quiz'. Konsumowane przez QuizController (Plan 17-02) przez textContent.
+    // `closeAria` reużywa pl.modals.closeAria (nie duplikujemy).
+    bhpQuiz: {
+      title:            'Quiz BHP',
+      // Funkcja szablonu — argumenty to liczby (numer pytania / total), nie user input.
+      questionOf:       (cur, total) => `Pytanie ${cur} z ${total}`,
+      btnNext:          'Dalej',
+      btnFinish:        'Zakończ',
+      btnConfirmOrder:  'Zatwierdź kolejność',
+      labelPrawda:      'Prawda',
+      labelFalsz:       'Fałsz',
+      labelNormRef:     'Podstawa prawna:',
+      labelExplanation: 'Wyjaśnienie:',
+      scorePassed:      'Zaliczone',
+      scoreFailed:      'Niezaliczone',
+      // Funkcja szablonu — argument to wynik 0-100 (liczba), nie user input.
+      scoreOf:          (score) => `${score}/100`,
     },
   },
 
@@ -341,6 +384,11 @@ export const pl = {
     severityMinor:      'Drobny',
     pageLabel:          (cur, total) => `Strona ${cur} z ${total}`,
     appVersion:         'pm300-trener v1.0',
+    // Phase 17 Plan 17-01 (TEST-09): sekcja BHP w raporcie PDF (PdfExporter — Plan 17-03).
+    sectionBhpResult:   'Wynik BHP',
+    bhpScore:           'Wynik',
+    bhpPassed:          'Zaliczone',
+    bhpFailed:          'Niezaliczone',
   },
 };
 

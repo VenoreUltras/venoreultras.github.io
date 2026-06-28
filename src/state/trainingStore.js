@@ -11,6 +11,10 @@ import { subscribeWithSelector } from 'zustand/middleware';
 import { validateStep, evaluateFaultRules } from '../training/ProcedureEngine.js';
 import { faultRules } from '../training/faultRules.js';
 import { DEFAULT_LECTOR_VOICE_ID } from '../data/lectorVoices.js';
+import { selectQuizQuestions } from '../training/quizSelection.js';
+
+// Eksportowana stała progowa — testowalna bez magic number (Success Criterion 4).
+export const QUIZ_PASS_THRESHOLD = 80; // procent (0-100)
 
 /**
  * Tworzy nową instancję store'a. Phase 1 wpina go w Application;
@@ -75,6 +79,9 @@ export function createTrainingStore(opts = {}) {
       // Phase 11 Plan 11-03 (FUNC-11-07): aktualnie wybrany mesh dla ElementInfoPanel.
       // Ustawiany przez openElementInfo(meshId); czyszczony przez closeModal.
       _elementInfoMeshId: null,
+      // FIX (dymek): pozycja ekranowa klikniętego elementu {x,y} (clientX/clientY) — panel
+      // renderuje się jako mały tooltip przy kursorze zamiast modalu na cały ekran. null → wyśrodkowany fallback.
+      _elementInfoPos: null,
       // Phase 11 Plan 11-04 (FUNC-11-05): idempotent flag — prompt "Przejść do egzaminu?"
       // pokazywany tylko raz na sesję. Reset przez startScenario (świeży scenariusz =
       // świeży flag). closeModal NIE resetuje — by ręczne re-finishedAt nie retriggerowało.
@@ -98,6 +105,17 @@ export function createTrainingStore(opts = {}) {
       lectorVoiceId: DEFAULT_LECTOR_VOICE_ID,
       _now: now,
       _spinUpTimerHandle: null,
+      // Phase 13 Plan 13-01 (MENU-01/MENU-03): widoczność start menu (StartMenuOverlay, Phase 15).
+      // Flaga CAŁKOWICIE oddzielna od activeModal — symulacja NIE pauzuje za menu
+      // (predykat pauzy GSAP ticker czyta tylko activeModal !== null, patrz komentarz wyżej).
+      // Default false. Flag NIE jest resetowany przez startScenario — to stan nawigacji
+      // użytkownika, nie scenario state (analogicznie do hcOutlineMode user-preference).
+      showStartMenu: false,
+      // Phase 13 Plan 13-02 (EXAM-02/03): izolowany slice dla quizu BHP. NIE dotyka
+      // scoring.score (CRIT-V12-5). quiz.score jest 0–100 numeryczny, ustawiany TYLKO
+      // przez finishQuiz(). quiz.finishedAt (kiedy quiz ukończony) ≠ session.finishedAt
+      // (kiedy SOP ukończony). Slice w pełni odseparowany od scoring slice.
+      quiz: { questions: [], currentIndex: 0, answers: [], score: 0, finishedAt: null },
 
       startScenario: (scenario) => {
         set({
@@ -119,6 +137,8 @@ export function createTrainingStore(opts = {}) {
           bimanualHintState: 'idle',
           // Phase 11 Plan 11-04 (FUNC-11-05): reset prompt flag — nowy scenariusz = nowa szansa na exam prompt.
           _examPromptShown: false,
+          // Phase 13 EXAM-02: reset quiz slice przy nowym scenariuszu (Pitfall 3).
+          quiz: { questions: [], currentIndex: 0, answers: [], score: 0, finishedAt: null },
         });
         // Phase 6 Plan 06-03 Task 2: ewaluuj faultRules na initial state by initialMeshStates
         // triggujące fault rule (np. awaria) natychmiast ustawiły machineState='awaria-os-otwarta'.
@@ -216,17 +236,19 @@ export function createTrainingStore(opts = {}) {
       })),
 
       /** Zamyka dowolny aktywny modal. D-Phase5-20 (Esc precedencja). */
-      closeModal: () => set({ activeModal: null, _confirmPayload: null, _elementInfoMeshId: null }),
+      closeModal: () => set({ activeModal: null, _confirmPayload: null, _elementInfoMeshId: null, _elementInfoPos: null }),
 
       /**
        * Phase 11 Plan 11-03 (FUNC-11-07): otwiera ElementInfoPanel dla danego mesh.
        * RaycastController woła z mode in {'free','nauka'}; panel renderuje conditional
        * content (1 sekcja w 'free', 4 sekcje w 'nauka').
        * @param {string} meshId
+       * @param {{x:number,y:number}} [pos] - pozycja ekranowa kliknięcia (clientX/clientY) dla tooltipa
        */
-      openElementInfo: (meshId) => set({
+      openElementInfo: (meshId, pos = null) => set({
         activeModal: 'element-info',
         _elementInfoMeshId: meshId,
+        _elementInfoPos: pos,
       }),
 
       /**
@@ -240,6 +262,48 @@ export function createTrainingStore(opts = {}) {
 
       /** Przełącza globalny mute audio. D-Phase5-18. */
       toggleMute: () => set(s => ({ audioMuted: !s.audioMuted })),
+
+      // Phase 13 Plan 13-01 (MENU-03): showMenu/hideMenu — flaga oddzielna od activeModal;
+      // symulacja NIE pauzuje za menu. NIGDY nie dotykają activeModal (ortogonalność).
+      /** Pokazuje start menu (MENU-01). Nie dotyka activeModal — symulacja nie pauzuje. */
+      showMenu: () => set({ showStartMenu: true }),
+      /** Chowa start menu (MENU-01). Nie dotyka activeModal. */
+      hideMenu: () => set({ showStartMenu: false }),
+
+      // ── Phase 13 Plan 13-02: akcje quizu BHP (EXAM-02/EXAM-03) ───────────────
+      // CRIT-V12-5: żadna z tych akcji NIGDY nie pisze do s.scoring — quiz slice
+      // jest w pełni odseparowany od scoring slice.
+
+      /**
+       * EXAM-02: inicjuje quiz slice świeżym zestawem pytań.
+       * Resetuje currentIndex/answers/score/finishedAt. NIE dotyka scoring.score.
+       * @param {import('../data/quizData.js').QuizQuestion[]} questions
+       */
+      startQuiz: (questions) => set({
+        quiz: { questions, currentIndex: 0, answers: [], score: 0, finishedAt: null },
+      }),
+
+      /**
+       * EXAM-03: zapisuje odpowiedź na bieżące pytanie i przesuwa indeks.
+       * Functional update — czyta s.quiz. NIE modyfikuje s.scoring (CRIT-V12-5).
+       * @param {number | number[]} answer
+       */
+      submitAnswer: (answer) => set(s => {
+        const answers = [...s.quiz.answers, answer];
+        return { quiz: { ...s.quiz, answers, currentIndex: s.quiz.currentIndex + 1 } };
+      }),
+
+      /**
+       * EXAM-03: oblicza quiz.score (0–100) z liczby poprawnych odpowiedzi i zapisuje
+       * quiz.finishedAt. NIE woła endExam() — to robi QuizController w Phase 17.
+       * NIE dotyka scoring.score (CRIT-V12-5).
+       */
+      finishQuiz: () => set(s => {
+        const { questions, answers } = s.quiz;
+        const correct = questions.filter((q, i) => isCorrect(q, answers[i])).length;
+        const score = questions.length > 0 ? Math.round((correct / questions.length) * 100) : 0;
+        return { quiz: { ...s.quiz, score, finishedAt: Date.now() } };
+      }),
 
       // Phase 11 Plan 11-05 (FUNC-11-09/12): lektor TTS akcje.
       /** Ustawia czy lektor jest włączony (toggle on/off). Persist w Application bootstrap. */
@@ -454,10 +518,11 @@ export function createTrainingStore(opts = {}) {
     }
   );
 
-  // Phase 11 Plan 11-04 (FUNC-11-05/06): exam-prompt + auto-endExam triggers.
+  // Phase 11 Plan 11-04 + Phase 13 Plan 13-02 (FUNC-11-05 / EXAM-02): finishedAt triggers.
   // Po SOP done (finishedAt zmienia null → ts):
-  //   - mode='nauka' + !_examPromptShown → activeModal='exam-prompt' (FUNC-11-05)
-  //   - mode='egzamin' → endExam() auto-powrót do 'free' (FUNC-11-06)
+  //   - mode='nauka' + !_examPromptShown → activeModal='exam-prompt' (FUNC-11-05, UNCHANGED)
+  //   - mode='egzamin' → uruchom quiz BHP: startQuiz + activeModal='bhp-quiz' (EXAM-02).
+  //     endExam() jest teraz DEFEROWANY do Phase 17 QuizController (po pokazaniu wyników).
   //   - mode='free' → no-op (swobodna eksploracja, brak prompt'u)
   // Idempotent: _examPromptShown flag chroni przed wielokrotnym otwarciem dla tej samej sesji.
   store.subscribe(
@@ -470,7 +535,19 @@ export function createTrainingStore(opts = {}) {
         return;
       }
       if (cur.mode === 'egzamin') {
-        cur.endExam();
+        // EXAM-02: zamiast endExam() — uruchom quiz BHP zamiast auto-powrotu do 'free'.
+        if (!cur.session.scenarioId) return; // guard: Pitfall 2 — null scenarioId
+        // selectQuizQuestions rzuca dla nierozpoznanego scenarioId (allowlist, T-13-02).
+        // Degradacja graceful: nieznany scenariusz (np. fixtury testowe) → brak quizu,
+        // bez uncaught throw w subscriberze. endExam jest Phase 17 — tu nie wołamy.
+        let questions;
+        try {
+          questions = selectQuizQuestions(cur.session.scenarioId);
+        } catch {
+          return;
+        }
+        cur.startQuiz(questions);
+        store.setState({ activeModal: 'bhp-quiz' });
       }
     },
   );
@@ -554,6 +631,24 @@ function applyEffects(set, get, effects, scheduleTimer) {
         break;
     }
   }
+}
+
+/**
+ * Phase 13 EXAM-03: prywatny helper — sprawdza poprawność odpowiedzi per typ pytania.
+ * NIE eksportowany (analog applyScoringEvent). Degraduje gracefully na nieznany typ /
+ * niezgodny kształt odpowiedzi (security T-13-03) — zwraca false zamiast rzucać.
+ * @param {import('../data/quizData.js').QuizQuestion} question
+ * @param {number | number[]} answer
+ * @returns {boolean}
+ */
+function isCorrect(question, answer) {
+  if (question.type === 'mc' || question.type === 'tf') {
+    return answer === question.correctIdx;
+  }
+  if (question.type === 'sequence') {
+    return JSON.stringify(answer) === JSON.stringify(question.correctOrder);
+  }
+  return false;
 }
 
 /** Live scoring counter — używa default weights (-25/-10/-2). */

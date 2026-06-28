@@ -115,10 +115,15 @@ const FORBIDDEN_PAIRS = [
   // Zero importów: THREE/gsap/state/training/ui/highlight/RaycastController/education.
   { file: 'src/data/elementInfo.js',
     mustNotImport: ['three', 'gsap', '../state/', '../training/', './state/', './training/', '../RaycastController', '../ui/', './ui/', '../highlight/', './highlight/', '../education/', './education/'] },
-  // Phase 11 Plan 11-03 (FUNC-11-07): ElementInfoPanel — DOM + store + i18n + data.
+  // Phase 14 Plan 14-01/02 (OVL-01): ElementInfoOverlay — DOM + store + i18n + data.
   // Boundary clean analogicznie do HelpModal: NIE THREE/gsap/training/highlight/floating-ui.
-  { file: 'src/ui/ElementInfoPanel.js',
+  { file: 'src/ui/ElementInfoOverlay.js',
     mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/'] },
+  // Phase 15 Plan 15-01 (MENU-01/02): StartMenuOverlay — TYLKO DOM + store (DI) + i18n.
+  // Boundary clean analogicznie do ElementInfoOverlay, ale BEZ data/ (nie czyta elementInfo).
+  // NIE THREE/gsap/training/highlight/data/floating-ui.
+  { file: 'src/ui/StartMenuOverlay.js',
+    mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/', '../data/', './data/'] },
   // Phase 11 Plan 11-04 (FUNC-11-05/06): ExamPromptModal — DOM + store + i18n.
   // Boundary clean analogicznie do ConfirmModal: NIE THREE/gsap/training/highlight/floating-ui/state.
   { file: 'src/ui/ExamPromptModal.js',
@@ -132,6 +137,21 @@ const FORBIDDEN_PAIRS = [
   // Phase 11 Plan 11-05: lectorVoices.js to pure data module (analog elementInfo.js).
   { file: 'src/data/lectorVoices.js',
     mustNotImport: ['three', 'gsap', '../state/', './state/', '../training/', './training/', '../highlight/', './highlight/', '../ui/', './ui/', '../education/', './education/'] },
+
+  // Phase 12 (Plan 12-02): quizData.js — czysty moduł danych, zero importów (analog elementInfo.js).
+  { file: 'src/data/quizData.js',
+    mustNotImport: ['three', 'gsap', '../state/', '../training/', './state/', './training/', '../RaycastController', '../ui/', './ui/', '../highlight/', './highlight/', '../education/', './education/'] },
+
+  // Phase 12 (Plan 12-03): quizSelection.js — czysta funkcja, warstwa training.
+  // Może importować tylko ../data/quizData.js. NIE three/gsap/state/.
+  { file: 'src/training/quizSelection.js',
+    mustNotImport: ['three', 'gsap', '../state/', './state/'] },
+
+  // Phase 16 Plan 16-01 (MED-01/MED-03): MediaManager — boundary-clean serwis mediów.
+  // Zero importów (fetchImpl DI + browser fetch). resolveSrc/validateSrc/dispose.
+  // NIE three/gsap/state/ui/training/highlight/education.
+  { file: 'src/media/MediaManager.js',
+    mustNotImport: ['three', 'gsap', '../state/', './state/', '../ui/', './ui/', '../training/', './training/', '../highlight/', './highlight/', '../education/', './education/'] },
 ];
 
 /** Regex: static + dynamic imports. Capturuje string specifier. */

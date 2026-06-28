@@ -68,3 +68,44 @@ describe('elementInfo — dataset shape (FUNC-11-08)', () => {
     expect(Object.isFrozen(elementInfo)).toBe(true);
   });
 });
+
+describe('elementInfo — Phase 12 extensions (EDU-01/EDU-02)', () => {
+  it('każdy wpis ma pole bhp: string', () => {
+    for (const [id, entry] of Object.entries(elementInfo)) {
+      expect(entry.bhp, `${id}.bhp`).toBeTypeOf('string');
+    }
+  });
+
+  it('każde bhp ma length > 20 (brak placeholder)', () => {
+    for (const [id, entry] of Object.entries(elementInfo)) {
+      expect(entry.bhp.length, `${id}.bhp length`).toBeGreaterThan(20);
+    }
+  });
+
+  it('każdy wpis ma pole media: array', () => {
+    for (const [id, entry] of Object.entries(elementInfo)) {
+      expect(Array.isArray(entry.media), `${id}.media`).toBe(true);
+    }
+  });
+
+  it('media: dokładnie 2 wpisy wypełnione (Phase 16 Plan 16-02), reszta pusta', () => {
+    const populated = [];
+    for (const [id, entry] of Object.entries(elementInfo)) {
+      if (entry.media.length > 0) {
+        populated.push(id);
+        // Każdy element media ma poprawny kształt { src, alt }.
+        for (const item of entry.media) {
+          expect(typeof item.src, `${id}.media[].src`).toBe('string');
+          expect(item.src.length, `${id}.media[].src niepuste`).toBeGreaterThan(0);
+          expect(typeof item.alt, `${id}.media[].alt`).toBe('string');
+          expect(item.alt.length, `${id}.media[].alt niepuste`).toBeGreaterThan(0);
+        }
+      }
+    }
+    expect(populated.sort()).toEqual(['hamulec', 'kolo-zamachowe']);
+  });
+
+  it('elementInfo nadal jest Object.frozen po rozszerzeniu', () => {
+    expect(Object.isFrozen(elementInfo)).toBe(true);
+  });
+});

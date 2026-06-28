@@ -498,6 +498,11 @@ input[type=range]::-webkit-slider-thumb:hover {
 }
 
 /* === Phase 4 — left column StepPanel === */
+/* FIX: tryb swobodny ukrywa panel procedury (StepPanel ustawia [hidden]). */
+.step-panel[hidden] {
+  display: none;
+}
+
 .step-panel {
   position: absolute;
   top: 5rem; /* poniżej #status-panel */
@@ -696,6 +701,192 @@ body.training-complete #status-panel {
 /* Wariant dla ConfirmModal — węższy */
 .modal-card--confirm {
   width: min(440px, 92vw);
+}
+
+/* ── ElementInfoOverlay — pełnoekranowy blokujący modal (Phase 14, OVL-01/02/03) ─
+   Zastępuje wcześniejszy boczny dymek. dialog.showModal() + natywny ::backdrop. */
+.modal-card--element-info-overlay {
+  width: min(720px, 92vw);
+  max-height: 80vh;
+}
+
+/* Wiersz zakładek */
+.element-info-overlay__tabs {
+  display: flex;
+  gap: 8px;
+  border-bottom: 1px solid var(--glass-border);
+  padding-bottom: 8px;
+  margin-bottom: 16px;
+}
+
+.element-info-overlay__tab {
+  appearance: none;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px 8px 0 0;
+  padding: 8px 14px;
+  color: var(--text-muted);
+  font: inherit;
+  cursor: pointer;
+  transition: color 120ms ease, background 120ms ease;
+}
+
+.element-info-overlay__tab:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* Aktywna zakładka — wskaźnik */
+.element-info-overlay__tab[aria-selected="true"] {
+  color: var(--text-main);
+  border-bottom: 2px solid var(--accent, #4a9eff);
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* Panele treści — tylko aktywny widoczny */
+.element-info-overlay__panel {
+  display: none;
+}
+
+.element-info-overlay__panel--active {
+  display: block;
+}
+
+.element-info-overlay__text {
+  font-size: 14px;
+  line-height: 1.6;
+  margin: 0;
+}
+
+/* Slot mediów */
+.element-info-overlay__media {
+  margin-top: 16px;
+  color: var(--text-muted);
+  font-size: 13px;
+  font-style: italic;
+}
+
+/* Slot lektora w headerze */
+.element-info-overlay__lector-slot {
+  margin-left: auto;
+  margin-right: 8px;
+}
+
+/* ::backdrop — natywne przyciemnienie (brak .modal-overlay div) */
+.modal-card--element-info-overlay::backdrop {
+  background: rgba(11, 15, 25, 0.85);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+/* ── StartMenuOverlay — ekran startowy wyboru trybu (Phase 15, MENU-01/02) ─
+   <div> (NIE <dialog>) sterowany store.showStartMenu przez display.
+   z-index 200 — nad canvasem, pod #modal-container (z-index 300). */
+#start-menu-container {
+  display: none; /* nadpisywane inline przez _render() (block/none) */
+}
+
+.start-menu__overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(11, 15, 25, 0.85);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+}
+
+.start-menu__panel {
+  width: min(720px, 92vw);
+  max-height: 86vh;
+  overflow-y: auto;
+  background: var(--glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--glass-border);
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
+  color: var(--text-main);
+}
+
+.start-menu__title {
+  font-size: 24px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--text-main);
+}
+
+.start-menu__subtitle {
+  font-size: 14px;
+  color: var(--text-muted);
+  margin: 0 0 24px;
+}
+
+.start-menu__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.start-menu__card {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  padding: 16px;
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.start-menu__card:hover {
+  border-color: rgba(255, 255, 255, 0.35);
+}
+
+.start-menu__card--selected {
+  border-color: var(--accent, #4f9dff);
+  background: rgba(79, 157, 255, 0.12);
+}
+
+.start-menu__card-title {
+  font-size: 16px;
+  font-weight: 600;
+  margin: 0 0 8px;
+  color: var(--text-main);
+}
+
+.start-menu__card-desc {
+  font-size: 13px;
+  line-height: 1.4;
+  color: var(--text-muted);
+  margin: 0 0 8px;
+}
+
+.start-menu__last-session {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin: 0;
+  min-height: 1em; /* rezerwacja miejsca — brak skoku layoutu gdy brak danych */
+}
+
+.start-menu__start-btn {
+  appearance: none;
+  width: 100%;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-main);
+  background: rgba(79, 157, 255, 0.2);
+  border: 1px solid var(--accent, #4f9dff);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.start-menu__start-btn:hover {
+  background: rgba(79, 157, 255, 0.35);
 }
 
 /* ── Modal card — wewnętrzne sekcje ─────────────────────── */
@@ -1419,4 +1610,111 @@ body.training-complete #status-panel {
 @keyframes session-overlay-fade-in {
   from { opacity: 0; }
   to   { opacity: 1; }
+}
+
+/* ── Quiz BHP (Phase 17, TEST-09) — blok .bhp-quiz__* ────────────────────
+   Renderowany wewnątrz .modal-card (dialog 'bhp-quiz'). Reużywa zmiennych
+   glassmorphism (--glass-*, --accent-*, --text-*). Wyłącznie dodatkowy blok. */
+.bhp-quiz__progress {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-bottom: 12px;
+}
+
+.bhp-quiz__question {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
+  line-height: 1.5;
+  margin-bottom: 16px;
+}
+
+.bhp-quiz__options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.bhp-quiz__option {
+  text-align: left;
+  padding: 12px 16px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--text-main);
+  cursor: pointer;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.bhp-quiz__option:hover {
+  border-color: var(--accent-hover);
+}
+
+.bhp-quiz__option--selected {
+  border-color: var(--accent-primary);
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.bhp-quiz__steps {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.bhp-quiz__step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-radius: 10px;
+  color: var(--text-main);
+}
+
+.bhp-quiz__step--selected {
+  border-color: var(--accent-primary);
+}
+
+.bhp-quiz__feedback {
+  margin-top: 16px;
+  padding: 14px 16px;
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  border-left: 3px solid var(--accent-secondary);
+  border-radius: 10px;
+  color: var(--text-main);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.bhp-quiz__feedback--wrong {
+  border-left-color: #ef4444;
+}
+
+.bhp-quiz__norm-ref {
+  display: block;
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.bhp-quiz__score-screen {
+  text-align: center;
+  padding: 16px 0;
+}
+
+.bhp-quiz__score-value {
+  font-size: 2.4rem;
+  font-weight: 700;
+  color: var(--accent-primary);
+}
+
+.bhp-quiz__score-status {
+  margin-top: 8px;
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-main);
 }

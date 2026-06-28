@@ -1,0 +1,24 @@
+# PM-300 Trener — Media Attribution
+# Format: one block per file. Gate: no non-commercial (NC) CC licenses allowed.
+# Updated: 2026-06-19
+
+---
+filename: tabliczka-znamionowa.webp
+author: PM-300 Trener project (generated placeholder)
+source_url: local
+license: własność firmy (placeholder — do podmiany)
+notes: Pure-Python PNG saved as .webp; browser sniffs content correctly.
+
+---
+filename: kolo-zamachowe-placeholder.webp
+author: PM-300 Trener project (generated placeholder)
+source_url: local
+license: własność firmy (placeholder — do podmiany)
+notes: Placeholder — replace with CC0/CC BY/CC BY-SA photo at same URL.
+
+---
+filename: hamulec-placeholder.webp
+author: PM-300 Trener project (generated placeholder)
+source_url: local
+license: własność firmy (placeholder — do podmiany)
+notes: Placeholder — replace with CC0/CC BY/CC BY-SA photo at same URL.

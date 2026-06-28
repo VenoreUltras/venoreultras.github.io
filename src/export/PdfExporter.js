@@ -12,7 +12,8 @@
 import { pl, pluralPL } from '../i18n/pl.js';
 
 const APP_VERSION = 'pm300-trener v1.0';
-const FONT_URL = '/fonts/NotoSans-Regular.ttf';
+// BASE_URL = '/' w dev/test, '/HydraulicPress/' w buildzie (GitHub Pages subpath).
+const FONT_URL = import.meta.env.BASE_URL + 'fonts/NotoSans-Regular.ttf';
 const FONT_VFS_NAME = 'NotoSans-Regular.ttf';
 const FONT_NAME = 'NotoSans';
 
@@ -257,6 +258,26 @@ export async function generatePdf({ state, scenarioTitlePL, metrics, allAttempts
       doc.text(`#${idx + 1}: Wynik ${score}/100`, MARGIN_L, y);
       y += 5;
     });
+  }
+
+  // ── Sekcja 5 — Wynik BHP (quiz) ───────────────────────────────────────────
+  // EXAM-04 — additive. Renderowana TYLKO gdy quiz ukończony (finishedAt ustawione).
+  // Tryb nauka (finishedAt===null) i stany bez quizu pomijają sekcję — pozycja footera
+  // niezmieniona. Sekcja proceduralna (scoring) nietknięta (CRIT-V12-5 izolacja).
+  if (state.quiz?.finishedAt !== null && state.quiz?.finishedAt !== undefined) {
+    doc.setFontSize(12);
+    y = _ensureSpace(doc, y, 8, header);
+    doc.text(pl.pdf.sectionBhpResult, MARGIN_L, y);
+    y += 7;
+    doc.setFontSize(10);
+
+    const total = state.quiz.questions?.length ?? 0;
+    const correct = total > 0 ? Math.round((state.quiz.score / 100) * total) : 0;
+    const passed = state.quiz.score >= 80; // QUIZ_PASS_THRESHOLD
+    doc.text(`${pl.pdf.bhpScore}: ${correct}/${total} (${state.quiz.score}%)`, MARGIN_L, y);
+    y += 6;
+    doc.text(passed ? pl.pdf.bhpPassed : pl.pdf.bhpFailed, MARGIN_L, y);
+    y += 10;
   }
 
   // ── Footer dla każdej strony ──────────────────────────────────────────────

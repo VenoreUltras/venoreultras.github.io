@@ -6,9 +6,7 @@
     <title>Interaktywna Instrukcja Prasy Mimośrodowej</title>
     <!-- Google Fonts for modern technical look -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/style.css"
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-<script src="./js/main.js" type="module"></script>
+    <link rel="stylesheet" href="/style.css">
   </head>
   <body>
     <!-- Kontener na scenę Three.js -->
@@ -74,6 +72,10 @@
 
     <!-- Phase 5: kontener modali (HelpModal + ConfirmModal, z-index:300, pointer-events:none) -->
     <div id="modal-container" style="position:fixed;inset:0;z-index:300;pointer-events:none;"></div>
+
+    <!-- Phase 15 (MENU-01): mount point dla StartMenuOverlay. Brak pointer-events:none — menu jest interaktywne.
+         Styling (z-index:200, display toggle) w style.css; musi istnieć w DOM przed new StartMenuOverlay(). -->
+    <div id="start-menu-container"></div>
 
     <script type="module" src="/src/main.js"></script>
   </body>

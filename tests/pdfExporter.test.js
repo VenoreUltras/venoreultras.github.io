@@ -145,6 +145,53 @@ describe('PdfExporter.generatePdf — jsPDF flow + Noto Sans embed (D-Phase6-16)
   });
 });
 
+describe('PdfExporter.generatePdf — EXAM-04 sekcja BHP (Wynik BHP)', () => {
+  beforeEach(() => {
+    Object.values(mockDoc).forEach((fn) => {
+      if (typeof fn === 'function' && fn.mockClear) fn.mockClear();
+    });
+    mockDoc.internal.getNumberOfPages.mockClear();
+    mockDoc.internal.getNumberOfPages.mockReturnValue(1);
+
+    vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({
+      ok: true,
+      arrayBuffer: () => Promise.resolve(new ArrayBuffer(1024)),
+    })));
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it('renderuje sekcję BHP (sectionBhpResult) gdy quiz ukończony', async () => {
+    const stateWithQuiz = {
+      ...mockState,
+      quiz: { questions: [{}, {}, {}, {}, {}], score: 80, finishedAt: 7000 },
+    };
+    await generatePdf({ state: stateWithQuiz, scenarioTitlePL: 'Uruchomienie', metrics: mockMetrics });
+    const allTextCalls = mockDoc.text.mock.calls.map((c) => c[0]);
+    expect(allTextCalls).toContain(pl.pdf.sectionBhpResult);
+    expect(allTextCalls.some((t) => typeof t === 'string' && /4\/5 \(80%\)/.test(t))).toBe(true);
+    expect(allTextCalls).toContain(pl.pdf.bhpPassed);
+  });
+
+  it('NIE renderuje sekcji BHP gdy quiz.finishedAt === null (tryb nauka)', async () => {
+    const naukaState = {
+      ...mockState,
+      quiz: { questions: [{}], score: 0, finishedAt: null },
+    };
+    await generatePdf({ state: naukaState, scenarioTitlePL: 'Uruchomienie', metrics: mockMetrics });
+    const allTextCalls = mockDoc.text.mock.calls.map((c) => c[0]);
+    expect(allTextCalls).not.toContain(pl.pdf.sectionBhpResult);
+  });
+
+  it('NIE renderuje sekcji BHP gdy state nie ma quizu (tryb proceduralny)', async () => {
+    await generatePdf({ state: mockState, scenarioTitlePL: 'Uruchomienie', metrics: mockMetrics });
+    const allTextCalls = mockDoc.text.mock.calls.map((c) => c[0]);
+    expect(allTextCalls).not.toContain(pl.pdf.sectionBhpResult);
+  });
+});
+
 describe('PdfExporter.downloadPdf — anchor click + revokeObjectURL', () => {
   let createSpy, revokeSpy, clickSpy;
 

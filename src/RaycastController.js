@@ -185,15 +185,20 @@ export class RaycastController {
       this._onManipulationClick?.(meshId, mesh);
     }
 
-    // Phase 11 Plan 11-03 (FUNC-11-03/07): mode branch — klik w 'free' / 'nauka' otwiera
-    // ElementInfoPanel zamiast advance SOP. Tryb 'egzamin' (lub mode undefined w testach
-    // backward-compat) → fall-through do bimanual / attemptStep flow.
+    // Phase 11 Plan 11-03 (FUNC-11-03/07): mode branch — klik TYLKO w 'free' otwiera
+    // ElementInfoPanel (swobodna eksploracja, brak prowadzonego SOP). Tryby 'nauka' i
+    // 'egzamin' (oraz mode undefined w testach backward-compat) → fall-through do bimanual /
+    // attemptStep flow, bo to one napędzają procedurę: kroki + punktacja (D-Phase3-04 —
+    // ZAWSZE attemptStep przy hicie, wrong-mesh = engine-side violation). Wcześniej 'nauka'
+    // też otwierała dymek i robiła return → SOP nigdy nie dostawał kliknięcia, więc kroki i
+    // punktacja w nauce nie działały (FIX).
     // _onManipulationClick (animacja oslony/dzwigni) emit'owane PRZED — animacja działa we
     // wszystkich trybach (Phase 10 inwariant).
     const storeStateForMode = this._store.getState();
     const mode = storeStateForMode.mode;
-    if ((mode === 'free' || mode === 'nauka') && typeof storeStateForMode.openElementInfo === 'function') {
-      storeStateForMode.openElementInfo(meshId);
+    if (mode === 'free' && typeof storeStateForMode.openElementInfo === 'function') {
+      // FIX (dymek): przekazujemy pozycję kliknięcia → ElementInfoPanel renderuje tooltip przy kursorze.
+      storeStateForMode.openElementInfo(meshId, { x: event.clientX, y: event.clientY });
       return;
     }
 

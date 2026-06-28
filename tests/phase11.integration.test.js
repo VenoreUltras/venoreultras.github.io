@@ -86,7 +86,7 @@ describe('Phase 11 — integration audit (FUNC-11-13)', () => {
       'src/data/elementInfo.js',
       'src/data/lectorVoices.js',
       'src/lector/LectorService.js',
-      'src/ui/ElementInfoPanel.js',
+      'src/ui/ElementInfoOverlay.js',
       'src/ui/ExamPromptModal.js',
     ];
     const missing = required.filter(path => !src.includes(path));
@@ -130,7 +130,7 @@ describe('Phase 11 — nowe moduły istnieją na dysku', () => {
       'src/data/elementInfo.js',
       'src/data/lectorVoices.js',
       'src/lector/LectorService.js',
-      'src/ui/ElementInfoPanel.js',
+      'src/ui/ElementInfoOverlay.js',
       'src/ui/ExamPromptModal.js',
     ];
     const missing = modules.filter(p => !existsSync(join(ROOT, p)));

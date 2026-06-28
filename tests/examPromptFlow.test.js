@@ -42,13 +42,16 @@ describe('exam prompt flow — Plan 11-04 (FUNC-11-05/06)', () => {
     expect(store.getState()._examPromptShown).toBe(false);
   });
 
-  it('3. mode=egzamin + finishedAt set → endExam() (mode=free), NIE exam-prompt', () => {
+  it('3. mode=egzamin + finishedAt set → activeModal=bhp-quiz + quiz uruchomiony (Phase 13 EXAM-02)', () => {
     store.getState().setMode('egzamin');
     expect(store.getState().mode).toBe('egzamin');
 
     store.setState({ session: { ...store.getState().session, finishedAt: Date.now() } });
 
-    expect(store.getState().mode).toBe('free');
+    // Phase 13: subscriber woła startQuiz + ustawia activeModal='bhp-quiz' zamiast endExam().
+    expect(store.getState().activeModal).toBe('bhp-quiz');
+    expect(store.getState().quiz.questions.length).toBeGreaterThan(0);
+    expect(store.getState().mode).toBe('egzamin'); // mode zostaje egzamin — endExam jest Phase 17
     expect(store.getState().activeModal).not.toBe('exam-prompt');
   });
 

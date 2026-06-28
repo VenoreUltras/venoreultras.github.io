@@ -61,6 +61,11 @@ export class StepPanel {
       this._store.subscribe((s) => s.steps,         () => this._render()),
       this._store.subscribe((s) => s.isAnimating,   () => this._render()),
       this._store.subscribe((s) => s.difficulty,    () => this._render()),
+      // FIX: w trybie swobodnym (freeRoam) panel procedury jest ukryty —
+      // brak prowadzonego SOP, użytkownik tylko eksploruje i klika części po opis.
+      // Używamy freeRoam (a nie mode) bo to istniejąca flaga "swobodnej eksploracji"
+      // (analog HighlightManager, który na freeRoam wyłącza podpowiedzi).
+      this._store.subscribe((s) => s.freeRoam,      () => this._render()),
       // Phase 6 Plan 06-05 (D-Phase6-04): subscriber na bimanualHintState
       // tylko toggle'uje klasy CSS w istniejącym .bimanual-hint elemencie — UNIKAMY
       // full re-render bo klasy zmieniają się 3-4 razy w 500-1000ms (active→timeout/success→idle).
@@ -76,6 +81,16 @@ export class StepPanel {
 
   _render() {
     const state = this._store.getState();
+
+    // FIX: tryb swobodny — ukryj cały panel procedury (overlay z trybu nauki).
+    // Brak prowadzonego SOP w trybie swobodnym; panel wraca w 'nauka'/'egzamin'.
+    if (state.freeRoam) {
+      this._root.replaceChildren();
+      this._root.hidden = true;
+      return;
+    }
+    this._root.hidden = false;
+
     const scenario = state.activeScenario;
     if (!scenario) {
       this._root.replaceChildren(); // graceful — Plan 04-06 bootstrap może mountować przed startScenario
