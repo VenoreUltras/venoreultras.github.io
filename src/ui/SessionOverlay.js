@@ -54,6 +54,12 @@ export class SessionOverlay {
           <span class="session-overlay__score-value" aria-live="polite"></span>
           <span class="session-overlay__score-label"></span>
         </div>
+        <div class="session-overlay__exam-result" hidden>
+          <span class="session-overlay__exam-label"></span>
+          <span class="session-overlay__exam-value" aria-live="polite"></span>
+          <span class="session-overlay__exam-verdict"></span>
+          <span class="session-overlay__exam-breakdown"></span>
+        </div>
         <div class="session-overlay__metrics"></div>
         <div class="session-overlay__errors"></div>
         <div class="session-overlay__actions">
@@ -68,6 +74,12 @@ export class SessionOverlay {
     this._closeBtn = this._root.querySelector('.session-overlay__close');
     this._scoreValueEl = this._root.querySelector('.session-overlay__score-value');
     this._scoreLabelEl = this._root.querySelector('.session-overlay__score-label');
+    // Phase 19 Plan 19-02 (EXAM-05): sekcja łącznego wyniku egzaminu — cache elementów.
+    this._examResultEl = this._root.querySelector('.session-overlay__exam-result');
+    this._examLabelEl = this._root.querySelector('.session-overlay__exam-label');
+    this._examValueEl = this._root.querySelector('.session-overlay__exam-value');
+    this._examVerdictEl = this._root.querySelector('.session-overlay__exam-verdict');
+    this._examBreakdownEl = this._root.querySelector('.session-overlay__exam-breakdown');
     this._metricsEl = this._root.querySelector('.session-overlay__metrics');
     this._errorsEl = this._root.querySelector('.session-overlay__errors');
     this._replayBtn = this._root.querySelector('.session-overlay__replay-btn');
@@ -80,6 +92,8 @@ export class SessionOverlay {
     this._scoreLabelEl.textContent = pl.overlay.scoreLabel;
     this._replayBtn.textContent = pl.overlay.openReplay;
     this._retryBtn.textContent = pl.overlay.retry;
+    // EXAM-05: statyczna etykieta sekcji łącznego wyniku (zawsze po polsku).
+    this._examLabelEl.textContent = pl.overlay.examScoreLabel;
 
     // Listenery
     this._onClose = () => this._store.getState().closeOverlay();
@@ -108,6 +122,8 @@ export class SessionOverlay {
       this._store.subscribe((s) => s.scoring.score, () => this._renderIfVisible()),
       this._store.subscribe((s) => s.session.finishedAt, () => this._renderIfVisible()),
       this._store.subscribe((s) => s.difficulty, () => this._renderIfVisible()),
+      // EXAM-05: re-render gdy quiz zostanie ukończony (quiz.finishedAt zmienia null → ts).
+      this._store.subscribe((s) => s.quiz.finishedAt, () => this._renderIfVisible()),
     );
   }
 
@@ -195,6 +211,39 @@ export class SessionOverlay {
     // Retry visible tylko w Nauka
     const isNauka = s.difficulty === 'nauka';
     this._retryBtn.style.display = isNauka ? '' : 'none';
+
+    // EXAM-05: łączny wynik egzaminu — liczony WYŁĄCZNIE w widoku, nigdy w store (CRIT-V12-5).
+    const isEgzamin = s.difficulty === 'egzamin';
+    const quizFinished = s.quiz.finishedAt !== null && s.quiz.questions.length > 0;
+    if (isEgzamin && quizFinished) {
+      const sopTotal = (scenario?.steps?.length) ?? 0;
+      const sopCorrect = sopTotal - metrics.missedSteps.length;
+      const bhpTotal = s.quiz.questions.length;
+      const bhpCorrect = s.quiz.questions.reduce(
+        (acc, q, i) => acc + (this._quizCorrectAt(q, s.quiz.answers[i]) ? 1 : 0),
+        0,
+      );
+      const denominator = sopTotal + bhpTotal;
+      if (denominator > 0) {
+        const pct = Math.round(((sopCorrect + bhpCorrect) / denominator) * 100);
+        const passed = pct >= 80;
+        // XSS-safe: textContent dla wszystkich wartości dynamicznych.
+        this._examValueEl.textContent = pl.overlay.examScoreValue(pct);
+        this._examVerdictEl.textContent = passed ? pl.overlay.verdictPassed : pl.overlay.verdictFailed;
+        this._examVerdictEl.className = 'session-overlay__exam-verdict';
+        this._examVerdictEl.classList.add(
+          passed ? 'session-overlay__exam-verdict--pass' : 'session-overlay__exam-verdict--fail',
+        );
+        this._examBreakdownEl.textContent = pl.overlay.examBreakdown(
+          sopCorrect, sopTotal, bhpCorrect, bhpTotal,
+        );
+        this._examResultEl.hidden = false;
+      } else {
+        this._examResultEl.hidden = true;
+      }
+    } else {
+      this._examResultEl.hidden = true;
+    }
   }
 
   _makeMetricRow(text) {
@@ -202,6 +251,25 @@ export class SessionOverlay {
     row.className = 'metric-row';
     row.textContent = text;
     return row;
+  }
+
+  /**
+   * Lokalna replika logiki store.isCorrect — widok, NIE zapis do store (CRIT-V12-5).
+   * Granty boundary: SessionOverlay NIE importuje ze ../state/. Replika musi pozostać
+   * zsynchronizowana z isCorrect w trainingStore.js gdy zmienia się kontrakt pytań.
+   *
+   * @param {object} q - pytanie (mc/tf: correctIdx; sequence: correctOrder)
+   * @param {number | number[]} answer - odpowiedź ucznia
+   * @returns {boolean}
+   */
+  _quizCorrectAt(q, answer) {
+    if (q.type === 'mc' || q.type === 'tf') {
+      return answer === q.correctIdx;
+    }
+    if (q.type === 'sequence') {
+      return JSON.stringify(answer) === JSON.stringify(q.correctOrder);
+    }
+    return false;
   }
 
   dispose() {

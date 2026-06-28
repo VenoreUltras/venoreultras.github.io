@@ -358,6 +358,12 @@ export const pl = {
     metricErrors:   (n) => `${n} ${pluralPL(n, pl.plurals.blad)} w tej próbie`,
     metricTime:     (mm, ss) => `Czas: ${mm}:${ss}`,
     metricAttempts: (n) => `${n} ${pluralPL(n, pl.plurals.proba)}`,
+    // Phase 19 Plan 19-02 (EXAM-05): łączny wynik egzaminu — combined score + werdykt + rozbicie.
+    examScoreLabel:  'Wynik egzaminu',
+    verdictPassed:   'Zaliczony',
+    verdictFailed:   'Niezaliczony',
+    examScoreValue:  (pct) => `${pct}%`,
+    examBreakdown:   (sc, st, bc, bt) => `SOP: ${sc}/${st} kroków | BHP: ${bc}/${bt} pytań`,
   },
 
   // Phase 6 Plan 06-01 (UI-SPEC §Copywriting Contract): replay drawer.
