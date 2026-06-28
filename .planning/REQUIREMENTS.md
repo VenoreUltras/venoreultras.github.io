@@ -27,8 +27,8 @@ Milestone czyszcząco-dopracowujący na istniejącym kodzie v1.2. Numeracja faz 
 
 ### Testy i regresja (TEST)
 
-- [ ] **TEST-11**: Testy usuniętych funkcji (PdfExporter, JsonExporter, HUM, parametry panel) skasowane lub zaktualizowane; nowe testy pokrywają połączoną punktację (EXAM-05) i feedback odpowiedzi (QUIZ-01); pozostały suite zielony, `getInteractables().size===15` i maszyna trybów bez regresji
-- [ ] **TEST-12**: `npm run build` przechodzi i main bundle jest mniejszy niż baseline 834.98 KB (usunięcie `jspdf` + `html2canvas`); brak referencji do `/fonts/NotoSans` po wycofaniu PDF
+- [x] **TEST-11**: Testy usuniętych funkcji (PdfExporter, JsonExporter, HUM, parametry panel) skasowane lub zaktualizowane; nowe testy pokrywają połączoną punktację (EXAM-05) i feedback odpowiedzi (QUIZ-01); pozostały suite zielony, `getInteractables().size===15` i maszyna trybów bez regresji
+- [x] **TEST-12**: `npm run build` przechodzi i main bundle jest mniejszy niż baseline 834.98 KB (usunięcie `jspdf` + `html2canvas`); brak referencji do `/fonts/NotoSans` po wycofaniu PDF
 
 ## Future Requirements (v1.4+ / P2)
 
@@ -69,8 +69,8 @@ Potwierdzone jako wartościowe, ale poza zakresem v1.3.
 | EXAM-05 | Phase 19 | Complete |
 | QUIZ-01 | Phase 19 | Complete |
 | QUIZ-02 | Phase 19 | Complete |
-| TEST-11 | Phase 20 | Pending |
-| TEST-12 | Phase 20 | Pending |
+| TEST-11 | Phase 20 | Complete |
+| TEST-12 | Phase 20 | Complete |
 
 **Coverage:**
 - v1.3 requirements: **9 total** (CLEAN×3 + EXAM×2 + QUIZ×2 + TEST×2)
