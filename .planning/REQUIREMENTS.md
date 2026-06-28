@@ -12,7 +12,7 @@ Milestone czyszcząco-dopracowujący na istniejącym kodzie v1.2. Numeracja faz 
 ### Usunięcia i sprzątanie (CLEAN)
 
 - [x] **CLEAN-01**: Eksport wyników sesji (PDF i JSON) całkowicie usunięty — `src/export/PdfExporter.js` i `src/export/JsonExporter.js` skasowane, przyciski eksportu zniknięte z `SessionOverlay`, zależności `jspdf` i `html2canvas` usunięte z `package.json` (bundle się kurczy)
-- [ ] **CLEAN-02**: Panel „Parametry Układu" usunięty — blok `info-panel` (skok suwaka, długość korbowodu, kąt wału, wychylenie suwaka, wzór kinematyczny) zniknięty z `index.html`, a martwy update telemetrii (`val-angle` / `val-displacement`) wycięty z `src/UI.js` bez regresji pętli animacji
+- [x] **CLEAN-02**: Panel „Parametry Układu" usunięty — blok `info-panel` (skok suwaka, długość korbowodu, kąt wału, wychylenie suwaka, wzór kinematyczny) zniknięty z `index.html`, a martwy update telemetrii (`val-angle` / `val-displacement`) wycięty z `src/UI.js` bez regresji pętli animacji
 - [ ] **CLEAN-03**: Dźwięk pracującej prasy (HUM silnika) usunięty z `src/education/AudioController.js`; dźwięki alarmu (awaria) i confirm (potwierdzenie kroku) pozostają w pełni funkcjonalne
 
 ### Egzamin — połączona punktacja (EXAM)
@@ -63,7 +63,7 @@ Potwierdzone jako wartościowe, ale poza zakresem v1.3.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | CLEAN-01 | Phase 18 | Complete |
-| CLEAN-02 | Phase 18 | Pending |
+| CLEAN-02 | Phase 18 | Complete |
 | CLEAN-03 | Phase 18 | Pending |
 | EXAM-06 | Phase 18 | Complete |
 | EXAM-05 | Phase 19 | Pending |
