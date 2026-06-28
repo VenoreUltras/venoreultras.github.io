@@ -39,12 +39,6 @@ import { ReplayDrawer } from './ui/ReplayDrawer.js';
 import { SessionOverlay } from './ui/SessionOverlay.js';
 import { computeMetrics } from './training/ScoringService.js';
 import {
-  buildJsonPayload,
-  downloadJson,
-  generateFilename as jsonFilename,
-} from './export/JsonExporter.js';
-import { downloadPdf, generateFilename as pdfFilename } from './export/PdfExporter.js';
-import {
   loadPersistedSession,
   savePersistedSession,
   SESSION_KEY,
@@ -397,8 +391,6 @@ export class Application {
       store: this.store,
       scenarios: allScenarios,
       computeMetrics,
-      jsonExporter: { build: buildJsonPayload, download: downloadJson, generateFilename: jsonFilename },
-      pdfExporter: { download: downloadPdf, generateFilename: pdfFilename },
     });
 
     // Phase 15 (MENU-01/03): StartMenuOverlay — ekran startowy wyboru trybu.

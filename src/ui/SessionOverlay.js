@@ -1,8 +1,8 @@
 // src/ui/SessionOverlay.js
 // Phase 6 — D-Phase6-17, SCORE-05/06. Results modal po zakończeniu sesji.
 //
-// Boundary: importuje wyłącznie pl (i18n) + DOM. computeMetrics + JsonExporter + PdfExporter
-// + scenarios mapa wstrzykiwane przez Application (DI, Plan 06-08).
+// Boundary: importuje wyłącznie pl (i18n) + DOM. computeMetrics + scenarios mapa
+// wstrzykiwane przez Application (DI, Plan 06-08).
 // Subscriber na state.overlayOpen i scoring.score; renderuje gdy overlayOpen === true.
 
 import { pl, pluralPL } from '../i18n/pl.js';
@@ -24,23 +24,18 @@ function _formatTimeMs(ms) {
  *   store,
  *   scenarios: { 'uruchomienie': {...}, ... },
  *   computeMetrics: ScoringService.computeMetrics,
- *   jsonExporter: { build: buildJsonPayload, download: downloadJson, generateFilename: jsonFilename },
- *   pdfExporter:  { download: downloadPdf, generateFilename: pdfFilename },
  * });
  */
 export class SessionOverlay {
-  constructor({ store, scenarios, computeMetrics, jsonExporter, pdfExporter, rootElementId = 'session-overlay' }) {
+  constructor({ store, scenarios, computeMetrics, rootElementId = 'session-overlay' }) {
     this._store = store;
     this._scenarios = scenarios ?? {};
     this._computeMetrics = computeMetrics;
-    this._jsonExporter = jsonExporter;
-    this._pdfExporter = pdfExporter;
 
     this._root = document.getElementById(rootElementId);
     if (!this._root) {
       throw new Error(`SessionOverlay: brak #${rootElementId} w DOM`);
     }
-    this._pdfLoading = false;
     this._unsubscribers = [];
     this._build();
     this._wireSubscribers();
@@ -64,8 +59,6 @@ export class SessionOverlay {
         <div class="session-overlay__actions">
           <button class="btn secondary session-overlay__replay-btn" type="button"></button>
           <button class="btn secondary session-overlay__retry-btn" type="button" style="display:none;"></button>
-          <button class="btn primary session-overlay__export-json-btn" type="button"></button>
-          <button class="btn primary session-overlay__export-pdf-btn" type="button"></button>
         </div>
       </div>
     `;
@@ -79,8 +72,6 @@ export class SessionOverlay {
     this._errorsEl = this._root.querySelector('.session-overlay__errors');
     this._replayBtn = this._root.querySelector('.session-overlay__replay-btn');
     this._retryBtn = this._root.querySelector('.session-overlay__retry-btn');
-    this._exportJsonBtn = this._root.querySelector('.session-overlay__export-json-btn');
-    this._exportPdfBtn = this._root.querySelector('.session-overlay__export-pdf-btn');
 
     // Statyczne label/aria (XSS-safe textContent)
     this._closeBtn.textContent = '✕';
@@ -89,8 +80,6 @@ export class SessionOverlay {
     this._scoreLabelEl.textContent = pl.overlay.scoreLabel;
     this._replayBtn.textContent = pl.overlay.openReplay;
     this._retryBtn.textContent = pl.overlay.retry;
-    this._exportJsonBtn.textContent = pl.overlay.exportJson;
-    this._exportPdfBtn.textContent = pl.overlay.exportPdf;
 
     // Listenery
     this._onClose = () => this._store.getState().closeOverlay();
@@ -108,45 +97,6 @@ export class SessionOverlay {
 
     this._onRetry = () => this._store.getState().retry();
     this._retryBtn.addEventListener('click', this._onRetry);
-
-    this._onExportJson = () => {
-      const s = this._store.getState();
-      const scenarioId = s.session.scenarioId;
-      const scenarioTitlePL = this._scenarios[scenarioId]?.titlePL ?? pl.scenarios[scenarioId]?.title ?? scenarioId;
-      const payload = this._jsonExporter.build(s, scenarioTitlePL);
-      const filename = this._jsonExporter.generateFilename(scenarioId);
-      this._jsonExporter.download(payload, filename);
-    };
-    this._exportJsonBtn.addEventListener('click', this._onExportJson);
-
-    this._onExportPdf = async () => {
-      if (this._pdfLoading) return;
-      const s = this._store.getState();
-      const scenarioId = s.session.scenarioId;
-      const scenario = this._scenarios[scenarioId] ?? s.activeScenario;
-      const scenarioTitlePL = this._scenarios[scenarioId]?.titlePL ?? pl.scenarios[scenarioId]?.title ?? scenarioId;
-      const metrics = this._computeMetrics(s.events, scenario);
-      const allAttempts = (s.session.attempts ?? []).map((a) => ({
-        attemptIdx: a.attemptIdx,
-        score: a.scoring?.score,
-      }));
-      const filename = this._pdfExporter.generateFilename(scenarioId);
-
-      this._pdfLoading = true;
-      this._exportPdfBtn.disabled = true;
-      try {
-        await this._pdfExporter.download(
-          { state: s, scenarioTitlePL, metrics, allAttemptsMetrics: allAttempts },
-          filename,
-        );
-      } catch {
-        // Alert pokazany w downloadPdf; tu tylko unlock UI.
-      } finally {
-        this._pdfLoading = false;
-        this._exportPdfBtn.disabled = false;
-      }
-    };
-    this._exportPdfBtn.addEventListener('click', this._onExportPdf);
 
     // Initial hidden
     this._root.style.display = 'none';
@@ -259,8 +209,6 @@ export class SessionOverlay {
     if (this._backdropEl) this._backdropEl.removeEventListener('click', this._onClose);
     if (this._replayBtn) this._replayBtn.removeEventListener('click', this._onReplay);
     if (this._retryBtn) this._retryBtn.removeEventListener('click', this._onRetry);
-    if (this._exportJsonBtn) this._exportJsonBtn.removeEventListener('click', this._onExportJson);
-    if (this._exportPdfBtn) this._exportPdfBtn.removeEventListener('click', this._onExportPdf);
     for (const u of this._unsubscribers) u();
     this._unsubscribers = [];
   }
