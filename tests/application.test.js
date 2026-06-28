@@ -1086,13 +1086,13 @@ describe('Application — Phase 15 first-launch bootstrap (MENU-01)', () => {
     expect(app.store.getState().showStartMenu).toBe(true);
   });
 
-  it('MENU-01b: klucz start-menu-shown==="true" → showStartMenu pozostaje false (returning visitor)', async () => {
-    localStorage.setItem('pm300:start-menu-shown:v1', 'true');
+  it('MENU-01b: menu pokazuje się ZAWSZE na starcie — nawet gdy stara flaga start-menu-shown==="true" (MENU-01 v1.3)', async () => {
+    localStorage.setItem('pm300:start-menu-shown:v1', 'true'); // legacy klucz — nie może już tłumić menu
     vi.resetModules();
     const mod = await import('../src/main.js');
     Application = mod.Application;
     app = new Application();
-    expect(app.store.getState().showStartMenu).toBe(false);
+    expect(app.store.getState().showStartMenu).toBe(true);
   });
 });
 

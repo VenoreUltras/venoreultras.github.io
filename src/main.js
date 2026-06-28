@@ -51,7 +51,6 @@ const AUDIO_MUTE_KEY = 'pm300:audio-mute:v1';  // D-Phase5-18
 const MODE_KEY = 'pm300:mode:v1';              // Phase 11 Plan 11-01 (FUNC-11-01)
 const LECTOR_ENABLED_KEY = 'pm300:lector:enabled'; // Phase 11 Plan 11-05 (FUNC-11-12)
 const LECTOR_VOICE_KEY   = 'pm300:lector:voice';   // Phase 11 Plan 11-05 (FUNC-11-12)
-const START_MENU_SHOWN_KEY = 'pm300:start-menu-shown:v1'; // Phase 15 MENU-01 (first-launch flag)
 
 export class Application {
   constructor() {
@@ -133,16 +132,11 @@ export class Application {
       lectorVoiceId: lectorVoiceIdInitial,
     });
 
-    // Phase 15 MENU-01: first-launch detection. Brak klucza → pokaż menu; 'true' → pomiń.
-    // HARD CONSTRAINT (Pitfall 1): setState({ showStartMenu }) MUSI poprzedzać konstruktor overlayu
-    // (i innych subscriberów). Silent catch — private mode/quota → false (T-15-04).
-    const startMenuShownInitial = (() => {
-      try { return localStorage.getItem(START_MENU_SHOWN_KEY) === 'true'; }
-      catch { return false; }
-    })();
-    if (!startMenuShownInitial) {
-      this.store.setState({ showStartMenu: true });
-    }
+    // MENU-01 (v1.3): menu wyboru trybu pokazuje się ZAWSZE na starcie aplikacji
+    // (wcześniej tylko przy pierwszym uruchomieniu — zmiana na życzenie użytkownika).
+    // HARD CONSTRAINT (Pitfall 1): setState({ showStartMenu }) MUSI poprzedzać konstruktor
+    // overlayu (i innych subscriberów) — inaczej ctor odczyta showStartMenu=false.
+    this.store.setState({ showStartMenu: true });
 
     // Persist warstwa — store-side toggleMute/setDifficulty zmienia state, Application
     // zapisuje do localStorage. trainingStore zachowuje boundary clean (D-Phase5-26).

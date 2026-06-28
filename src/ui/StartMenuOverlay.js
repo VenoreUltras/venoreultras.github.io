@@ -16,7 +16,6 @@
 
 import { pl } from '../i18n/pl.js';
 
-const START_MENU_SHOWN_KEY = 'pm300:start-menu-shown:v1'; // MENU-01: flaga pierwszego uruchomienia
 const MODES = ['free', 'nauka', 'egzamin'];
 
 // Mapa mode → klucze pl.startMenu (tytuł/opis karty).
@@ -132,7 +131,8 @@ export class StartMenuOverlay {
   }
 
   /**
-   * "Rozpocznij" — gdy karta wybrana: ustaw tryb, schowaj menu, zapisz flagę pierwszego uruchomienia.
+   * "Rozpocznij" — gdy karta wybrana: ustaw tryb i schowaj menu (na czas sesji).
+   * Menu pojawi się ponownie przy następnym starcie aplikacji (MENU-01 v1.3).
    * @private
    */
   _onStart() {
@@ -140,11 +140,6 @@ export class StartMenuOverlay {
     const state = this._store.getState();
     state.setMode(this._selectedMode);
     state.hideMenu();
-    try {
-      localStorage.setItem(START_MENU_SHOWN_KEY, 'true');
-    } catch {
-      // ignoruj — private mode / quota exceeded (analog DisclaimerBanner)
-    }
   }
 
   /**

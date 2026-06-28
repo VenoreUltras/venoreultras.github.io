@@ -86,7 +86,7 @@ describe('StartMenuOverlay (MENU-01/02)', () => {
     expect(document.getElementById('start-menu-container').style.display).toBe('block');
   });
 
-  it('(c) klik karty + Rozpocznij → setMode(selected) + hideMenu() + flaga w localStorage', () => {
+  it('(c) klik karty + Rozpocznij → setMode(selected) + hideMenu() (bez trwałej flagi — MENU-01 v1.3 menu zawsze na starcie)', () => {
     store._state.showStartMenu = true;
     new StartMenuOverlay({ store });
     // wybierz kartę 'nauka'
@@ -99,7 +99,8 @@ describe('StartMenuOverlay (MENU-01/02)', () => {
 
     expect(store._state.setMode).toHaveBeenCalledWith('nauka');
     expect(store._state.hideMenu).toHaveBeenCalled();
-    expect(localStorage.getItem('pm300:start-menu-shown:v1')).toBe('true');
+    // MENU-01 v1.3: brak zapisu flagi pierwszego uruchomienia — menu pojawia się przy każdym starcie.
+    expect(localStorage.getItem('pm300:start-menu-shown:v1')).toBeNull();
   });
 
   it('(c2) Rozpocznij bez wybranej karty nie wywołuje setMode', () => {
