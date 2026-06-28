@@ -11,14 +11,14 @@ Milestone czyszcząco-dopracowujący na istniejącym kodzie v1.2. Numeracja faz 
 
 ### Usunięcia i sprzątanie (CLEAN)
 
-- [ ] **CLEAN-01**: Eksport wyników sesji (PDF i JSON) całkowicie usunięty — `src/export/PdfExporter.js` i `src/export/JsonExporter.js` skasowane, przyciski eksportu zniknięte z `SessionOverlay`, zależności `jspdf` i `html2canvas` usunięte z `package.json` (bundle się kurczy)
+- [x] **CLEAN-01**: Eksport wyników sesji (PDF i JSON) całkowicie usunięty — `src/export/PdfExporter.js` i `src/export/JsonExporter.js` skasowane, przyciski eksportu zniknięte z `SessionOverlay`, zależności `jspdf` i `html2canvas` usunięte z `package.json` (bundle się kurczy)
 - [ ] **CLEAN-02**: Panel „Parametry Układu" usunięty — blok `info-panel` (skok suwaka, długość korbowodu, kąt wału, wychylenie suwaka, wzór kinematyczny) zniknięty z `index.html`, a martwy update telemetrii (`val-angle` / `val-displacement`) wycięty z `src/UI.js` bez regresji pętli animacji
 - [ ] **CLEAN-03**: Dźwięk pracującej prasy (HUM silnika) usunięty z `src/education/AudioController.js`; dźwięki alarmu (awaria) i confirm (potwierdzenie kroku) pozostają w pełni funkcjonalne
 
 ### Egzamin — połączona punktacja (EXAM)
 
 - [ ] **EXAM-05**: Po ukończeniu egzaminu uczeń widzi jeden łączny wynik z interakcji 3D (SOP) i quizu BHP, liczony proporcjonalnie — suma zdobytych punktów obu części jako procent maksimum; obie części nadal widoczne z osobna w podsumowaniu
-- [ ] **EXAM-06**: EXAM-04 (z v1.2 — wynik w eksporcie PDF/JSON) zinwalidowany przez CLEAN-01; podsumowanie egzaminu prezentuje wynik wyłącznie na ekranie (`SessionOverlay`), bez ścieżki eksportu
+- [x] **EXAM-06**: EXAM-04 (z v1.2 — wynik w eksporcie PDF/JSON) zinwalidowany przez CLEAN-01; podsumowanie egzaminu prezentuje wynik wyłącznie na ekranie (`SessionOverlay`), bez ścieżki eksportu
 
 ### Quiz — dopracowanie UX (QUIZ)
 
@@ -62,10 +62,10 @@ Potwierdzone jako wartościowe, ale poza zakresem v1.3.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| CLEAN-01 | Phase 18 | Pending |
+| CLEAN-01 | Phase 18 | Complete |
 | CLEAN-02 | Phase 18 | Pending |
 | CLEAN-03 | Phase 18 | Pending |
-| EXAM-06 | Phase 18 | Pending |
+| EXAM-06 | Phase 18 | Complete |
 | EXAM-05 | Phase 19 | Pending |
 | QUIZ-01 | Phase 19 | Pending |
 | QUIZ-02 | Phase 19 | Pending |

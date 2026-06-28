@@ -37,7 +37,7 @@
   3. Dźwięk HUM silnika nie gra podczas pracy prasy w żadnym trybie; dźwięki alarmu (awaria) i confirm (potwierdzenie kroku) brzmią normalnie po odpowiednich zdarzeniach
   4. Po ukończeniu egzaminu `SessionOverlay` wyświetla wynik wyłącznie na ekranie — brak przycisku eksportu, brak referencji do `/fonts/NotoSans` w kodzie
 **Plans** (3 plans, 3 waves):
-- [ ] 18-01-PLAN.md — CLEAN-01 + EXAM-06: usunięcie eksportu PDF/JSON (moduły, zależność jspdf/html2canvas, przyciski SessionOverlay, plik czcionki), screen-only wynik
+- [x] 18-01-PLAN.md — CLEAN-01 + EXAM-06: usunięcie eksportu PDF/JSON (moduły, zależność jspdf/html2canvas, przyciski SessionOverlay, plik czcionki), screen-only wynik
 - [ ] 18-02-PLAN.md — CLEAN-02: usunięcie panelu Parametry Układu (index.html) + martwej telemetrii (UI.js, main.js)
 - [ ] 18-03-PLAN.md — CLEAN-03: usunięcie ścieżki HUM z AudioController + main.js + testy audio
 
@@ -66,7 +66,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 18. Usunięcia i sprzątanie | 0/? | Not started | - |
+| 18. Usunięcia i sprzątanie | 1/3 | In Progress|  |
 | 19. Egzamin — połączony wynik i feedback quizu | 0/? | Not started | - |
 | 20. Gate — testy i bundle | 0/? | Not started | - |
 
