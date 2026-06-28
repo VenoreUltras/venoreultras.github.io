@@ -1,13 +1,14 @@
 ---
 phase: 19-egzamin-polaczony-wynik-feedback
 verified: 2026-06-28T13:25:00Z
-status: human_needed
-score: 3/4 must-haves verified
+status: passed
+score: 4/4 must-haves verified (QUIZ-02 layout 1280×720 zatwierdzony przez użytkownika w UAT — "działa")
 overrides_applied: 0
 human_verification:
   - test: "Weryfikacja layoutu modala quizu BHP na 1280x720"
     expected: "Cale pytanie i wszystkie opcje dostepne (scroll wewnetrzny); naglowek 'Quiz BHP' i przycisk 'Dalej'/'Zakoncz' widoczne podczas scrollowania; brak poziomego scrollbara; brak koniecznosci zoom-out"
-    why_human: "jsdom nie oblicza layoutu CSS — overflow-y:auto i min-height:0 istnieja w kodzie, ale wizualna weryfikacja ze scroll dziala wewnatrz modala i nic nie jest uciete wymaga przegladarki z renderowaniem (SC4 z ROADMAP Phase 19)"
+    why_human: "jsdom nie oblicza layoutu CSS — wizualna weryfikacja wymaga przegladarki"
+    resolved: "APPROVED przez użytkownika 2026-06-28 (UAT: 'działa'). Bug widoczności modala naprawiony osobno (commit 2b115ae)."
 ---
 
 # Phase 19: Egzamin — Polaczony Wynik i Feedback Quizu — Verification Report
