@@ -23,7 +23,7 @@
 
 - [x] **Phase 18: Usunięcia i sprzątanie** — eksport PDF/JSON wycofany (PdfExporter, JsonExporter, jspdf, html2canvas), panel Parametry Układu usunięty z index.html + UI.js, HUM silnika wycięty z AudioController (completed 2026-06-28)
 - [x] **Phase 19: Egzamin — połączony wynik i feedback quizu** — jeden łączny wynik procentowy SOP+BHP w SessionOverlay, kolorowy feedback odpowiedzi (zielony/czerwony + ikona), responsywne okno quizu bez ucinania treści (completed 2026-06-28)
-- [ ] **Phase 20: Gate — testy i bundle** — suite testów odzwierciedla usunięte i dodane funkcje; bundle < 834.98 KB; getInteractables===15; maszyna trybów bez regresji
+- [x] **Phase 20: Gate — testy i bundle** — suite testów odzwierciedla usunięte i dodane funkcje; bundle < 834.98 KB; getInteractables===15; maszyna trybów bez regresji (completed 2026-06-28)
 
 ## Phase Details
 
@@ -71,7 +71,7 @@
 |-------|----------------|--------|-----------|
 | 18. Usunięcia i sprzątanie | 3/3 | Complete   | 2026-06-28 |
 | 19. Egzamin — połączony wynik i feedback quizu | 3/3 | Complete   | 2026-06-28 |
-| 20. Gate — testy i bundle | 0/? | Not started | - |
+| 20. Gate — testy i bundle | 1/1 | Complete   | 2026-06-28 |
 
 ## Phase Ordering Rationale
 
