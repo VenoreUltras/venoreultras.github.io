@@ -1,6 +1,7 @@
 # Build + deploy aplikacji Vite na GitHub Pages.
-# Pages serwuje z subpathu /HydraulicPress/ — base ustawiony w vite.config.js.
-# WAŻNE: w ustawieniach repo Settings → Pages → Source musi być "GitHub Actions".
+# Repo to user site venoreultras.github.io — serwowany z roota (base '/' w vite.config.js).
+# WAŻNE: w ustawieniach repo Settings → Pages → Source musi być "GitHub Actions"
+# (a NIE "Deploy from a branch" — inaczej serwowane są surowe źródła i UI nie startuje).
 name: Deploy to GitHub Pages
 
 on:
