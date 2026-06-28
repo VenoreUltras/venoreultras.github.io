@@ -714,8 +714,12 @@ body.training-complete #status-panel {
    Scroll wyłącznie w body (.modal-card__body), nagłówek i pasek akcji stałe.
    Na rozdzielczości ≥1280×720 żadne pytanie nie jest ucięte; brak poziomego
    scrolla. Nadpisuje overflow-y:auto z bazowego .modal-card (scroll przeniesiony
-   do body). Zmiany zakresowane wyłącznie do .modal-card--bhp-quiz. */
-.modal-card--bhp-quiz {
+   do body). Zmiany zakresowane wyłącznie do .modal-card--bhp-quiz.
+   KRYTYCZNE: selektor [open] — `display:flex` (styl autora) nadpisałby UA
+   `dialog:not([open]){display:none}` i pokazywałby dialog ZAWSZE (regresja:
+   modal quizu widoczny od startu, blokował menu/tryby). Gating na [open]
+   przywraca domyślne ukrycie; showModal()/fallback jsdom ustawiają [open]. */
+.modal-card--bhp-quiz[open] {
   display: flex;
   flex-direction: column;
   /* Zmniejszona wartość padding — body dostaje własny scroll, więc rezygnujemy z
