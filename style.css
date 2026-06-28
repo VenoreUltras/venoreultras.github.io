@@ -710,6 +710,54 @@ body.training-complete #status-panel {
   max-height: 80vh;
 }
 
+/* ── Modal quizu BHP — QUIZ-02 (Phase 19-03) ────────────────────────────────
+   Scroll wyłącznie w body (.modal-card__body), nagłówek i pasek akcji stałe.
+   Na rozdzielczości ≥1280×720 żadne pytanie nie jest ucięte; brak poziomego
+   scrolla. Nadpisuje overflow-y:auto z bazowego .modal-card (scroll przeniesiony
+   do body). Zmiany zakresowane wyłącznie do .modal-card--bhp-quiz. */
+.modal-card--bhp-quiz {
+  display: flex;
+  flex-direction: column;
+  /* Zmniejszona wartość padding — body dostaje własny scroll, więc rezygnujemy z
+     bottom-paddu na karcie; padding poziomy zostaje z bazowego .modal-card (24px). */
+  padding: 0;
+  /* max-height: mieści się w 720px viewportu z marginesem na overlay centering */
+  max-height: min(80vh, 640px);
+  /* Scroll przeniesiony do body — karta nie scrolluje jako całość */
+  overflow: hidden;
+}
+
+/* Nagłówek i akcje: nie kurczą się przy długim body */
+.modal-card--bhp-quiz .modal-card__header {
+  flex: 0 0 auto;
+  padding: 24px 24px 16px;
+  border-bottom: 1px solid var(--glass-border);
+  margin-bottom: 0;
+}
+
+/* Body quizu: zajmuje dostępną przestrzeń, przewija wewnętrznie */
+.modal-card--bhp-quiz .modal-card__body {
+  flex: 1 1 auto;
+  min-height: 0;        /* kluczowe: pozwala flex-item kurczyć się poniżej intrinsic size */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 16px 24px;
+}
+
+/* Pasek akcji: stały na dole, nie kurczy się */
+.modal-card--bhp-quiz .modal-card__actions {
+  flex: 0 0 auto;
+  padding: 16px 24px;
+  margin-top: 0;
+  border-top: 1px solid var(--glass-border);
+}
+
+/* Zabezpieczenie przed poziomym przepełnieniem długich słów/treści pytań (QUIZ-02) */
+.modal-card--bhp-quiz .bhp-quiz__question,
+.modal-card--bhp-quiz .bhp-quiz__option {
+  overflow-wrap: anywhere; /* bhp-quiz: brak poziomego scrolla przy długich słowach */
+}
+
 /* Wiersz zakładek */
 .element-info-overlay__tabs {
   display: flex;
