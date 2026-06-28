@@ -5,22 +5,23 @@
 **Shipped:**
 - ✅ v1.0 — SOP Training Layer (2026-05-28) — 4 scenariusze grywalne (uruchomienie / cykl-pracy / zatrzymanie / awaria), redundant visual feedback, warstwa edukacyjna, replay ze scrubberem, eksport PDF/JSON. 6 faz, 38 planów, 642/642 testów. Audit: `.planning/v1.0-MILESTONE-AUDIT.md`.
 - ✅ v1.1 — Visual Quality & Press Realism (2026-05-29) — naprawa bugów rotacji + floating, fundament/stół/wsporniki, przemysłowe detale (śruby/kable/panele), materiały PBR (fazy 7-9). Następnie fazy 10-11: półprzezroczysta osłona + łączniki mechanizmu + animacje GSAP klik (10), oraz 3 spójne tryby (swobodny/nauka/egzamin) + wskaźnik statusu + rozbudowane etykiety 15 interactables + **lektor głosowy ElevenLabs** (11). 903 testy zielone, bundle 809.94 KB / 850 KB.
+- ✅ v1.2 — Rozbudowa edukacyjna i realizm (2026-06-19) — menu startowe z wyborem trybu, pełnoekranowy overlay (ElementInfoOverlay) zamiast bocznego panelu, instrukcje BHP + media w public/media/, płytka znamionowa (TextureLoader), egzamin hybrydowy (interakcja 3D + quiz BHP). 6 faz (12-17), 1010 testów, bundle 834.98 KB / 850 KB. Audit: `.planning/v1.2-MILESTONE-AUDIT.md`.
 
-## Current Milestone: v1.2 Rozbudowa edukacyjna i realizm
+## Current Milestone: v1.3 Uproszczenie i dopracowanie egzaminu
 
-**Goal:** Pogłębić warstwę szkoleniową PM-300 — szczegółowe instrukcje obsługi + BHP oparte na realnych materiałach (zdjęcia/filmy), egzamin sprawdzający tę wiedzę, oraz uporządkowanie wejścia do aplikacji (menu startowe) i prezentacji informacji (pełnoekranowy overlay zamiast bocznego panelu).
+**Goal:** Odchudzić aplikację z funkcji eksportu i zbędnego UI oraz dopracować doświadczenie egzaminu/quizu — jeden spójny wynik i czytelny feedback odpowiedzi.
 
 **Target features:**
-- Menu startowe z wyborem trybu (swobodny / nauka / egzamin) jako ekran wejściowy
-- Usunięcie prawego panelu (ElementInfoPanel) → pełnoekranowy overlay (lightbox) z treścią + media
-- Rozbudowany tryb edukacyjny — szczegółowe instrukcje obsługi + zasady BHP dla każdego elementu/kroku
-- Instrukcje oparte na realnych mediach — prawdziwe zdjęcia/filmy (sourcing z internetu, licencje free-use) osadzone w overlayu
-- Realistyczna płytka znamionowa — prawdziwe zdjęcie/tekstura na meshu w scenie
-- Egzamin hybrydowy — interakcja 3D w scenie + pytania kontrolne BHP na końcu scenariusza
+- Usunięcie eksportu wyników — wycofanie PDF (`PdfExporter.js`) i JSON (`JsonExporter.js`) wraz z przyciskami w `SessionOverlay` oraz zależnościami `jspdf` + `html2canvas` (zysk na bundle)
+- Usunięcie panelu „Parametry Układu" — `info-panel` (skok/korbowód/kąt/wychylenie + wzór kinematyczny) z `index.html` i powiązany update telemetrii w `UI.js`
+- Połączona punktacja egzaminu — jeden wynik z interakcji 3D (SOP) + quizu BHP, proporcjonalnie do zdobytych punktów (% z maksimum)
+- Feedback odpowiedzi w quizie — po zaznaczeniu zielony=poprawna / czerwony=błędna, w trybie nauka i egzamin
+- Responsywne okno quizu — żadne pytanie nie zostaje ucięte (dopasowanie rozmiaru / scroll modala)
+- Usunięcie dźwięku pracującej prasy — wycięcie HUM-u z `AudioController.js` (alarm i confirm pozostają)
 
-**Out of scope tego milestone:** lektor ElevenLabs (już dostarczony w Fazie 11).
+**Out of scope tego milestone:** alarm i confirm w AudioController (zostają — feedback bezpieczeństwa/UX); eksport wyników w jakiejkolwiek formie (wycofany).
 
-**Następnie (v2 docking points):** DIFF-01..04 — ExplodedViewController, randomized faults, supervisor recommendations w PDF, font scaling + high-contrast theme.
+**Następnie (v2 docking points):** DIFF-01..04 — ExplodedViewController, randomized faults, supervisor recommendations, font scaling + high-contrast theme; adaptacyjny dobór pytań quizu wg błędów SOP.
 
 ## What This Is
 
@@ -112,4 +113,4 @@ This document evolves at phase transitions and milestone boundaries.
 4. Update Context with current state
 
 ---
-*Last updated: 2026-06-13 — milestone v1.2 (Rozbudowa edukacyjna i realizm) started*
+*Last updated: 2026-06-28 — milestone v1.3 (Uproszczenie i dopracowanie egzaminu) started*

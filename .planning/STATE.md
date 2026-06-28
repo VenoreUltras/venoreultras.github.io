@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.2
-milestone_name: Rozbudowa edukacyjna i realizm
-status: v1.2 COMPLETE — all 6 phases shipped; milestone gate passed (1010 tests, bundle 834.98 KB < 850 KB). Phase 17 code-reviewed (CR-01 blocker fixed).
-last_updated: "2026-06-19T22:40:00.000Z"
-last_activity: 2026-06-19 -- Phase 17 complete + code-review fixes; v1.2 milestone done, ready for audit
+milestone: v1.3
+milestone_name: Uproszczenie i dopracowanie egzaminu
+status: planning
+last_updated: "2026-06-28T09:28:33.215Z"
+last_activity: 2026-06-28
 progress:
-  total_phases: 6
-  completed_phases: 6
-  total_plans: 18
-  completed_plans: 18
-  percent: 100
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State: PM-300 Trener
@@ -34,16 +34,10 @@ progress:
 
 ## Current Position
 
-Phase: 17 (quizcontroller-application-wiring) — COMPLETE (4/4 plans); v1.2 milestone gate PASSED
-Plan: 17-04 done (QuizController wired into Application ctor + dispose chain; FINAL milestone gate)
-Status: Phase 17 executed; 1010 tests green (1 skipped, 0 failed), main bundle 834.98 KB < 850 KB. quizController disposed before examPromptModal; getInteractables().size===15 holds. Deferred: human e2e browser smoke (Task 3, non-blocking).
-Last activity: 2026-06-19 -- Phase 17 plan 04 complete (QuizController wiring + v1.2 milestone gate passed)
-
-Progress bar: `[████████████████████] 6 / 6 phases`
-
-⚠ **Open manual checks (deferred):** Phase 15 start-menu visual; Phase 16 media render/404 graceful — validate via `npm run dev`. Media placeholders (kolo-zamachowe, hamulec, tabliczka) are company-owned PNG-as-webp; swap real CC assets at same URLs + update ATTRIBUTION.txt.
-
-**Bundle:** main chunk 834.98 KB / 850 KB (~15 KB headroom) at v1.2 close. quizData + quizSelection ship as a separate cacheable `quiz-data` chunk (26 KB) via Vite `manualChunks` (Phase 13); `assetsInlineLimit:0` (Phase 16) keeps media out of the JS bundle. Headroom is now tight — a future milestone should consider dynamic-import lazy-load of quizData if more main-bundle code lands.
+Phase: Not started (defining requirements)
+Plan: —
+Status: Defining requirements
+Last activity: 2026-06-28 — Milestone v1.3 started
 
 ## Performance Metrics
 
