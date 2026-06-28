@@ -26,24 +26,13 @@ const noopComputeMetrics = (events, scenario) => ({
 });
 
 function makeOverlay({ store, computeMetricsOverride } = {}) {
-  const jsonExporter = {
-    build: vi.fn((s, title) => ({ version: 'v1', session: s.session, metadata: { title } })),
-    download: vi.fn(),
-    generateFilename: vi.fn((id) => `pm300_${id}_test.json`),
-  };
-  const pdfExporter = {
-    download: vi.fn(() => Promise.resolve()),
-    generateFilename: vi.fn((id) => `pm300_raport_${id}_test.pdf`),
-  };
   const compute = computeMetricsOverride ?? noopComputeMetrics;
   const overlay = new SessionOverlay({
     store: store ?? createTrainingStore(),
     scenarios,
     computeMetrics: compute,
-    jsonExporter,
-    pdfExporter,
   });
-  return { overlay, jsonExporter, pdfExporter };
+  return { overlay };
 }
 
 describe('SessionOverlay — mount + auto-open (D-Phase6-17)', () => {
@@ -183,31 +172,6 @@ describe('SessionOverlay — button actions (UI-SPEC §3)', () => {
     expect(store.getState().currentStepId).toBe('step-1');
   });
 
-  it('"Eksportuj JSON" click → jsonExporter.build + download + generateFilename', () => {
-    const btn = document.querySelector('.session-overlay__export-json-btn');
-    btn.click();
-    expect(m.jsonExporter.build).toHaveBeenCalledTimes(1);
-    expect(m.jsonExporter.generateFilename).toHaveBeenCalledWith('uruchomienie');
-    expect(m.jsonExporter.download).toHaveBeenCalledTimes(1);
-  });
-
-  it('"Eksportuj PDF" click async → pdfExporter.download + button disabled w trakcie', async () => {
-    const btn = document.querySelector('.session-overlay__export-pdf-btn');
-    let resolvePdf;
-    m.pdfExporter.download.mockImplementationOnce(
-      () => new Promise((r) => { resolvePdf = r; }),
-    );
-    btn.click();
-    // Sync after click: disabled=true
-    expect(btn.disabled).toBe(true);
-    resolvePdf();
-    // Await async tick
-    await Promise.resolve();
-    await Promise.resolve();
-    expect(m.pdfExporter.download).toHaveBeenCalledTimes(1);
-    expect(btn.disabled).toBe(false);
-  });
-
   it('Close X click → store.closeOverlay (overlayOpen=false, display=none)', () => {
     const btn = document.querySelector('.session-overlay__close');
     btn.click();
@@ -265,8 +229,6 @@ describe('SessionOverlay — sanity', () => {
         store: createTrainingStore(),
         scenarios,
         computeMetrics: noopComputeMetrics,
-        jsonExporter: { build: vi.fn(), download: vi.fn(), generateFilename: vi.fn() },
-        pdfExporter: { download: vi.fn(), generateFilename: vi.fn() },
       });
     }).toThrow(/session-overlay/);
   });

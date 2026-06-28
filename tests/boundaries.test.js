@@ -81,18 +81,11 @@ const FORBIDDEN_PAIRS = [
   { file: 'src/ui/HelpModal.js',
     mustNotImport: ['three', 'gsap', '@floating-ui/dom', '../training/', './training/', '../highlight/', './highlight/'] },
 
-  // Phase 6 (Plan 06-06): persistence + JsonExporter — pure utility layers.
+  // Phase 6 (Plan 06-06): persistence — pure utility layer.
   // sessionPersistence — zero imports (pure localStorage + JSON).
   { file: 'src/persistence/sessionPersistence.js',
     mustNotImport: ['three', 'gsap', '../training/', './training/', '../state/', './state/', '../ui/', './ui/', '../highlight/', './highlight/', '../education/', './education/', '@floating-ui/dom'] },
-  // JsonExporter — może document (download anchor) ale NIE THREE/training/state/store/highlight/replay.
-  { file: 'src/export/JsonExporter.js',
-    mustNotImport: ['three', 'gsap', '../training/', './training/', '../state/', './state/', '../ui/', './ui/', '../highlight/', './highlight/', '../replay/', './replay/', '@floating-ui/dom'] },
-  // Phase 6 (Plan 06-07): PdfExporter — dynamic import('jspdf'); może document + i18n; NIE THREE/training/state/ui/highlight/replay.
-  // computeMetrics + scenarioTitlePL wstrzykiwane przez consumer (DI z SessionOverlay).
-  { file: 'src/export/PdfExporter.js',
-    mustNotImport: ['three', 'gsap', '../training/', './training/', '../state/', './state/', '../ui/', './ui/', '../highlight/', './highlight/', '../replay/', './replay/', '@floating-ui/dom'] },
-  // Phase 6 (Plan 06-07): SessionOverlay — DOM + pl; computeMetrics + JsonExporter + PdfExporter + scenarios przez DI.
+  // Phase 6 (Plan 06-07): SessionOverlay — DOM + pl; computeMetrics + scenarios przez DI.
   // Czysty boundary: NIE THREE/gsap/training/state/highlight/replay/export/education/floating-ui.
   { file: 'src/ui/SessionOverlay.js',
     mustNotImport: ['three', 'gsap', '../training/', './training/', '../state/', './state/', '../highlight/', './highlight/', '../replay/', './replay/', '../export/', './export/', '../education/', './education/', '@floating-ui/dom'] },
