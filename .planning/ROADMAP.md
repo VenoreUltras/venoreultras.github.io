@@ -36,7 +36,10 @@
   2. Blok "Parametry Układu" (`#info-panel`) nie jest renderowany w DOM; `UI.js` nie aktualizuje `val-angle` / `val-displacement`; pętla animacji (GSAP ticker) działa bez regresji kinematycznej — kąt i wychylenie obliczane poprawnie, tylko telemetria widziana przez użytkownika znika
   3. Dźwięk HUM silnika nie gra podczas pracy prasy w żadnym trybie; dźwięki alarmu (awaria) i confirm (potwierdzenie kroku) brzmią normalnie po odpowiednich zdarzeniach
   4. Po ukończeniu egzaminu `SessionOverlay` wyświetla wynik wyłącznie na ekranie — brak przycisku eksportu, brak referencji do `/fonts/NotoSans` w kodzie
-**Plans**: TBD
+**Plans** (3 plans, 3 waves):
+- [ ] 18-01-PLAN.md — CLEAN-01 + EXAM-06: usunięcie eksportu PDF/JSON (moduły, zależność jspdf/html2canvas, przyciski SessionOverlay, plik czcionki), screen-only wynik
+- [ ] 18-02-PLAN.md — CLEAN-02: usunięcie panelu Parametry Układu (index.html) + martwej telemetrii (UI.js, main.js)
+- [ ] 18-03-PLAN.md — CLEAN-03: usunięcie ścieżki HUM z AudioController + main.js + testy audio
 
 ### Phase 19: Egzamin — połączony wynik i feedback quizu
 **Goal:** Uczeń widzi jeden spójny wynik egzaminu i natychmiastowy, dostępny feedback po każdej odpowiedzi — doświadczenie egzaminu jest czytelne dla wszystkich użytkowników.
