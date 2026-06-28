@@ -1,57 +1,38 @@
-# Requirements: PM-300 Trener — Milestone v1.2
+# Requirements: PM-300 Trener — Milestone v1.3
 
-**Defined:** 2026-06-13
+**Defined:** 2026-06-28
 **Status:** Active
 **Core Value (unchanged):** Uczeń, który ukończy sesję szkoleniową w symulatorze, wie w jakiej kolejności i dlaczego wykonuje się każdy krok procedury obsługi prasy mimośrodowej — i nie uruchomi maszyny pomijając krytyczny krok bezpieczeństwa.
-**Milestone Value:** Pogłębiona warstwa szkoleniowa — szczegółowe instrukcje obsługi + BHP oparte na realnych materiałach (zdjęcia), egzamin sprawdzający tę wiedzę, uporządkowane wejście do aplikacji (menu startowe) i pełnoekranowa prezentacja informacji zamiast wąskiego bocznego panelu. Bundle ≤ 850 KB, SOP/kinematyka nietknięte.
+**Milestone Value:** Odchudzenie aplikacji z funkcji eksportu i zbędnego UI oraz dopracowanie egzaminu/quizu — jeden spójny wynik (SOP + BHP) i czytelny, natychmiastowy feedback odpowiedzi. Mniejszy bundle (usunięte `jspdf` + `html2canvas`), prostszy interfejs.
 
-## v1.2 Requirements
+## v1.3 Requirements
 
-Wymagania edukacyjno-medialnego rozszerzenia. Numeracja faz kontynuowana z poprzedniego milestone (Faza 12+). Build order z researchu: dane → store → overlay+menu → media → tabliczka → quiz → wiring.
+Milestone czyszcząco-dopracowujący na istniejącym kodzie v1.2. Numeracja faz kontynuowana z poprzedniego milestone (Faza 18+). Brak nowej domeny — wszystkie zmiany dotyczą istniejących modułów (`AudioController`, `SessionOverlay`, `QuizController`, `UI`, `index.html`, store scoring).
 
-### Menu startowe (MENU)
+### Usunięcia i sprzątanie (CLEAN)
 
-- [ ] **MENU-01**: Użytkownik widzi ekran startowy z wyborem trybu (swobodny / nauka / egzamin) jako wejście do aplikacji
-- [ ] **MENU-02**: Każdy tryb na ekranie startowym ma krótki opis (co robi) + wskaźnik ostatniej sesji (wynik/data z `localStorage`, jeśli istnieje)
-- [ ] **MENU-03**: Menu startowe nie blokuje symulacji ani powrotu — można je ponownie wywołać i przełączyć tryb bez restartu aplikacji (flaga `showStartMenu`, NIE `activeModal` — symulacja nie pauzuje za menu)
+- [ ] **CLEAN-01**: Eksport wyników sesji (PDF i JSON) całkowicie usunięty — `src/export/PdfExporter.js` i `src/export/JsonExporter.js` skasowane, przyciski eksportu zniknięte z `SessionOverlay`, zależności `jspdf` i `html2canvas` usunięte z `package.json` (bundle się kurczy)
+- [ ] **CLEAN-02**: Panel „Parametry Układu" usunięty — blok `info-panel` (skok suwaka, długość korbowodu, kąt wału, wychylenie suwaka, wzór kinematyczny) zniknięty z `index.html`, a martwy update telemetrii (`val-angle` / `val-displacement`) wycięty z `src/UI.js` bez regresji pętli animacji
+- [ ] **CLEAN-03**: Dźwięk pracującej prasy (HUM silnika) usunięty z `src/education/AudioController.js`; dźwięki alarmu (awaria) i confirm (potwierdzenie kroku) pozostają w pełni funkcjonalne
 
-### Overlay informacyjny (OVL)
+### Egzamin — połączona punktacja (EXAM)
 
-- [ ] **OVL-01**: Prawy panel `ElementInfoPanel` usunięty — atomiczna migracja zachowuje kontrakt store (`activeModal==='element-info'`, `openElementInfo`, `_elementInfoMeshId`), lector DI oraz inwariant `getInteractables().size === 15`; wszystkie istniejące testy przechodzą
-- [ ] **OVL-02**: Klik elementu w trybie swobodnym/nauka otwiera pełnoekranowy overlay (lightbox) z treścią elementu w sekcjach/tabach (opis / zasady BHP / kroki obsługi)
-- [ ] **OVL-03**: Overlay zamykany jednym kliknięciem oraz klawiszem ESC, z focus-trap i poprawną dostępnością (a11y); osadza zdjęcia, technicznie przygotowany na video (slot mediów)
+- [ ] **EXAM-05**: Po ukończeniu egzaminu uczeń widzi jeden łączny wynik z interakcji 3D (SOP) i quizu BHP, liczony proporcjonalnie — suma zdobytych punktów obu części jako procent maksimum; obie części nadal widoczne z osobna w podsumowaniu
+- [ ] **EXAM-06**: EXAM-04 (z v1.2 — wynik w eksporcie PDF/JSON) zinwalidowany przez CLEAN-01; podsumowanie egzaminu prezentuje wynik wyłącznie na ekranie (`SessionOverlay`), bez ścieżki eksportu
 
-### Treść edukacyjna i BHP (EDU)
+### Quiz — dopracowanie UX (QUIZ)
 
-- [ ] **EDU-01**: Każdy z 15 interaktywnych elementów ma rozbudowaną instrukcję obsługi (do czego służy, jak się go używa w procedurze) — addytywne rozszerzenie `src/data/elementInfo.js`, kompatybilne wstecz
-- [ ] **EDU-02**: Treść BHP pogrupowana wg norm: osłony + interlock, sterowanie oburęczne, E-stop, energia koła zamachowego, sprzęgło-hamulec, LOTO, inspekcja przedrozruchowa
-- [ ] **EDU-03**: Treść BHP po polsku, oparta na cytowanych normach (ISO 16092-1/2, Dyrektywa Maszynowa 2006/42/EC, OSHA 1910.217, IEC 60204-1) — cytat normy widoczny przy regule
-
-### Realne media (MED)
-
-- [ ] **MED-01**: `MediaManager` serwuje media z `public/media/` — żaden plik graficzny/video nie trafia do bundla JS (`npm run build` < 850 KB pozostaje gate'em)
-- [ ] **MED-02**: Realne zdjęcia prasy mimośrodowej / komponentów osadzone w overlayu, licencje wyłącznie CC0 / CC BY / CC BY-SA / własność firmy; każdy zasób wpisany do `public/media/ATTRIBUTION.txt` (gate fazy)
-- [ ] **MED-03**: Overlay gracefully degraduje gdy zasób mediów niedostępny (brak internetu / 404) — pokazuje tekst + dostępne zdjęcia bez błędu
-
-### Płytka znamionowa (NAME)
-
-- [ ] **NAME-01**: Mesh `tabliczka-znamionowa` (#15) ma realistyczną teksturę (realne zdjęcie tabliczki LUB synteza wg pól wymaganych Dyrektywą 2006/42/EC §1.7.3: producent, nr seryjny, rok, max nacisk, znak CE) — WebP/POT, `SRGBColorSpace`, `dispose()` bez wycieku; inwariant 15 i KIN rotacji zachowane
-
-### Egzamin hybrydowy (EXAM)
-
-- [ ] **EXAM-01**: Pytania kontrolne BHP zdefiniowane jako dane (mix scenariuszowe MC / prawda-fałsz / sekwencja), powiązane z grupami treści EDU-02
-- [ ] **EXAM-02**: Po ukończeniu interakcji 3D w trybie egzamin uruchamia się quiz BHP (`activeModal='bhp-quiz'`, symulacja pauzuje); flow podpięty do istniejącego subskrybenta `finishedAt`
-- [ ] **EXAM-03**: Scoring quizu izolowany w `scoring.quiz` (nie miesza się z `scoring.procedure`); próg zaliczenia 80%; feedback per pytanie z cytatem normy
-- [x] **EXAM-04**: Wynik egzaminu (interakcja 3D + BHP quiz) ujęty w eksporcie PDF/JSON sesji
+- [ ] **QUIZ-01**: Po zaznaczeniu odpowiedzi w quizie opcja podświetla się kolorem — zielony gdy poprawna, czerwony gdy błędna — w trybie nauka ORAZ egzamin; kolor jest dostępny także dla daltonistów (ikona/symbol obok koloru, nie sam kolor)
+- [ ] **QUIZ-02**: Okno quizu dopasowuje rozmiar do treści — żadne pytanie ani zestaw odpowiedzi nie jest ucięte na typowych rozdzielczościach desktop; długa treść przewija się wewnątrz modala zamiast wychodzić poza widok
 
 ### Testy i regresja (TEST)
 
-- [x] **TEST-09**: Wszystkie istniejące testy (903 baseline) pozostają zielone + nowe testy dla MENU/OVL/EDU/MED/NAME/EXAM; `getInteractables().size===15` i maszyna stanów trybów bez regresji
-- [x] **TEST-10**: `npm run build` < 850 KB main bundle — gate w każdej fazie dodającej pliki (projekcja po fslightbox ~822 KB)
+- [ ] **TEST-11**: Testy usuniętych funkcji (PdfExporter, JsonExporter, HUM, parametry panel) skasowane lub zaktualizowane; nowe testy pokrywają połączoną punktację (EXAM-05) i feedback odpowiedzi (QUIZ-01); pozostały suite zielony, `getInteractables().size===15` i maszyna trybów bez regresji
+- [ ] **TEST-12**: `npm run build` przechodzi i main bundle jest mniejszy niż baseline 834.98 KB (usunięcie `jspdf` + `html2canvas`); brak referencji do `/fonts/NotoSans` po wycofaniu PDF
 
-## Future Requirements (v1.3+ / P2)
+## Future Requirements (v1.4+ / P2)
 
-Potwierdzone jako wartościowe, ale poza zakresem v1.2.
+Potwierdzone jako wartościowe, ale poza zakresem v1.3.
 
 ### Video instruktażowe (VID — P2)
 
@@ -62,49 +43,32 @@ Potwierdzone jako wartościowe, ale poza zakresem v1.2.
 
 - **DIFF-01**: ExplodedViewController (widok rozstrzelony mechanizmu)
 - **DIFF-02**: Randomized faults (losowe awarie w scenariuszach)
-- **DIFF-03**: Supervisor recommendations w eksporcie PDF
+- **DIFF-03**: Supervisor recommendations w podsumowaniu egzaminu (na ekranie, nie PDF)
 - **DIFF-04**: Font scaling + high-contrast theme (dostępność)
+- **DIFF-05**: Adaptacyjny dobór pytań quizu wg błędów SOP (z Open Questions v1.2)
 
 ## Out of Scope
 
 | Feature | Reason |
 |---------|--------|
-| Lektor głosowy ElevenLabs | Już dostarczony w Fazie 11 (LectorService) — nie jest nowym zakresem v1.2 |
-| Pobieranie filmów z YouTube | Zabronione przez ToS — dozwolony tylko embed (gdy video wejdzie w v1.3) |
-| Media na licencji CC-BY-NC | Szkolenie pracowników = użycie komercyjne; NC niedozwolone |
-| Backend / hosting mediów po stronie serwera | Aplikacja client-side; media w `public/` lub embed zewnętrzny |
-| Refactor kinematyki / SOP engine | v1.2 nie rusza logiki ruchu ani silnika scenariuszy — tylko warstwa edukacyjna/UI |
-| KTX2 / Basis dla tekstur | ~600 KB WASM transcoder nieproporcjonalny do 1 tekstury — WebP wystarcza |
+| Eksport wyników (PDF/JSON) w jakiejkolwiek formie | Wycofany w tym milestone (CLEAN-01) — wynik prezentowany wyłącznie na ekranie |
+| Dźwięki alarm i confirm | Pozostają — feedback bezpieczeństwa/UX; usuwamy tylko HUM pracującej prasy |
+| Refactor kinematyki / SOP engine | Tylko warstwa UI/audio/scoring — logika ruchu i silnik scenariuszy nietknięte |
+| Nowe pytania quizu / nowa treść BHP | v1.3 dopracowuje istniejący quiz, nie rozszerza banku pytań |
+| Adaptacyjny dobór pytań | Odłożony do v1.4+ (DIFF-05) — wymaga danych pilotażowych |
+| Eksport mobilny / responsywność mobilna | Desktop-first bez zmian; QUIZ-02 dotyczy rozdzielczości desktop |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| EDU-01 | Phase 12 | Pending |
-| EDU-02 | Phase 12 | Pending |
-| EDU-03 | Phase 12 | Pending |
-| EXAM-01 | Phase 12 | Pending |
-| MENU-01 | Phase 13 (store prereq) + Phase 15 (UI) | Pending |
-| MENU-03 | Phase 13 | Pending |
-| EXAM-02 | Phase 13 | Pending |
-| EXAM-03 | Phase 13 | Pending |
-| OVL-01 | Phase 14 | Pending |
-| OVL-02 | Phase 14 | Pending |
-| OVL-03 | Phase 14 | Pending |
-| NAME-01 | Phase 14 | Pending |
-| MENU-02 | Phase 15 | Pending |
-| MED-01 | Phase 16 | Pending |
-| MED-02 | Phase 16 | Pending |
-| MED-03 | Phase 16 | Pending |
-| EXAM-04 | Phase 17 | Complete |
-| TEST-09 | Phase 17 (integration gate, criteria in all phases) | Complete |
-| TEST-10 | Phase 17 (integration gate, criteria in all phases) | Complete |
+| _(uzupełni roadmapper)_ | — | Pending |
 
 **Coverage:**
-- v1.2 requirements: **19 total** (MENU×3 + OVL×3 + EDU×3 + MED×3 + NAME×1 + EXAM×4 + TEST×2)
-- Mapped to phases: 19/19 ✓
-- Unmapped: 0 ✓
+- v1.3 requirements: **9 total** (CLEAN×3 + EXAM×2 + QUIZ×2 + TEST×2)
+
+  _(EXAM-06 jest wymaganiem walidacyjnym domykającym inwalidację EXAM-04 z v1.2)_
+- Mapped to phases: 0/9 (przed roadmapem)
 
 ---
-*Requirements defined: 2026-06-13*
-*Last updated: 2026-06-13 — traceability filled by roadmapper (Phases 12–17)*
+*Requirements defined: 2026-06-28*
