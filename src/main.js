@@ -464,9 +464,6 @@ export class Application {
     );
     void displacement; // inwariant kinematyczny — obliczenie zachowane, prezentacja usunięta
 
-    // D-Phase5-17: AudioController hum freq/gain proporcjonalny do effective RPM.
-    const rpmEffective = (this._omega / (Math.PI * 2)) * 60;
-    this.audioController?.updateHum(rpmEffective);
   }
 
   /**

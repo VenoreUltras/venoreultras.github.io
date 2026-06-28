@@ -1,7 +1,7 @@
 // tests/AudioController.test.js
 // @vitest-environment node
 // Phase 5 — EDU-03: WebAudio synthesis controller tests
-// Weryfikuje: alarm 600Hz×2 burst, confirm 880Hz/200ms, hum RPM scaling, mute ramp, dispose.
+// Weryfikuje: alarm 600Hz×2 burst, confirm 880Hz/200ms, mute ramp, dispose.
 // AudioContext mockowany przez vi.stubGlobal (Pitfall 1 — jsdom nie ma AudioContext).
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
@@ -147,15 +147,15 @@ describe('AudioController — alarm trigger', () => {
     // Trigger: przejście do 'awaria'
     store.setState({ machineState: 'awaria' });
 
-    // Kontekst powinien być utworzony — masterGain i humOsc tworzone w _getOrCreateContext
+    // Kontekst powinien być utworzony — masterGain tworzony w _getOrCreateContext
     expect(mockCtx.createGain).toHaveBeenCalled();
-    // _getOrCreateContext tworzy 1 humOsc, playAlarm tworzy 2 burstOsc → łącznie 3
-    expect(mockCtx.createOscillator).toHaveBeenCalledTimes(3);
+    // _getOrCreateContext NIE tworzy humOsc; playAlarm tworzy 2 burstOsc → łącznie 2
+    expect(mockCtx.createOscillator).toHaveBeenCalledTimes(2);
 
-    // Burst osc to results[1] i results[2] (results[0] = humOsc tworzony w _getOrCreateContext)
+    // Burst osc to results[0] i results[1] (brak humOsc po usunięciu HUM)
     const burstOscs = [
+      mockCtx.createOscillator.mock.results[0].value,
       mockCtx.createOscillator.mock.results[1].value,
-      mockCtx.createOscillator.mock.results[2].value,
     ];
     for (const osc of burstOscs) {
       expect(osc.type).toBe('square');
@@ -203,9 +203,9 @@ describe('AudioController — confirm trigger', () => {
       steps: { ...s.steps, 'krok-1': { status: 'done' } },
     }));
 
-    // _getOrCreateContext tworzy humOsc (index 0), playConfirm tworzy confirmOsc (index 1)
-    expect(mockCtx.createOscillator).toHaveBeenCalledTimes(2);
-    const confirmOsc = mockCtx.createOscillator.mock.results[1].value;
+    // _getOrCreateContext NIE tworzy humOsc; playConfirm tworzy confirmOsc (index 0)
+    expect(mockCtx.createOscillator).toHaveBeenCalledTimes(1);
+    const confirmOsc = mockCtx.createOscillator.mock.results[0].value;
     expect(confirmOsc.type).toBe('sine');
     expect(confirmOsc.frequency.setValueAtTime).toHaveBeenCalledWith(880, expect.any(Number));
 
@@ -229,87 +229,9 @@ describe('AudioController — confirm trigger', () => {
 });
 
 // =====================================================================
-// 4. hum + mute
+// 4. mute
 // =====================================================================
-describe('AudioController — hum + mute', () => {
-  it('Test 7a: updateHum bez ctx (lazy guard) — no-op, bez throw', () => {
-    const store = createTrainingStore();
-    store.getState().startScenario(minimalScenario);
-
-    const ctrl = new AudioController({ store });
-    // Ctx jeszcze nie istnieje — updateHum musi być no-op
-    expect(() => ctrl.updateHum(50)).not.toThrow();
-    // AudioContext NIE został stworzony
-    expect(global.AudioContext).not.toHaveBeenCalled();
-
-    ctrl.dispose();
-  });
-
-  it('Test 7b: updateHum(rpm<5) → humGain.linearRampToValueAtTime(0, +0.05)', () => {
-    const store = createTrainingStore();
-    store.getState().startScenario(minimalScenario);
-
-    const ctrl = new AudioController({ store });
-
-    // Trigger audio (lazy init)
-    store.setState({ machineState: 'awaria' });
-
-    // Znajdź humGain (5. createGain: 1=master, 2=alarm-gain-1, 3=alarm-gain-2 → nie, hum tworzy osobno)
-    // mockCtx.createGain history: [masterGain, humGain, ...burst gains]
-    const humGain = mockCtx.createGain.mock.results[1]?.value;
-    expect(humGain).toBeDefined();
-
-    mockCtxCurrentTime = 1.0;
-    ctrl.updateHum(2); // rpm < 5
-
-    expect(humGain.gain.linearRampToValueAtTime).toHaveBeenCalledWith(
-      0,
-      expect.closeTo(1.05, 2),
-    );
-
-    ctrl.dispose();
-  });
-
-  it('Test 7c: updateHum(rpm=50) → freq=140, gain=0.3 (clamp)', () => {
-    const store = createTrainingStore();
-    store.getState().startScenario(minimalScenario);
-
-    const ctrl = new AudioController({ store });
-    store.setState({ machineState: 'awaria' });
-
-    const humOscAfterInit = mockCtx.createOscillator.mock.results[2]?.value
-      ?? mockCtx.createOscillator.mock.results[0]?.value; // fallback jeśli inny order
-
-    // Lepiej: find humOsc przez sprawdzenie — hum to osc stworzony bez type='square'/'sine'
-    // Ale mock.results[i].value zwracają gotowy createMockOsc() (type='sine' domyślnie)
-    // Podejście: sprawdzamy przez getOrCreateContext — hum to 3. osc (0=burst1, 1=burst2, 2=hum)
-    // KOREKCJA: hum tworzony w _getOrCreateContext() a burst w playAlarm() → hum PIERWSZY
-    // Order: _getOrCreateContext → createGain(master), createOscillator(hum), createGain(hum)
-    //        playAlarm →  2× [createOscillator(burst), createGain(burst)]
-    // Więc: createOscillator.mock.results[0] = humOsc, [1] = burst1, [2] = burst2
-    const humOsc = mockCtx.createOscillator.mock.results[0].value;
-    const humGain = mockCtx.createGain.mock.results[1].value;
-
-    humOsc.frequency.linearRampToValueAtTime.mockClear();
-    humGain.gain.linearRampToValueAtTime.mockClear();
-
-    mockCtxCurrentTime = 2.0;
-    ctrl.updateHum(50);
-
-    // freq = 80 + 1.2 * 50 = 140
-    expect(humOsc.frequency.linearRampToValueAtTime).toHaveBeenCalledWith(
-      expect.closeTo(140, 2),
-      expect.closeTo(2.05, 2),
-    );
-    // gain = Math.min(0.05 + 0.005 * 50, 0.3) = min(0.3, 0.3) = 0.3
-    expect(humGain.gain.linearRampToValueAtTime).toHaveBeenCalledWith(
-      expect.closeTo(0.3, 2),
-      expect.closeTo(2.05, 2),
-    );
-
-    ctrl.dispose();
-  });
-
+describe('AudioController — mute', () => {
   it('Test 8: audioMuted:true → masterGain.linearRampToValueAtTime(0, +0.05)', () => {
     const store = createTrainingStore();
     store.getState().startScenario(minimalScenario);
@@ -346,7 +268,7 @@ describe('AudioController — hum + mute', () => {
 // 5. dispose
 // =====================================================================
 describe('AudioController — dispose', () => {
-  it('Test 9: dispose() zatrzymuje humOsc + zamyka ctx + wywołuje unsubscribery', () => {
+  it('Test 9: dispose() zamyka ctx + wywołuje unsubscribery (brak humOsc po usunięciu HUM)', () => {
     const store = createTrainingStore();
     store.getState().startScenario(minimalScenario);
 
@@ -362,14 +284,10 @@ describe('AudioController — dispose', () => {
     // Trigger lazy init
     store.setState({ machineState: 'awaria' });
 
-    // humOsc = createOscillator.mock.results[0] (tworzony w _getOrCreateContext)
-    const humOsc = mockCtx.createOscillator.mock.results[0].value;
     const ctx = mockCtx;
 
     ctrl.dispose();
 
-    // humOsc.stop() wywołane
-    expect(humOsc.stop).toHaveBeenCalled();
     // ctx.close() wywołane
     expect(ctx.close).toHaveBeenCalled();
 
