@@ -22,7 +22,7 @@ Milestone czyszcząco-dopracowujący na istniejącym kodzie v1.2. Numeracja faz 
 
 ### Quiz — dopracowanie UX (QUIZ)
 
-- [ ] **QUIZ-01**: Po zaznaczeniu odpowiedzi w quizie opcja podświetla się kolorem — zielony gdy poprawna, czerwony gdy błędna — w trybie nauka ORAZ egzamin; kolor jest dostępny także dla daltonistów (ikona/symbol obok koloru, nie sam kolor)
+- [x] **QUIZ-01**: Po zaznaczeniu odpowiedzi w quizie opcja podświetla się kolorem — zielony gdy poprawna, czerwony gdy błędna — w trybie nauka ORAZ egzamin; kolor jest dostępny także dla daltonistów (ikona/symbol obok koloru, nie sam kolor)
 - [ ] **QUIZ-02**: Okno quizu dopasowuje rozmiar do treści — żadne pytanie ani zestaw odpowiedzi nie jest ucięte na typowych rozdzielczościach desktop; długa treść przewija się wewnątrz modala zamiast wychodzić poza widok
 
 ### Testy i regresja (TEST)
@@ -67,7 +67,7 @@ Potwierdzone jako wartościowe, ale poza zakresem v1.3.
 | CLEAN-03 | Phase 18 | Complete |
 | EXAM-06 | Phase 18 | Complete |
 | EXAM-05 | Phase 19 | Pending |
-| QUIZ-01 | Phase 19 | Pending |
+| QUIZ-01 | Phase 19 | Complete |
 | QUIZ-02 | Phase 19 | Pending |
 | TEST-11 | Phase 20 | Pending |
 | TEST-12 | Phase 20 | Pending |
