@@ -52,7 +52,7 @@
   4. Żadne pytanie ani zestaw odpowiedzi nie jest ucięty na rozdzielczości desktop ≥ 1280×720; długa treść przewija się wewnątrz modala quizu zamiast wychodzić poza obszar widoku; modal nie wymaga powiększenia strony ani poziomego scrollowania
 **Plans** (3 plans, 2 waves):
 - [x] 19-01-PLAN.md — QUIZ-01: kolorowy feedback opcji (zielony/czerwony + ikona ✓/✗ + aria) w QuizController, blokada po wyborze, oba tryby [wave 1]
-- [ ] 19-02-PLAN.md — EXAM-05: łączny wynik egzaminu (combined % + werdykt 80% + rozbicie SOP/BHP) w SessionOverlay, liczony w widoku [wave 2]
+- [x] 19-02-PLAN.md — EXAM-05: łączny wynik egzaminu (combined % + werdykt 80% + rozbicie SOP/BHP) w SessionOverlay, liczony w widoku [wave 2]
 - [ ] 19-03-PLAN.md — QUIZ-02: responsywny modal quizu (.modal-card--bhp-quiz scroll wewnętrzny, brak ucinania ≥1280×720) [wave 2]
 **UI hint**: yes
 
@@ -70,7 +70,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 18. Usunięcia i sprzątanie | 3/3 | Complete   | 2026-06-28 |
-| 19. Egzamin — połączony wynik i feedback quizu | 1/3 | In Progress|  |
+| 19. Egzamin — połączony wynik i feedback quizu | 2/3 | In Progress|  |
 | 20. Gate — testy i bundle | 0/? | Not started | - |
 
 ## Phase Ordering Rationale

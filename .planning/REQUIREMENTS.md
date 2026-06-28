@@ -17,7 +17,7 @@ Milestone czyszcząco-dopracowujący na istniejącym kodzie v1.2. Numeracja faz 
 
 ### Egzamin — połączona punktacja (EXAM)
 
-- [ ] **EXAM-05**: Po ukończeniu egzaminu uczeń widzi jeden łączny wynik z interakcji 3D (SOP) i quizu BHP, liczony proporcjonalnie — suma zdobytych punktów obu części jako procent maksimum; obie części nadal widoczne z osobna w podsumowaniu
+- [x] **EXAM-05**: Po ukończeniu egzaminu uczeń widzi jeden łączny wynik z interakcji 3D (SOP) i quizu BHP, liczony proporcjonalnie — suma zdobytych punktów obu części jako procent maksimum; obie części nadal widoczne z osobna w podsumowaniu
 - [x] **EXAM-06**: EXAM-04 (z v1.2 — wynik w eksporcie PDF/JSON) zinwalidowany przez CLEAN-01; podsumowanie egzaminu prezentuje wynik wyłącznie na ekranie (`SessionOverlay`), bez ścieżki eksportu
 
 ### Quiz — dopracowanie UX (QUIZ)
@@ -66,7 +66,7 @@ Potwierdzone jako wartościowe, ale poza zakresem v1.3.
 | CLEAN-02 | Phase 18 | Complete |
 | CLEAN-03 | Phase 18 | Complete |
 | EXAM-06 | Phase 18 | Complete |
-| EXAM-05 | Phase 19 | Pending |
+| EXAM-05 | Phase 19 | Complete |
 | QUIZ-01 | Phase 19 | Complete |
 | QUIZ-02 | Phase 19 | Pending |
 | TEST-11 | Phase 20 | Pending |
