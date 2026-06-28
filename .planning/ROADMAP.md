@@ -22,7 +22,7 @@
 ### Phases
 
 - [x] **Phase 18: Usunięcia i sprzątanie** — eksport PDF/JSON wycofany (PdfExporter, JsonExporter, jspdf, html2canvas), panel Parametry Układu usunięty z index.html + UI.js, HUM silnika wycięty z AudioController (completed 2026-06-28)
-- [ ] **Phase 19: Egzamin — połączony wynik i feedback quizu** — jeden łączny wynik procentowy SOP+BHP w SessionOverlay, kolorowy feedback odpowiedzi (zielony/czerwony + ikona), responsywne okno quizu bez ucinania treści
+- [x] **Phase 19: Egzamin — połączony wynik i feedback quizu** — jeden łączny wynik procentowy SOP+BHP w SessionOverlay, kolorowy feedback odpowiedzi (zielony/czerwony + ikona), responsywne okno quizu bez ucinania treści (completed 2026-06-28)
 - [ ] **Phase 20: Gate — testy i bundle** — suite testów odzwierciedla usunięte i dodane funkcje; bundle < 834.98 KB; getInteractables===15; maszyna trybów bez regresji
 
 ## Phase Details
@@ -53,7 +53,7 @@
 **Plans** (3 plans, 2 waves):
 - [x] 19-01-PLAN.md — QUIZ-01: kolorowy feedback opcji (zielony/czerwony + ikona ✓/✗ + aria) w QuizController, blokada po wyborze, oba tryby [wave 1]
 - [x] 19-02-PLAN.md — EXAM-05: łączny wynik egzaminu (combined % + werdykt 80% + rozbicie SOP/BHP) w SessionOverlay, liczony w widoku [wave 2]
-- [ ] 19-03-PLAN.md — QUIZ-02: responsywny modal quizu (.modal-card--bhp-quiz scroll wewnętrzny, brak ucinania ≥1280×720) [wave 2]
+- [x] 19-03-PLAN.md — QUIZ-02: responsywny modal quizu (.modal-card--bhp-quiz scroll wewnętrzny, brak ucinania ≥1280×720) [wave 2]
 **UI hint**: yes
 
 ### Phase 20: Gate — testy i bundle
@@ -70,7 +70,7 @@
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 18. Usunięcia i sprzątanie | 3/3 | Complete   | 2026-06-28 |
-| 19. Egzamin — połączony wynik i feedback quizu | 2/3 | In Progress|  |
+| 19. Egzamin — połączony wynik i feedback quizu | 3/3 | Complete   | 2026-06-28 |
 | 20. Gate — testy i bundle | 0/? | Not started | - |
 
 ## Phase Ordering Rationale
