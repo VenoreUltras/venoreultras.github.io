@@ -41,6 +41,9 @@ export class QuizController {
     this._answered = false;
     // Bieżąca kolejność wybranych kroków dla pytań typu sequence (lokalna, nie live store).
     this._seqOrder = [];
+    // QUIZ-01: referencje przycisków opcji mc/tf bieżącego pytania — do oznaczania
+    // correct/incorrect i blokowania po wyborze. Reset w _renderQuestion i _renderScore.
+    this._optionBtns = [];
     this._build();
     this._wireSubscribers();
     this._render();
@@ -191,6 +194,7 @@ export class QuizController {
     // Reset regionów do stanu "pytanie bez odpowiedzi".
     this._answered = false;
     this._seqOrder = [];
+    this._optionBtns = []; // QUIZ-01: wyczyść referencje poprzednich przycisków opcji.
     this._optionsEl.replaceChildren();
     this._feedbackEl.hidden = true;
     this._feedbackEl.classList.remove('bhp-quiz__feedback--wrong');
@@ -214,6 +218,7 @@ export class QuizController {
   /**
    * mc / tf: jeden przycisk .bhp-quiz__option na opcję (textContent only).
    * Klik → answer = indeks opcji → _onAnswer.
+   * QUIZ-01: każdy przycisk zapamiętywany w this._optionBtns (do oznaczania feedback).
    * @param {object} q
    * @param {string[]} labels
    */
@@ -224,8 +229,25 @@ export class QuizController {
       btn.type = 'button';
       btn.textContent = label;
       btn.addEventListener('click', () => this._onAnswer(q, idx));
+      this._optionBtns.push(btn); // QUIZ-01: zachowaj referencję do oznaczania.
       this._optionsEl.appendChild(btn);
     });
+  }
+
+  /**
+   * QUIZ-01: Oznacza przycisk opcji jako poprawny lub błędny (kolor + ikona + aria).
+   * Ikona dodawana przez textContent (XSS-safe). Klasa CSS steruje kolorem tła/obwódki.
+   * @param {HTMLButtonElement} btn - przycisk opcji do oznaczenia
+   * @param {'correct' | 'incorrect'} kind - rodzaj oznaczenia
+   */
+  _markOption(btn, kind) {
+    const isCorrect = kind === 'correct';
+    btn.classList.add(`bhp-quiz__option--${kind}`);
+    const icon = document.createElement('span');
+    icon.className = 'bhp-quiz__option-icon';
+    icon.textContent = isCorrect ? pl.modals.bhpQuiz.iconCorrect : pl.modals.bhpQuiz.iconWrong;
+    icon.setAttribute('aria-label', isCorrect ? pl.modals.bhpQuiz.ariaCorrect : pl.modals.bhpQuiz.ariaWrong);
+    btn.appendChild(icon);
   }
 
   /**
@@ -285,6 +307,22 @@ export class QuizController {
     // Lokalna poprawność — TYLKO do emfazy feedbacku, NIGDY do oceny SOP (CRIT-V12-5).
     const correct = this._isCorrect(q, answer);
 
+    // QUIZ-01: oznacz opcje kolorem + ikoną PRZED submitAnswer (timing KRYTYCZNY).
+    // Działa identycznie w trybie nauka i egzamin — brak gałęzi zależnej od trybu.
+    if ((q.type === 'mc' || q.type === 'tf') && this._optionBtns.length > 0) {
+      // Oznacz wybraną opcję.
+      this._markOption(this._optionBtns[answer], correct ? 'correct' : 'incorrect');
+      // Przy błędnym wyborze dodatkowo podświetl poprawną na zielono.
+      if (!correct) {
+        this._markOption(this._optionBtns[q.correctIdx], 'correct');
+      }
+      // Zablokuj wszystkie opcje — jedna odpowiedź na pytanie.
+      for (const btn of this._optionBtns) {
+        btn.disabled = true;
+        btn.setAttribute('aria-disabled', 'true');
+      }
+    }
+
     this._explanationEl.textContent = q.explanation;
     this._normRefEl.textContent = q.normRef;
     this._feedbackEl.hidden = false;
@@ -331,6 +369,7 @@ export class QuizController {
 
     // Reset flagi — wynik nie jest "odpowiedzią na pytanie".
     this._answered = false;
+    this._optionBtns = []; // QUIZ-01: wyczyść referencje opcji po zakończeniu quizu.
 
     // Schowaj regiony pytania/feedbacku, pokaż ekran wyniku.
     this._questionEl.hidden = true;

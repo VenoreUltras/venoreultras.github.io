@@ -252,6 +252,11 @@ export const pl = {
       scoreFailed:      'Niezaliczone',
       // Funkcja szablonu — argument to wynik 0-100 (liczba), nie user input.
       scoreOf:          (score) => `${score}/100`,
+      // QUIZ-01 (Phase 19-01): aria-label i ikony feedbacku wybranej/poprawnej opcji.
+      ariaCorrect:      'Odpowiedź poprawna',
+      ariaWrong:        'Odpowiedź błędna',
+      iconCorrect:      '✓',
+      iconWrong:        '✗',
     },
   },
 
